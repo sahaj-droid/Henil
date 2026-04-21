@@ -5,366 +5,1805 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vidhya — Your Learning Mitra</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
-<script async src="https://js.puter.com/v2/"></script>
+<script src="https://js.puter.com/v2/"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height:100vh;overflow-x:hidden}
-#splash{position:fixed;inset:0;z-index:999;background:#1e3a8a;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.6s ease}
-#splash.hide{opacity:0;pointer-events:none}
-.splash-ring{width:140px;height:140px;border-radius:50%;background:#1e3a8a;border:2px solid rgba(251,191,36,0.3);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:24px;animation:pulseRing 2s ease-in-out infinite}
-@keyframes pulseRing{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0.2)}50%{box-shadow:0 0 0 16px rgba(251,191,36,0)}}
-.diya-svg{width:90px;height:90px}
-.splash-name{font-family:'EB Garamond',Georgia,serif;font-size:42px;font-weight:700;color:white;letter-spacing:2px;animation:fadeUp 0.8s ease 0.3s both}
-.splash-tagline{font-size:13px;font-weight:700;color:#93c5fd;letter-spacing:3px;text-transform:uppercase;margin-top:6px;animation:fadeUp 0.8s ease 0.5s both}
-.splash-pills{display:flex;gap:10px;margin-top:20px;animation:fadeUp 0.8s ease 0.7s both}
-.splash-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700}
-.pill-blue{background:rgba(59,130,246,0.25);color:#93c5fd}
-.pill-green{background:rgba(16,185,129,0.25);color:#6ee7b7}
-.splash-gseb{margin-top:12px;font-size:11px;color:rgba(255,255,255,0.4);animation:fadeUp 0.8s ease 0.9s both}
-.splash-loader{margin-top:40px;width:48px;height:3px;background:rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;animation:fadeUp 0.8s ease 0.9s both}
-.splash-loader-fill{height:100%;width:0%;background:#fbbf24;border-radius:10px;animation:loadFill 2s ease 0.5s forwards}
-@keyframes loadFill{to{width:100%}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.topbar{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 60%,#0d9488 100%);padding:11px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,58,138,0.25)}
-.back-btn{background:rgba(255,255,255,0.18);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:17px;cursor:pointer;display:none;align-items:center;justify-content:center;transition:background 0.2s}
-.back-btn.vis{display:flex}
-.back-btn:hover{background:rgba(255,255,255,0.3)}
-.topbar-logo{width:32px;height:32px;border-radius:50%;background:#1e3a8a;border:1.5px solid rgba(251,191,36,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.topbar-name{font-family:'EB Garamond',Georgia,serif;font-size:20px;font-weight:700;color:white;line-height:1}
-.topbar-sub{font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:1px}
-.topbar-right{margin-left:auto;display:flex;gap:8px}
-.lang-btn{background:rgba(255,255,255,0.18);border:none;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;transition:background 0.2s}
-.lang-btn:hover{background:rgba(255,255,255,0.3)}
-.screen{display:none}
-.screen.active{display:block;animation:fadeIn 0.25s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.hero{background:linear-gradient(160deg,#1e3a8a 0%,#1e40af 50%,#0d9488 100%);padding:28px 16px 36px;text-align:center;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:rgba(251,191,36,0.06);border-radius:50%}
-.hero::after{content:'';position:absolute;bottom:-30px;left:-30px;width:130px;height:130px;background:rgba(13,148,136,0.1);border-radius:50%}
-.hero-vidhya{font-family:'EB Garamond',Georgia,serif;font-size:38px;font-weight:700;color:white;position:relative;z-index:1;letter-spacing:2px}
-.hero-tagline{font-size:12px;font-weight:700;color:#93c5fd;letter-spacing:3px;text-transform:uppercase;position:relative;z-index:1;margin-top:3px}
-.hero-pills{display:flex;gap:8px;justify-content:center;margin-top:14px;position:relative;z-index:1;flex-wrap:wrap}
-.hero-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
-.hp-blue{background:rgba(59,130,246,0.25);color:#bfdbfe}
-.hp-green{background:rgba(16,185,129,0.22);color:#a7f3d0}
-.hp-yellow{background:rgba(251,191,36,0.22);color:#fde68a}
-.subject-bar{display:flex;gap:0;background:white;border-bottom:2px solid #e2e8f0;position:sticky;top:54px;z-index:90}
-.subj-btn{flex:1;padding:11px 4px;border:none;background:transparent;font-family:'Baloo 2',cursive;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px}
-.subj-btn.active{color:#1e40af;border-bottom-color:#1e40af}
-.subj-btn.locked{color:#cbd5e1;cursor:default}
-.chapters-grid{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:11px;max-width:500px;margin:0 auto}
-.chapter-card{background:white;border-radius:14px;padding:14px 12px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:relative;overflow:hidden}
-.chapter-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
-.chapter-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
-.ch-num{font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;line-height:1}
-.ch-icon{font-size:22px;float:right}
-.ch-name{font-size:11px;font-weight:700;margin-top:6px;line-height:1.3}
-.ch-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:6px}
-.ch-1::before{background:#2563eb}.ch-1 .ch-num{color:#2563eb}.ch-1 .ch-badge{background:#dbeafe;color:#1d4ed8}
-.ch-2::before{background:#0d9488}.ch-2 .ch-num{color:#0d9488}.ch-2 .ch-badge{background:#ccfbf1;color:#0f766e}
-.ch-3::before{background:#f97316}.ch-3 .ch-num{color:#f97316}.ch-3 .ch-badge{background:#ffedd5;color:#c2410c}
-.ch-4::before{background:#7c3aed}.ch-4 .ch-num{color:#7c3aed}.ch-4 .ch-badge{background:#ede9fe;color:#6d28d9}
-.ch-5::before{background:#ef4444}.ch-5 .ch-num{color:#ef4444}.ch-5 .ch-badge{background:#fee2e2;color:#b91c1c}
-.ch-6::before{background:#16a34a}.ch-6 .ch-num{color:#16a34a}.ch-6 .ch-badge{background:#dcfce7;color:#15803d}
-.ch-7::before{background:#db2777}.ch-7 .ch-num{color:#db2777}.ch-7 .ch-badge{background:#fce7f3;color:#be185d}
-.ch-8::before{background:#0284c7}.ch-8 .ch-num{color:#0284c7}.ch-8 .ch-badge{background:#e0f2fe;color:#0369a1}
-.ch-9::before{background:#9333ea}.ch-9 .ch-num{color:#9333ea}.ch-9 .ch-badge{background:#f3e8ff;color:#7e22ce}
-.ch-10::before{background:#0891b2}.ch-10 .ch-num{color:#0891b2}.ch-10 .ch-badge{background:#cffafe;color:#0e7490}
-.ch-header{padding:20px 14px 16px;color:white}
-.ch-number-label{font-size:11px;font-weight:700;opacity:0.8;text-transform:uppercase;letter-spacing:1px}
-.ch-header h2{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;margin-top:3px}
-.sections-list{padding:12px;max-width:500px;margin:0 auto}
-.section-item{background:white;border-radius:12px;padding:13px 14px;margin-bottom:9px;cursor:pointer;display:flex;align-items:center;gap:11px;box-shadow:0 2px 6px rgba(0,0,0,0.06);border:2px solid transparent;transition:all 0.2s}
-.section-item:hover{transform:translateX(4px)}
-.sec-num{font-family:'Baloo 2',cursive;font-size:13px;font-weight:800;min-width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white}
-.sec-title{font-weight:700;font-size:13px}
-.sec-type{font-size:11px;color:#64748b;margin-top:1px}
-.content-body{padding:14px 13px 50px;max-width:600px;margin:0 auto}
-.sec-heading{font-family:'Baloo 2',cursive;font-size:19px;font-weight:800;margin-bottom:13px;padding-bottom:7px;border-bottom:3px solid currentColor;display:flex;align-items:center;gap:7px}
-.content-body p{margin-bottom:11px;font-size:14px;line-height:1.7;position:relative;padding-right:30px}
-.speak-btn{position:absolute;right:0;top:0;background:#e0f2fe;border:none;color:#0284c7;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;opacity:0.7;transition:0.2s}
-.speak-btn:hover{opacity:1;transform:scale(1.1)}
-.concept-box{background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;padding:11px 13px;margin:13px 0}
-.concept-box .cb-title{font-weight:800;color:#1d4ed8;font-size:12px;margin-bottom:5px}
-.concept-box p{font-size:13px;margin:0;color:#1e3a5f;padding-right:0}
-.practice-section{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:13px;padding:14px;margin:16px 0}
-.practice-section .ps-hdr{font-family:'Baloo 2',cursive;font-size:14px;font-weight:800;color:#15803d;margin-bottom:11px}
-.practice-q{background:white;border-radius:10px;padding:11px 13px;margin-bottom:9px;border:1.5px solid #bbf7d0}
-.pq-text{font-size:13px;font-weight:700;color:#14532d;margin-bottom:9px}
-.answer-choices{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.choice-btn{background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:7px 8px;font-size:12px;font-weight:700;color:#15803d;cursor:pointer;transition:all 0.2s;text-align:center;font-family:'Nunito',sans-serif}
-.choice-btn:hover{background:#dcfce7}
-.choice-btn.correct{background:#16a34a !important;color:white !important;border-color:#16a34a !important}
-.choice-btn.wrong{background:#fee2e2 !important;color:#b91c1c !important;border-color:#fca5a5 !important}
-.feedback{font-size:12px;margin-top:7px;font-weight:700;min-height:16px}
-.feedback.ok{color:#16a34a}.feedback.no{color:#dc2626}
-.ai-section{background:linear-gradient(135deg,#ede9fe,#f3e8ff);border:2px solid #a78bfa;border-radius:16px;padding:16px;margin:20px 0}
-.ai-section h3{font-family:'Baloo 2',cursive;font-size:16px;font-weight:800;color:#6d28d9;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.ai-input-row{display:flex;gap:8px}
-.ai-input{flex:1;padding:10px 12px;border:2px solid #c4b5fd;border-radius:10px;font-size:13px;font-family:'Nunito',sans-serif}
-.ai-btn{background:#7c3aed;color:white;border:none;padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:0.2s;white-space:nowrap}
-.ai-btn:hover{background:#6d28d9}
-.ai-btn:disabled{background:#c4b5fd;cursor:not-allowed}
-.ai-response{background:white;border-radius:10px;padding:12px;margin-top:12px;font-size:13px;line-height:1.6;border:1px solid #ddd6fe;min-height:40px;white-space:pre-wrap}
-.ai-response.loading{color:#a78bfa;font-style:italic}
-.quiz-gen-btn{background:#0d9488;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin:10px 0;display:inline-flex;align-items:center;gap:5px}
-.quiz-gen-btn:hover{background:#0f766e}
-.quiz-gen-btn:disabled{background:#5eead4;cursor:not-allowed}
-.vidhya-footer{text-align:center;padding:20px;color:#cbd5e1;font-size:11px;font-weight:700}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; min-height: 100vh; overflow-x: hidden; }
+
+/* ── SPLASH ── */
+#splash {
+  position: fixed; inset: 0; z-index: 999;
+  background: #1e3a8a;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.6s ease;
+}
+#splash.hide { opacity: 0; pointer-events: none; }
+
+.splash-ring {
+  width: 140px; height: 140px; border-radius: 50%;
+  background: #1e3a8a;
+  border: 2px solid rgba(251,191,36,0.3);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; margin-bottom: 24px;
+  animation: pulseRing 2s ease-in-out infinite;
+}
+@keyframes pulseRing {
+  0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.2); }
+  50% { box-shadow: 0 0 0 16px rgba(251,191,36,0); }
+}
+
+.diya-svg { width: 90px; height: 90px; }
+
+.splash-name {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 42px; font-weight: 700;
+  color: white; letter-spacing: 2px;
+  animation: fadeUp 0.8s ease 0.3s both;
+}
+.splash-tagline {
+  font-size: 13px; font-weight: 700;
+  color: #93c5fd; letter-spacing: 3px;
+  text-transform: uppercase; margin-top: 6px;
+  animation: fadeUp 0.8s ease 0.5s both;
+}
+.splash-pills {
+  display: flex; gap: 10px; margin-top: 20px;
+  animation: fadeUp 0.8s ease 0.7s both;
+}
+.splash-pill {
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+}
+.pill-blue { background: rgba(59,130,246,0.25); color: #93c5fd; }
+.pill-green { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+.splash-gseb {
+  margin-top: 12px; font-size: 11px; color: rgba(255,255,255,0.4);
+  animation: fadeUp 0.8s ease 0.9s both;
+}
+.splash-loader {
+  margin-top: 40px; width: 48px; height: 3px;
+  background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden;
+  animation: fadeUp 0.8s ease 0.9s both;
+}
+.splash-loader-fill {
+  height: 100%; width: 0%; background: #fbbf24; border-radius: 10px;
+  animation: loadFill 2s ease 0.5s forwards;
+}
+@keyframes loadFill { to { width: 100%; } }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #0d9488 100%);
+  padding: 11px 14px;
+  display: flex; align-items: center; gap: 10px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 16px rgba(30,58,138,0.25);
+}
+.back-btn {
+  background: rgba(255,255,255,0.18); border: none; color: white;
+  width: 32px; height: 32px; border-radius: 50%; font-size: 17px;
+  cursor: pointer; display: none; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.back-btn.vis { display: flex; }
+.back-btn:hover { background: rgba(255,255,255,0.3); }
+
+.topbar-logo {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #1e3a8a; border: 1.5px solid rgba(251,191,36,0.4);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.topbar-name {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 20px; font-weight: 700; color: white; line-height: 1;
+}
+.topbar-sub { font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; margin-top: 1px; }
+.topbar-right { margin-left: auto; }
+.topbar-section {
+  font-family: 'Baloo 2', cursive;
+  font-size: 15px; font-weight: 700; color: white; flex: 1;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+/* ── HOME ── */
+.hero {
+  background: linear-gradient(160deg, #1e3a8a 0%, #1e40af 50%, #0d9488 100%);
+  padding: 28px 16px 36px; text-align: center; position: relative; overflow: hidden;
+}
+.hero::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:180px; height:180px; background:rgba(251,191,36,0.06); border-radius:50%;
+}
+.hero::after {
+  content:''; position:absolute; bottom:-30px; left:-30px;
+  width:130px; height:130px; background:rgba(13,148,136,0.1); border-radius:50%;
+}
+.hero-vidhya {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 38px; font-weight: 700; color: white;
+  position: relative; z-index: 1; letter-spacing: 2px;
+}
+.hero-tagline {
+  font-size: 12px; font-weight: 700; color: #93c5fd;
+  letter-spacing: 3px; text-transform: uppercase;
+  position: relative; z-index: 1; margin-top: 3px;
+}
+.hero-pills {
+  display: flex; gap: 8px; justify-content: center;
+  margin-top: 14px; position: relative; z-index: 1; flex-wrap: wrap;
+}
+.hero-pill {
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.hp-blue { background: rgba(59,130,246,0.25); color: #bfdbfe; }
+.hp-green { background: rgba(16,185,129,0.22); color: #a7f3d0; }
+.hp-yellow { background: rgba(251,191,36,0.22); color: #fde68a; }
+
+/* Subject selector */
+.subject-bar {
+  display: flex; gap: 0; background: white;
+  border-bottom: 2px solid #e2e8f0; position: sticky; top: 54px; z-index: 90;
+}
+.subj-btn {
+  flex: 1; padding: 11px 4px; border: none; background: transparent;
+  font-family: 'Baloo 2', cursive; font-size: 13px; font-weight: 700;
+  color: #94a3b8; cursor: pointer; border-bottom: 3px solid transparent;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.subj-btn.active { color: #1e40af; border-bottom-color: #1e40af; }
+.subj-btn.locked { color: #cbd5e1; cursor: default; }
+
+/* Chapter grid */
+.chapters-grid {
+  padding: 14px; display: grid; grid-template-columns: 1fr 1fr;
+  gap: 11px; max-width: 500px; margin: 0 auto;
+}
+.chapter-card {
+  background: white; border-radius: 14px; padding: 14px 12px;
+  cursor: pointer; border: 2px solid transparent;
+  transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  position: relative; overflow: hidden;
+}
+.chapter-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+.chapter-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.12); }
+.chapter-card.locked { opacity:0.5; cursor:default; }
+.ch-num { font-family:'Baloo 2',cursive; font-size:24px; font-weight:800; line-height:1; }
+.ch-icon { font-size:22px; float:right; }
+.ch-name { font-size:11px; font-weight:700; margin-top:6px; line-height:1.3; }
+.ch-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; display:inline-block; margin-top:6px; }
+
+.ch-1::before{background:#2563eb;} .ch-1 .ch-num{color:#2563eb;} .ch-1 .ch-badge{background:#dbeafe;color:#1d4ed8;}
+.ch-2::before{background:#0d9488;} .ch-2 .ch-num{color:#0d9488;} .ch-2 .ch-badge{background:#ccfbf1;color:#0f766e;}
+.ch-3::before{background:#f97316;} .ch-3 .ch-num{color:#f97316;} .ch-3 .ch-badge{background:#ffedd5;color:#c2410c;}
+.ch-4::before{background:#7c3aed;} .ch-4 .ch-num{color:#7c3aed;} .ch-4 .ch-badge{background:#ede9fe;color:#6d28d9;}
+.ch-5::before{background:#ef4444;} .ch-5 .ch-num{color:#ef4444;} .ch-5 .ch-badge{background:#fee2e2;color:#b91c1c;}
+.ch-6::before{background:#16a34a;} .ch-6 .ch-num{color:#16a34a;} .ch-6 .ch-badge{background:#dcfce7;color:#15803d;}
+.ch-7::before{background:#db2777;} .ch-7 .ch-num{color:#db2777;} .ch-7 .ch-badge{background:#fce7f3;color:#be185d;}
+.ch-8::before{background:#0284c7;} .ch-8 .ch-num{color:#0284c7;} .ch-8 .ch-badge{background:#e0f2fe;color:#0369a1;}
+.ch-9::before{background:#9333ea;} .ch-9 .ch-num{color:#9333ea;} .ch-9 .ch-badge{background:#f3e8ff;color:#7e22ce;}
+.ch-10::before{background:#0891b2;} .ch-10 .ch-num{color:#0891b2;} .ch-10 .ch-badge{background:#cffafe;color:#0e7490;}
+
+/* Coming soon panel */
+.coming-panel {
+  margin: 20px 16px; background: white; border-radius: 16px;
+  padding: 32px 20px; text-align: center;
+  border: 2px dashed #e2e8f0;
+}
+.coming-panel .cp-icon { font-size: 48px; margin-bottom: 12px; }
+.coming-panel h3 { font-family:'Baloo 2',cursive; font-size:18px; font-weight:800; color:#94a3b8; }
+.coming-panel p { font-size:13px; color:#cbd5e1; margin-top:6px; }
+
+/* ── CHAPTER SCREEN ── */
+.ch-header { padding: 20px 14px 16px; color: white; }
+.ch-number-label { font-size:11px; font-weight:700; opacity:0.8; text-transform:uppercase; letter-spacing:1px; }
+.ch-header h2 { font-family:'Baloo 2',cursive; font-size:22px; font-weight:800; margin-top:3px; }
+
+.sections-list { padding:12px; max-width:500px; margin:0 auto; }
+.section-item {
+  background:white; border-radius:12px; padding:13px 14px; margin-bottom:9px;
+  cursor:pointer; display:flex; align-items:center; gap:11px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06); border:2px solid transparent; transition:all 0.2s;
+}
+.section-item:hover { transform:translateX(4px); }
+.sec-num {
+  font-family:'Baloo 2',cursive; font-size:13px; font-weight:800;
+  min-width:40px; height:40px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center; color:white;
+}
+.sec-title { font-weight:700; font-size:13px; }
+.sec-type { font-size:11px; color:#64748b; margin-top:1px; }
+
+/* ── CONTENT ── */
+.content-body { padding:14px 13px 50px; max-width:600px; margin:0 auto; }
+.sec-heading {
+  font-family:'Baloo 2',cursive; font-size:19px; font-weight:800;
+  margin-bottom:13px; padding-bottom:7px; border-bottom:3px solid currentColor;
+  display:flex; align-items:center; gap:7px;
+}
+.content-body p { margin-bottom:11px; font-size:14px; line-height:1.7; }
+
+.india-example {
+  background:#fff7ed; border-left:4px solid #f97316;
+  border-radius:0 12px 12px 0; padding:11px 13px; margin:13px 0;
+}
+.india-example .ie-label {
+  font-size:10px; font-weight:800; color:#c2410c; text-transform:uppercase;
+  letter-spacing:0.5px; margin-bottom:5px;
+}
+.india-example p { font-size:13px; margin:0; color:#431407; }
+
+.concept-box {
+  background:#eff6ff; border:2px solid #bfdbfe; border-radius:12px;
+  padding:11px 13px; margin:13px 0;
+}
+.concept-box .cb-title { font-weight:800; color:#1d4ed8; font-size:12px; margin-bottom:5px; }
+.concept-box p { font-size:13px; margin:0; color:#1e3a5f; }
+
+.num-table { background:#fffbeb; border:2px solid #fde68a; border-radius:12px; padding:13px; margin:13px 0; }
+.num-table .nt-title { font-family:'Baloo 2',cursive; font-size:13px; font-weight:700; color:#92400e; margin-bottom:9px; text-align:center; }
+.seq-row { display:flex; justify-content:space-between; align-items:center; padding:5px 7px; border-radius:7px; margin-bottom:3px; font-size:12px; }
+.seq-row:nth-child(odd) { background:rgba(251,191,36,0.15); }
+.seq-nums { font-weight:700; font-family:'Baloo 2',cursive; color:#1e293b; }
+.seq-name { font-weight:700; font-size:10px; padding:2px 7px; border-radius:20px; background:#fde68a; color:#92400e; }
+
+.fig-out {
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe); border:2px solid #7c3aed;
+  border-radius:13px; padding:14px; margin:16px 0;
+}
+.fig-out .fo-hdr { font-family:'Baloo 2',cursive; font-size:14px; font-weight:800; color:#5b21b6; margin-bottom:9px; }
+.fig-out ol { padding-left:17px; }
+.fig-out li { margin-bottom:7px; font-size:13px; color:#3b0764; font-weight:600; }
+
+.practice-section {
+  background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:2px solid #86efac;
+  border-radius:13px; padding:14px; margin:16px 0;
+}
+.practice-section .ps-hdr { font-family:'Baloo 2',cursive; font-size:14px; font-weight:800; color:#15803d; margin-bottom:11px; }
+.practice-q { background:white; border-radius:10px; padding:11px 13px; margin-bottom:9px; border:1.5px solid #bbf7d0; }
+.pq-text { font-size:13px; font-weight:700; color:#14532d; margin-bottom:9px; }
+.answer-choices { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.choice-btn {
+  background:#f0fdf4; border:2px solid #86efac; border-radius:8px;
+  padding:7px 8px; font-size:12px; font-weight:700; color:#15803d;
+  cursor:pointer; transition:all 0.2s; text-align:center; font-family:'Nunito',sans-serif;
+}
+.choice-btn:hover { background:#dcfce7; }
+.choice-btn.correct { background:#16a34a !important; color:white !important; border-color:#16a34a !important; }
+.choice-btn.wrong { background:#fee2e2 !important; color:#b91c1c !important; border-color:#fca5a5 !important; }
+.feedback { font-size:12px; margin-top:7px; font-weight:700; min-height:16px; }
+.feedback.ok { color:#16a34a; } .feedback.no { color:#dc2626; }
+
+.pattern-box {
+  background:#f0fdf4; border:2px solid #86efac; border-radius:11px;
+  padding:13px; margin:13px 0; font-family:'Baloo 2',cursive;
+  font-size:13px; text-align:center;
+}
+.pline { margin:3px 0; }
+.pline .res { color:#dc2626; font-weight:800; }
+
+.math-talk {
+  background:white; border:2px dashed #f97316; border-radius:10px;
+  padding:9px 12px; margin:11px 0; font-size:12px; color:#9a3412;
+  font-weight:600; display:flex; gap:7px; align-items:flex-start;
+}
+
+.visual-wrap { margin:13px 0; border-radius:11px; overflow:hidden; border:2px solid #e2e8f0; }
+.visual-wrap svg { display:block; width:100%; }
+
+.vidhya-footer { text-align: center; padding: 20px; color: #cbd5e1; font-size: 11px; font-weight: 700; }
+
+/* ── ADDED BY GEMINI: AI & TTS STYLES ── */
+.speak-btn { position:absolute; right:0; top:-4px; background:#e0f2fe; border:none; color:#0284c7; width:26px; height:26px; border-radius:50%; font-size:14px; cursor:pointer; opacity:0.7; transition:0.2s; display:flex; align-items:center; justify-content:center; }
+.speak-btn:hover { opacity:1; transform:scale(1.1); }
+.content-body p { position: relative; padding-right: 30px; } 
+
+.ai-section { background:linear-gradient(135deg,#ede9fe,#f3e8ff); border:2px solid #a78bfa; border-radius:16px; padding:16px; margin:20px 0; }
+.ai-section h3 { font-family:'Baloo 2',cursive; font-size:16px; font-weight:800; color:#6d28d9; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.ai-input-row { display:flex; gap:8px; }
+.ai-input { flex:1; padding:10px 12px; border:2px solid #c4b5fd; border-radius:10px; font-size:13px; font-family:'Nunito',sans-serif; outline:none; }
+.ai-btn { background:#7c3aed; color:white; border:none; padding:10px 16px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s; white-space:nowrap; }
+.ai-btn:hover { background:#6d28d9; }
+.ai-btn:disabled { background:#c4b5fd; cursor:not-allowed; }
+.ai-response { background:white; border-radius:10px; padding:12px; margin-top:12px; font-size:13px; line-height:1.6; border:1px solid #ddd6fe; min-height:40px; white-space:pre-wrap; display:none; }
+.ai-response.loading { color:#a78bfa; font-style:italic; }
+.quiz-gen-btn { background:#0d9488; color:white; border:none; padding:10px 16px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; margin:10px 0; display:inline-flex; align-items:center; gap:6px; transition:0.2s; width:100%; justify-content:center; }
+.quiz-gen-btn:hover { background:#0f766e; }
+.quiz-gen-btn:disabled { background:#5eead4; cursor:not-allowed; }
 </style>
 </head>
 <body>
+
 <div id="splash">
-<div class="splash-ring">
-<svg class="diya-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
-<circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
-<circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
-<circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
-<circle cx="72" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
-<circle cx="45" cy="84" r="2.5" fill="#fbbf24" opacity="0.5"/>
-<circle cx="18" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
-<circle cx="6" cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
-<circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
-<ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
-<ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
-<ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
-<ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
-<ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
-<ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
-<ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
-<ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
-</svg>
-</div>
-<div class="splash-name">Vidhya</div>
-<div class="splash-tagline">Your Learning Mitra</div>
-<div class="splash-pills">
-<span class="splash-pill pill-blue">Mathematics</span>
-<span class="splash-pill pill-green">Science</span>
-</div>
-<div class="splash-gseb">Standard 6 • GSEB • English Medium</div>
-<div class="splash-loader"><div class="splash-loader-fill"></div></div>
+  <div class="splash-ring">
+    <svg class="diya-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
+      <circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
+      <circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
+      <circle cx="72" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
+      <circle cx="45" cy="84" r="2.5" fill="#fbbf24" opacity="0.5"/>
+      <circle cx="18" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
+      <circle cx="6"  cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
+      <circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
+      <ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
+      <ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
+      <ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
+      <ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
+      <ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
+      <ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
+      <ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
+      <ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
+    </svg>
+  </div>
+  <div class="splash-name">Vidhya</div>
+  <div class="splash-tagline">Your Learning Mitra</div>
+  <div class="splash-pills">
+    <span class="splash-pill pill-blue">Mathematics</span>
+    <span class="splash-pill pill-green">Science</span>
+  </div>
+  <div class="splash-gseb">Standard 6 &bull; GSEB &bull; English Medium</div>
+  <div class="splash-loader"><div class="splash-loader-fill"></div></div>
 </div>
 
 <div class="topbar">
-<button class="back-btn" id="backBtn" onclick="goBack()">←</button>
-<div class="topbar-logo">
-<svg width="20" height="20" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
-<ellipse cx="45" cy="62" rx="20" ry="7" fill="#d97706"/>
-<ellipse cx="45" cy="59" rx="17" ry="5" fill="#fbbf24"/>
-<ellipse cx="45" cy="38" rx="10" ry="17" fill="#f97316" opacity="0.8"/>
-<ellipse cx="45" cy="34" rx="7" ry="12" fill="#fbbf24"/>
-<ellipse cx="45" cy="30" rx="4" ry="8" fill="#fef3c7"/>
-</svg>
-</div>
-<div style="flex:1">
-<div class="topbar-name" id="topbarTitle">Vidhya</div>
-<div class="topbar-sub" id="topbarSub" data-en="Your Learning Mitra" data-gu="તમારી શીખવાની સાથી">Your Learning Mitra</div>
-</div>
-<div class="topbar-right">
-<button class="lang-btn" onclick="toggleLang()" id="langBtn">ગુ</button>
+  <button class="back-btn" id="backBtn" onclick="goBack()">&#8592;</button>
+  <div class="topbar-logo">
+    <svg width="20" height="20" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="45" cy="62" rx="20" ry="7" fill="#d97706"/>
+      <ellipse cx="45" cy="59" rx="17" ry="5" fill="#fbbf24"/>
+      <ellipse cx="45" cy="38" rx="10" ry="17" fill="#f97316" opacity="0.8"/>
+      <ellipse cx="45" cy="34" rx="7" ry="12" fill="#fbbf24"/>
+      <ellipse cx="45" cy="30" rx="4" ry="8" fill="#fef3c7"/>
+    </svg>
+  </div>
+  <div style="flex:1">
+    <div class="topbar-name" id="topbarTitle">Vidhya</div>
+    <div class="topbar-sub" id="topbarSub">Your Learning Mitra</div>
+  </div>
 </div>
 
 <div class="screen active" id="homeScreen">
-<div class="hero">
-<svg width="56" height="56" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:8px;position:relative;z-index:1">
-<circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
-<circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
-<circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
-<circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
-<circle cx="6" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
-<ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
-<ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
-<ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
-<ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
-<ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
-<ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
-<ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
-<ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
-</svg>
-<div class="hero-vidhya">Vidhya</div>
-<div class="hero-tagline" data-en="Your Learning Mitra" data-gu="તમારી શીખવાની સાથી">Your Learning Mitra</div>
-<div class="hero-pills">
-<span class="hero-pill hp-blue" data-en="Standard 6" data-gu="ધોરણ 6">Standard 6</span>
-<span class="hero-pill hp-green">GSEB</span>
-<span class="hero-pill hp-yellow" data-en="English Medium" data-gu="અંગ્રેજી માધ્યમ">English Medium</span>
-</div>
-</div>
+  <div class="hero">
+    <svg width="56" height="56" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:8px;position:relative;z-index:1">
+      <circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
+      <circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
+      <circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
+      <circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
+      <circle cx="6" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
+      <ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
+      <ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
+      <ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
+      <ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
+      <ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
+      <ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
+      <ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
+      <ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
+    </svg>
+    <div class="hero-vidhya">Vidhya</div>
+    <div class="hero-tagline">Your Learning Mitra</div>
+    <div class="hero-pills">
+      <span class="hero-pill hp-blue">Standard 6</span>
+      <span class="hero-pill hp-green">GSEB</span>
+      <span class="hero-pill hp-yellow">English Medium</span>
+    </div>
+  </div>
 
-<div class="subject-bar">
-<button class="subj-btn active">📐 <span data-en="Mathematics" data-gu="ગણિત">Mathematics</span></button>
-<button class="subj-btn locked">🔬 <span data-en="Science (Soon)" data-gu="વિજ્ઞાન (ટૂંક સમયમાં)">Science (Soon)</span></button>
-</div>
+  <div class="subject-bar">
+    <button class="subj-btn active" onclick="showSubject('maths',this)">&#x1F4D0; Mathematics</button>
+    <button class="subj-btn locked">&#x1F52C; Science (Soon)</button>
+  </div>
 
-<div id="mathsPanel">
-<div class="chapters-grid">
-<div class="chapter-card ch-1" onclick="openChapter(1)"><span class="ch-icon">🔢</span><div class="ch-num">1</div><div class="ch-name" data-en="Patterns in Mathematics" data-gu="ગણિતમાં ભાત">Patterns in Mathematics</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-2" onclick="openChapter(2)"><span class="ch-icon">📏</span><div class="ch-num">2</div><div class="ch-name" data-en="Lines and Angles" data-gu="રેખા અને ખૂણા">Lines and Angles</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-3" onclick="openChapter(3)"><span class="ch-icon">🎲</span><div class="ch-num">3</div><div class="ch-name" data-en="Number Play" data-gu="સંખ્યા સાથે રમત">Number Play</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-4" onclick="openChapter(4)"><span class="ch-icon">📊</span><div class="ch-num">4</div><div class="ch-name" data-en="Data Handling" data-gu="માહિતીનું વ્યવસ્થાપન">Data Handling</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-5" onclick="openChapter(5)"><span class="ch-icon">🌟</span><div class="ch-num">5</div><div class="ch-name" data-en="Prime Time" data-gu="અવિભાજ્ય સમય">Prime Time</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-6" onclick="openChapter(6)"><span class="ch-icon">⬜</span><div class="ch-num">6</div><div class="ch-name" data-en="Perimeter and Area" data-gu="પરિમિતિ અને ક્ષેત્રફળ">Perimeter and Area</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-7" onclick="openChapter(7)"><span class="ch-icon">½</span><div class="ch-num">7</div><div class="ch-name" data-en="Fractions" data-gu="અપૂર્ણાંક">Fractions</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-8" onclick="openChapter(8)"><span class="ch-icon">📐</span><div class="ch-num">8</div><div class="ch-name" data-en="Playing with Constructions" data-gu="રચનાઓ સાથે રમત">Playing with Constructions</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-9" onclick="openChapter(9)"><span class="ch-icon">◆</span><div class="ch-num">9</div><div class="ch-name" data-en="Symmetry" data-gu="સંમિતિ">Symmetry</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-10" onclick="openChapter(10)"><span class="ch-icon">⬇️</span><div class="ch-num">10</div><div class="ch-name" data-en="The Other Side of Zero" data-gu="શૂન્યની બીજી બાજુ">The Other Side of Zero</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-</div>
-<div class="vidhya-footer">🪔 Vidhya • <span data-en="Your Learning Mitra" data-gu="તમારી શીખવાની સાથી">Your Learning Mitra</span></div>
+  <div id="mathsPanel">
+    <div class="chapters-grid">
+      <div class="chapter-card ch-1" onclick="openChapter(1)">
+        <span class="ch-icon">&#x1F522;</span>
+        <div class="ch-num">1</div>
+        <div class="ch-name">Patterns in Mathematics</div>
+        <span class="ch-badge">&#x2705; Available</span>
+      </div>
+      <div class="chapter-card ch-2" onclick="openChapter(2)">
+        <span class="ch-icon">&#x1F4CF;</span>
+        <div class="ch-num">2</div>
+        <div class="ch-name">Lines and Angles</div>
+        <span class="ch-badge">&#x2705; Available</span>
+      </div>
+      <div class="chapter-card ch-3" onclick="openChapter(3)">
+        <span class="ch-icon">&#x1F3B2;</span>
+        <div class="ch-num">3</div>
+        <div class="ch-name">Number Play</div>
+        <span class="ch-badge">&#x2705; Available</span>
+      </div>
+      <div class="chapter-card ch-4 locked"><span class="ch-icon">&#x1F4CA;</span><div class="ch-num">4</div><div class="ch-name">Data Handling</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-5 locked"><span class="ch-icon">&#x1F31F;</span><div class="ch-num">5</div><div class="ch-name">Prime Time</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-6 locked"><span class="ch-icon">&#x25A1;</span><div class="ch-num">6</div><div class="ch-name">Perimeter and Area</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-7 locked"><span class="ch-icon">&#xBD;</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-8 locked"><span class="ch-icon">&#x1F4D0;</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-9 locked"><span class="ch-icon">&#x25C6;</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-10 locked"><span class="ch-icon">&#x2B07;</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">&#x1F512; Soon</span></div>
+    </div>
+    <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
+  </div>
 </div>
 
 <div class="screen" id="chapterScreen">
-<div class="ch-header" id="chHeader">
-<div class="ch-number-label" id="chLabel">Chapter 1</div>
-<h2 id="chTitle">Patterns in Mathematics</h2>
-</div>
-<div class="sections-list" id="sectionsList"></div>
+  <div id="chHdr" class="ch-header" style="background:linear-gradient(135deg,#1e3a8a,#2563eb)">
+    <div class="ch-number-label" id="chNumLabel">Chapter 1</div>
+    <h2 id="chTitleEl">Patterns in Mathematics</h2>
+  </div>
+  <div class="sections-list" id="sectionsList"></div>
+  <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
 </div>
 
 <div class="screen" id="contentScreen">
-<div class="content-body" id="contentBody"></div>
+  <div class="content-body" id="contentBody"></div>
+  <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
 </div>
 
 <script>
-let lang='en',curChapter=1,curSection=null,navStack=[],chData={},voices=[],puterReady=false;
+// ── NAV ──
+var navHistory = ['home'];
+var curCh = null;
 
-const CONTENT={
-1:{
-en:{name:"Patterns in Mathematics",icon:"🔢",color:"#2563eb",bg:"linear-gradient(135deg,#2563eb,#1d4ed8)",sections:[
-{num:"1.1",title:"What is Mathematics?",type:"Concept",content:[`Mathematics is, in large part, the search for patterns, and for the explanations as to why those patterns exist.`,`Such patterns indeed exist all around us in nature, in our homes and schools, and in the motion of the sun, moon, and stars.`,`By finding the rule of a sequence, we can easily predict any number that comes next.`],ai:"Explain number sequences with a simple daily life example."},
-{num:"1.2",title:"Triangular Numbers",type:"Activity",content:[`Some numbers can form the shape of a triangle using dots. These are called Triangular Numbers.`,`The first triangular number is 1. The second is 3. The third is 6.`,`The sequence goes: 1, 3, 6, 10, 15... We add 2, then 3, then 4, then 5!`],ai:"How do we find the 6th triangular number?",practice:[{q:"What is the 4th triangular number?",choices:["6","10","15"],ans:1},{q:"1 + 3 (first two triangular numbers) gives what square number?",choices:["4","5","6"],ans:0}]},
-{num:"1.3",title:"Square Numbers",type:"Practice",content:[`Square numbers are formed when we multiply a number by itself. They can be arranged in a perfect square grid.`,`1 × 1 = 1.  2 × 2 = 4.  3 × 3 = 9.  4 × 4 = 16.`,`So, the sequence of square numbers is 1, 4, 9, 16, 25...`],ai:"What is a square number? Explain simply.",practice:[{q:"What is the square of 5?",choices:["15","20","25"],ans:2}]}
-]},
-gu:{name:"ગણિતમાં ભાત",icon:"🔢",color:"#2563eb",bg:"linear-gradient(135deg,#2563eb,#1d4ed8)",sections:[
-{num:"1.1",title:"ગણિત એટલે શું?",type:"સંકલ્પના",content:[`ગણિત મોટે ભાગે ભાત (પેટર્ન) શોધવા અને તે શા માટે અસ્તિત્વમાં છે તેની સમજૂતી માટે છે.`,`આવી ભાત આપણી આસપાસ પ્રકૃતિમાં, ઘરોમાં અને શાળાઓમાં બધે જ જોવા મળે છે.`,`શ્રેણીનો નિયમ શોધીને, આપણે સરળતાથી કહી શકીએ છીએ કે આગળ કઈ સંખ્યા આવશે.`],ai:"રોજિંદા જીવનના ઉદાહરણ સાથે સંખ્યા શ્રેણી સમજાવો."},
-{num:"1.2",title:"ત્રિકોણીય સંખ્યાઓ",type:"પ્રવૃત્તિ",content:[`કેટલીક સંખ્યાઓ ટપકાંનો ઉપયોગ કરીને ત્રિકોણનો આકાર બનાવી શકે છે. આને ત્રિકોણીય સંખ્યાઓ કહેવાય છે.`,`પહેલી ત્રિકોણીય સંખ્યા 1 છે. બીજી 3 છે. ત્રીજી 6 છે.`,`શ્રેણી આ પ્રમાણે છે: 1, 3, 6, 10, 15... આપણે 2, પછી 3, પછી 4 ઉમેરીએ છીએ!`],ai:"6ઠ્ઠી ત્રિકોણીય સંખ્યા કેવી રીતે શોધવી?",practice:[{q:"4થી ત્રિકોણીય સંખ્યા કઈ છે?",choices:["6","10","15"],ans:1},{q:"1 + 3 નો સરવાળો કઈ વર્ગ સંખ્યા આપે છે?",choices:["4","5","6"],ans:0}]},
-{num:"1.3",title:"વર્ગ સંખ્યાઓ",type:"મહાવરો",content:[`જ્યારે આપણે કોઈ સંખ્યાનો પોતાની જ સાથે ગુણાકાર કરીએ ત્યારે વર્ગ સંખ્યાઓ બને છે. તેમને ચોરસ ગ્રીડમાં ગોઠવી શકાય છે.`,`1 × 1 = 1.  2 × 2 = 4.  3 × 3 = 9.  4 × 4 = 16.`,`તેથી, વર્ગ સંખ્યાઓની શ્રેણી 1, 4, 9, 16, 25... છે.`],ai:"વર્ગ સંખ્યા એટલે શું? સરળતાથી સમજાવો.",practice:[{q:"5 નો વર્ગ શું છે?",choices:["15","20","25"],ans:2}]}
-]}
-},
-2:{
-en:{name:"Lines and Angles",icon:"📏",color:"#0d9488",bg:"linear-gradient(135deg,#0d9488,#0f766e)",sections:[
-{num:"2.1",title:"Point, Line, Ray, Segment",type:"Concept",content:[`A point is a dot. It shows a precise location but has no length, breadth or height.`,`A line goes on forever in both directions. We draw arrows to show this.`,`A ray is a portion of a line that starts at one point and goes endlessly in one direction.`,`A line segment has two end points. It is the shortest route from point A to B.`],ai:"Explain point, line, ray, segment with classroom objects."},
-{num:"2.2",title:"Angles and Rotation",type:"Concept",content:[`An angle is formed by two rays having a common starting point called the vertex.`,`The size of an angle is the amount of rotation or turn needed about the vertex to move the first ray to the second ray.`,`A right angle is exactly half of a straight angle ($90^{\\circ}$).`,`An acute angle is less than a right angle. An obtuse angle is greater than a right angle but less than a straight angle.`],ai:"Give 3 real-life examples for an acute angle.",practice:[{q:"An angle less than $90^{\\circ}$ is called?",choices:["Acute","Right","Obtuse"],ans:0}]},
-{num:"2.3",title:"Measuring Angles",type:"Activity",content:[`To measure an angle, we use a protractor which is a semicircle divided into 180 equal parts.`,`Place the center of the protractor on the vertex. Align one ray with the $0^{\\circ}$ mark.`,`Read the number where the other ray touches. That is the measure of the angle in degrees.`],ai:"How to use a protractor - 3 simple steps."}
-]},
-gu:{name:"રેખા અને ખૂણા",icon:"📏",color:"#0d9488",bg:"linear-gradient(135deg,#0d9488,#0f766e)",sections:[
-{num:"2.1",title:"બિંદુ, રેખા, કિરણ, રેખાખંડ",type:"સંકલ્પના",content:[`બિંદુ એ એક ટપકું છે. તે ચોક્કસ સ્થાન બતાવે છે પરંતુ તેને લંબાઈ કે પહોળાઈ નથી.`,`રેખા બંને દિશામાં અનંત સુધી જાય છે. આપણે તે બતાવવા તીર દોરીએ છીએ.`,`કિરણ એ રેખાનો ભાગ છે જે એક બિંદુથી શરૂ થાય છે અને એક દિશામાં અનંત જાય છે.`,`રેખાખંડને બે અંત્યબિંદુઓ હોય છે. તે બિંદુ A થી B સુધીનો સૌથી ટૂંકો રસ્તો છે.`],ai:"બિંદુ, રેખા, કિરણ, રેખાખંડ વર્ગખંડની વસ્તુથી સમજાવો."},
-{num:"2.2",title:"ખૂણા અને પરિભ્રમણ",type:"સંકલ્પના",content:[`એક સામાન્ય ઉદ્ભવબિંદુ ધરાવતા બે કિરણોથી ખૂણો બને છે. તે બિંદુને શિરોબિંદુ કહે છે.`,`ખૂણાનું માપ એ પ્રથમ કિરણને બીજા કિરણ સુધી ખસેડવા માટે શિરોબિંદુની આસપાસ જરૂરી પરિભ્રમણ છે.`,`કાટખૂણો એ સરળકોણનો બરાબર અડધો ભાગ છે ($90^{\\circ}$).`,`લઘુકોણ કાટખૂણા કરતાં નાનો હોય છે. ગુરુકોણ કાટખૂણા કરતાં મોટો પણ સરળકોણ કરતાં નાનો હોય છે.`],ai:"લઘુકોણ માટે 3 રોજિંદા ઉદાહરણ આપો.",practice:[{q:"$90^{\\circ}$ થી નાના ખૂણાને શું કહેવાય?",choices:["લઘુકોણ","કાટખૂણો","ગુરુકોણ"],ans:0}]},
-{num:"2.3",title:"ખૂણા માપવા",type:"પ્રવૃત્તિ",content:[`ખૂણાને માપવા માટે, આપણે કોણમાપકનો ઉપયોગ કરીએ છીએ જે 180 સમાન ભાગોમાં વહેંચાયેલું અર્ધવર્તુળ છે.`,`કોણમાપકનું કેન્દ્ર શિરોબિંદુ પર મૂકો. એક કિરણને $0^{\\circ}$ ચિહ્ન સાથે ગોઠવો.`,`બીજું કિરણ જ્યાં સ્પર્શે તે નંબર વાંચો. તે ખૂણાનું અંશમાં માપ છે.`],ai:"કોણમાપક વાપરવાના 3 સરળ પગલાં."}
-]}
-},
-3:{
-en:{name:"Number Play",icon:"🎲",color:"#f97316",bg:"linear-gradient(135deg,#f97316,#ea580c)",sections:[
-{num:"3.1",title:"Place Value and Large Numbers",type:"Concept",content:[`Numbers can be used for many different purposes including, to convey information and estimate magnitudes.`,`A 5-digit number has places for Ten Thousands, Thousands, Hundreds, Tens, and Ones.`,`Estimation helps us to guess close to the actual answer quickly.`,`Computational thinking involves formulating set procedures to use numbers for playing games and solving puzzles.`],ai:"Explain place value using an example of 10,000.",practice:[{q:"What is the place value of 3 in 13,609?",choices:["300","3000","30,000"],ans:1}]}
-]},
-gu:{name:"સંખ્યા સાથે રમત",icon:"🎲",color:"#f97316",bg:"linear-gradient(135deg,#f97316,#ea580c)",sections:[
-{num:"3.1",title:"સ્થાન કિંમત અને મોટી સંખ્યાઓ",type:"સંકલ્પના",content:[`સંખ્યાઓનો ઉપયોગ માહિતી આપવા અને મૂલ્યનો અંદાજ કાઢવા સહિત ઘણા વિવિધ હેતુઓ માટે થઈ શકે છે.`,`5-અંકની સંખ્યામાં દસ હજાર, હજાર, શતક, દશક અને એકમ માટે સ્થાન હોય છે.`,`અંદાજ કાઢવાથી આપણને ઝડપથી વાસ્તવિક જવાબની નજીક પહોંચવામાં મદદ મળે છે.`,`સંખ્યાઓનો ઉપયોગ કરીને કોયડાઓ ઉકેલવા એ કમ્પ્યુટેશનલ થિંકિંગ છે.`],ai:"10,000 ના ઉદાહરણથી સ્થાન કિંમત સમજાવો.",practice:[{q:"13,609 માં 3 ની સ્થાન કિંમત શું છે?",choices:["300","3000","30,000"],ans:1}]}
-]}
-},
-4:{
-en:{name:"Data Handling",icon:"📊",color:"#7c3aed",bg:"linear-gradient(135deg,#7c3aed,#6d28d9)",sections:[
-{num:"4.1",title:"Organising Data",type:"Concept",content:[`Any collection of facts, numbers, measures, observations or other descriptions of things that convey information is called data.`,`Data can be organised in a tabular form using tally marks for easy analysis and interpretation.`,`Frequencies are the counts of the occurrences of values, measures or observations.`],ai:"What are tally marks? Explain simply."},
-{num:"4.2",title:"Pictographs & Bar Graphs",type:"Activity",content:[`Pictographs represent data in the form of pictures, or objects or parts of objects. Each picture represents a frequency.`,`Bar graphs give a nice visual way to represent data through equally-spaced bars.`,`The lengths or heights of the bars depict the corresponding frequency. We must decide a suitable scale, for example 1 unit length = 100 vehicles.`],ai:"What is a bar graph? Explain with an example.",practice:[{q:"If 1 picture = 5 students, how many students do 3 pictures represent?",choices:["8","15","3"],ans:1}]}
-]},
-gu:{name:"માહિતીનું વ્યવસ્થાપન",icon:"📊",color:"#7c3aed",bg:"linear-gradient(135deg,#7c3aed,#6d28d9)",sections:[
-{num:"4.1",title:"માહિતીનું એકત્રીકરણ",type:"સંકલ્પના",content:[`હકીકતો, સંખ્યાઓ, માપ, અવલોકનો અથવા વસ્તુઓનું કોઈપણ સંગ્રહ જે માહિતી આપે છે તેને ડેટા કહેવામાં આવે છે.`,`સરળ વિશ્લેષણ માટે આવૃત્તિ ચિહ્નો (tally marks) નો ઉપયોગ કરીને માહિતીને કોષ્ટક સ્વરૂપમાં ગોઠવી શકાય છે.`,`આવૃત્તિ એ મૂલ્યો અથવા અવલોકનોની ગણતરી છે.`],ai:"આવૃત્તિ ચિહ્નો શું છે? સરળતાથી સમજાવો."},
-{num:"4.2",title:"ચિત્રાલેખ અને લંબ આલેખ",type:"પ્રવૃત્તિ",content:[`ચિત્રાલેખ ચિત્રો અથવા વસ્તુઓના રૂપમાં માહિતી રજૂ કરે છે. દરેક ચિત્ર એક આવૃત્તિ રજૂ કરે છે.`,`લંબ આલેખ સમાન-અંતરે આવેલા સ્તંભો દ્વારા માહિતીને રજૂ કરવાની સુંદર દ્રશ્ય રીત આપે છે.`,`સ્તંભની ઊંચાઈ તેની આવૃત્તિ દર્શાવે છે. આપણે યોગ્ય સ્કેલ નક્કી કરવો જોઈએ, દા.ત. 1 એકમ = 100 વાહનો.`],ai:"લંબ આલેખ એટલે શું? ઉદાહરણ સાથે સમજાવો.",practice:[{q:"જો 1 ચિત્ર = 5 વિદ્યાર્થીઓ, તો 3 ચિત્રો કેટલા વિદ્યાર્થીઓ દર્શાવે છે?",choices:["8","15","3"],ans:1}]}
-]}
-},
-5:{
-en:{name:"Prime Time",icon:"🌟",color:"#ef4444",bg:"linear-gradient(135deg,#ef4444,#dc2626)",sections:[
-{num:"5.1",title:"Factors & Primes",type:"Concept",content:[`If a number is divisible by another, the second number is called a factor of the first. Example: 4 is a factor of 12.`,`Prime numbers are numbers like 2, 3, 5, 7, 11 that have only two factors: 1 and themselves.`,`Composite numbers are numbers like 4, 6, 8, 9 that have more than 2 factors.`,`The number 1 is neither a prime nor a composite number.`],ai:"What is a prime number? Give examples.",practice:[{q:"Which of these is a prime number?",choices:["4","7","9"],ans:1}]},
-{num:"5.2",title:"Prime Factorisation",type:"Concept",content:[`Every number greater than 1 can be written as a product of prime numbers. This is called the number's prime factorisation.`,`For example, $84 = 2 \\times 2 \\times 3 \\times 7$.`,`Two numbers that do not have a common factor other than 1 are said to be co-prime.`],ai:"Explain prime factorisation of 12."}
-]},
-gu:{name:"અવિભાજ્ય સમય",icon:"🌟",color:"#ef4444",bg:"linear-gradient(135deg,#ef4444,#dc2626)",sections:[
-{num:"5.1",title:"અવયવો અને અવિભાજ્ય સંખ્યાઓ",type:"સંકલ્પના",content:[`જો કોઈ સંખ્યા બીજી સંખ્યા વડે વિભાજ્ય હોય, તો બીજી સંખ્યાને પહેલી સંખ્યાનો અવયવ કહે છે. ઉદાહરણ: 4 એ 12 નો અવયવ છે.`,`અવિભાજ્ય સંખ્યાઓ એવી સંખ્યાઓ છે જેમને માત્ર બે જ અવયવો છે: 1 અને સંખ્યા પોતે (દા.ત. 2, 3, 5, 7).`,`વિભાજ્ય સંખ્યાઓ (દા.ત. 4, 6, 8, 9) ને 2 કરતાં વધુ અવયવો હોય છે.`,`સંખ્યા 1 અવિભાજ્ય કે વિભાજ્ય નથી.`],ai:"અવિભાજ્ય સંખ્યા એટલે શું? ઉદાહરણ આપો.",practice:[{q:"આમાંથી કઈ અવિભાજ્ય સંખ્યા છે?",choices:["4","7","9"],ans:1}]},
-{num:"5.2",title:"અવિભાજ્ય અવયવીકરણ",type:"સંકલ્પના",content:[`1 કરતાં મોટી દરેક સંખ્યાને અવિભાજ્ય સંખ્યાઓના ગુણાકાર તરીકે લખી શકાય છે. આને અવિભાજ્ય અવયવીકરણ કહેવાય છે.`,`ઉદાહરણ તરીકે, $84 = 2 \\times 2 \\times 3 \\times 7$.`,`જે બે સંખ્યાઓનો 1 સિવાય કોઈ સામાન્ય અવયવ ન હોય તેને પરસ્પર અવિભાજ્ય (co-prime) કહેવાય છે.`],ai:"12 નું અવિભાજ્ય અવયવીકરણ સમજાવો."}
-]}
-},
-6:{
-en:{name:"Perimeter and Area",icon:"⬜",color:"#16a34a",bg:"linear-gradient(135deg,#16a34a,#15803d)",sections:[
-{num:"6.1",title:"Perimeter",type:"Concept",content:[`The perimeter of any closed plane figure is the distance covered along its boundary when you go around it once.`,`Perimeter of a rectangle = $2 \\times (length + breadth)$.`,`Perimeter of a square = $4 \\times length of a side$.`],ai:"Explain perimeter with a garden fence example.",practice:[{q:"If a square has side 5cm, what is its perimeter?",choices:["15cm","20cm","25cm"],ans:1}]},
-{num:"6.2",title:"Area of Shapes",type:"Concept",content:[`The amount of region enclosed by a closed figure is called its area.`,`Area of a rectangle = $length \\times width$. Area of a square = $side \\times side$.`,`The area of a triangle is exactly half of the area of the rectangle it forms.`],ai:"How do we find the area of a rectangle?",practice:[{q:"Area of a 4m by 3m rectangle is?",choices:["12 sq m","7 sq m","14 sq m"],ans:0}]}
-]},
-gu:{name:"પરિમિતિ અને ક્ષેત્રફળ",icon:"⬜",color:"#16a34a",bg:"linear-gradient(135deg,#16a34a,#15803d)",sections:[
-{num:"6.1",title:"પરિમિતિ",type:"સંકલ્પના",content:[`કોઈપણ બંધ આકૃતિની પરિમિતિ એટલે તેની સીમા પર એકવાર ફરવામાં આવતું અંતર.`,`લંબચોરસની પરિમિતિ = $2 \\times (લંબાઈ + પહોળાઈ)$.`,`ચોરસની પરિમિતિ = $4 \\times બાજુની લંબાઈ$.`],ai:"બગીચાની વાડના ઉદાહરણથી પરિમિતિ સમજાવો.",practice:[{q:"જો ચોરસની બાજુ 5cm હોય, તો પરિમિતિ કેટલી?",choices:["15cm","20cm","25cm"],ans:1}]},
-{num:"6.2",title:"આકારોનું ક્ષેત્રફળ",type:"સંકલ્પના",content:[`બંધ આકૃતિ દ્વારા ઘેરાયેલા પ્રદેશના જથ્થાને તેનું ક્ષેત્રફળ કહેવામાં આવે છે.`,`લંબચોરસનું ક્ષેત્રફળ = $લંબાઈ \\times પહોળાઈ$. ચોરસનું ક્ષેત્રફળ = $બાજુ \\times બાજુ$.`,`ત્રિકોણનું ક્ષેત્રફળ તે બનાવેલા લંબચોરસના ક્ષેત્રફળ કરતા બરાબર અડધું હોય છે.`],ai:"આપણે લંબચોરસનું ક્ષેત્રફળ કેવી રીતે શોધીએ છીએ?",practice:[{q:"4m લંબાઈ અને 3m પહોળાઈના લંબચોરસનું ક્ષેત્રફળ?",choices:["12 sq m","7 sq m","14 sq m"],ans:0}]}
-]}
-},
-7:{
-en:{name:"Fractions",icon:"½",color:"#db2777",bg:"linear-gradient(135deg,#db2777,#be185d)",sections:[
-{num:"7.1",title:"What is a Fraction?",type:"Concept",content:[`When a whole number of units is divided into equal parts and shared equally, a fraction results.`,`In a fraction such as $\\frac{5}{6}$, 5 is called the numerator and 6 is called the denominator.`,`Mixed fractions contain a whole number part and a fractional part, like $2 \\frac{2}{3}$.`],ai:"Explain numerator and denominator simply.",practice:[{q:"In $\\frac{3}{8}$, what is 8?",choices:["Numerator","Denominator","Whole number"],ans:1}]},
-{num:"7.2",title:"Equivalent Fractions & Arithmetic",type:"Concept",content:[`When two or more fractions represent the same share or number, they are called equivalent fractions. (e.g. $\\frac{1}{2} = \\frac{2}{4}$)` ,`To add or subtract fractions with different denominators, we convert them into equivalent fractions with a common denominator.`,`This method of addition was first described by ancient Indian mathematician Brahmagupta in 628 CE!`],ai:"How do we add $\\frac{1}{4}$ and $\\frac{1}{2}$?",practice:[{q:"What is $\\frac{1}{3} + \\frac{1}{3}$?",choices:["1","$\\frac{2}{3}$","$\\frac{2}{6}$"],ans:1}]}
-]},
-gu:{name:"અપૂર્ણાંક",icon:"½",color:"#db2777",bg:"linear-gradient(135deg,#db2777,#be185d)",sections:[
-{num:"7.1",title:"અપૂર્ણાંક એટલે શું?",type:"સંકલ્પના",content:[`જ્યારે આખા એકમને સમાન ભાગોમાં વહેંચવામાં આવે છે, ત્યારે અપૂર્ણાંક બને છે.`,`$\\frac{5}{6}$ જેવા અપૂર્ણાંકમાં, 5 ને અંશ અને 6 ને છેદ કહેવામાં આવે છે.`,`મિશ્ર અપૂર્ણાંકમાં પૂર્ણાંક અને અપૂર્ણાંક બંને ભાગ હોય છે, જેમ કે $2 \\frac{2}{3}$.`],ai:"અંશ અને છેદ સરળતાથી સમજાવો.",practice:[{q:"$\\frac{3}{8}$ માં, 8 શું છે?",choices:["અંશ","છેદ","પૂર્ણાંક"],ans:1}]},
-{num:"7.2",title:"સમઅપૂર્ણાંક અને ગણતરી",type:"સંકલ્પના",content:[`જ્યારે બે કે તેથી વધુ અપૂર્ણાંકો સમાન ભાગ દર્શાવે છે, ત્યારે તેને સમઅપૂર્ણાંક કહેવાય છે. (દા.ત. $\\frac{1}{2} = \\frac{2}{4}$)`,`અલગ છેદવાળા અપૂર્ણાંકોના સરવાળા કે બાદબાકી કરવા માટે, આપણે સામાન્ય છેદ સાથે તેમને સમઅપૂર્ણાંકમાં ફેરવીએ છીએ.`,`સરવાળાની આ પદ્ધતિ સૌપ્રથમ 628 CE માં પ્રાચીન ભારતીય ગણિતશાસ્ત્રી બ્રહ્મગુપ્ત દ્વારા વર્ણવવામાં આવી હતી!`],ai:"આપણે $\\frac{1}{4}$ અને $\\frac{1}{2}$ નો સરવાળો કેવી રીતે કરીએ?",practice:[{q:"$\\frac{1}{3} + \\frac{1}{3}$ કેટલા થાય?",choices:["1","$\\frac{2}{3}$","$\\frac{2}{6}$"],ans:1}]}
-]}
-},
-8:{
-en:{name:"Playing with Constructions",icon:"📐",color:"#0284c7",bg:"linear-gradient(135deg,#0284c7,#0369a1)",sections:[
-{num:"8.1",title:"Using a Compass",type:"Activity",content:[`A compass is a tool used to draw circles and arcs.`,`The point where the tip of the compass is placed is the centre of the circle.`,`The distance between the centre and any point on the circle is called the radius of the circle.`],ai:"How to draw a circle using a compass?"},
-{num:"8.2",title:"Squares and Rectangles",type:"Concept",content:[`In a rectangle, the opposite sides are equal in length, and all the angles are exactly $90^{\\circ}$.`,`In a square, all four sides are equal in length and all angles are exactly $90^{\\circ}$.`,`We can construct accurate rectangles and squares using a compass and a ruler without trial and error.`],ai:"What is the main difference between a square and a rectangle?",practice:[{q:"Are all angles in a rectangle $90^{\\circ}$?",choices:["Yes","No","Sometimes"],ans:0}]}
-]},
-gu:{name:"રચનાઓ સાથે રમત",icon:"📐",color:"#0284c7",bg:"linear-gradient(135deg,#0284c7,#0369a1)",sections:[
-{num:"8.1",title:"પરિકરનો ઉપયોગ",type:"પ્રવૃત્તિ",content:[`પરિકર એ વર્તુળો અને ચાપ દોરવા માટે વપરાતું સાધન છે.`,`જ્યાં પરિકરની અણી મૂકવામાં આવે છે તે બિંદુ વર્તુળનું કેન્દ્ર છે.`,`કેન્દ્ર અને વર્તુળ પરના કોઈપણ બિંદુ વચ્ચેના અંતરને વર્તુળની ત્રિજ્યા કહેવામાં આવે છે.`],ai:"પરિકરથી વર્તુળ કેવી રીતે દોરવું?"},
-{num:"8.2",title:"ચોરસ અને લંબચોરસ",type:"સંકલ્પના",content:[`લંબચોરસમાં સામસામેની બાજુઓ સમાન લંબાઈની હોય છે, અને બધા ખૂણા બરાબર $90^{\\circ}$ ના હોય છે.`,`ચોરસમાં, ચારેય બાજુઓની લંબાઈ સમાન હોય છે અને બધા ખૂણા બરાબર $90^{\\circ}$ ના હોય છે.`,`આપણે અંદાજ વગર પરિકર અને માપપટ્ટીનો ઉપયોગ કરીને ચોક્કસ લંબચોરસ અને ચોરસ દોરી શકીએ છીએ.`],ai:"ચોરસ અને લંબચોરસ વચ્ચેનો મુખ્ય તફાવત શું છે?",practice:[{q:"શું લંબચોરસના બધા ખૂણા $90^{\\circ}$ ના હોય છે?",choices:["હા","ના","ક્યારેક"],ans:0}]}
-]}
-},
-9:{
-en:{name:"Symmetry",icon:"◆",color:"#9333ea",bg:"linear-gradient(135deg,#9333ea,#7e22ce)",sections:[
-{num:"9.1",title:"Line of Symmetry",type:"Concept",content:[`A symmetry refers to a part or parts of a figure that are repeated in some definite pattern.`,`A line that cuts a figure into two parts that exactly overlap when folded along that line is called a line of symmetry.`,`A square has multiple lines of symmetry, including vertical, horizontal, and both diagonals!`],ai:"What is a line of symmetry? Explain with a paper folding example.",practice:[{q:"How many lines of symmetry does a square have?",choices:["1","2","4"],ans:2}]},
-{num:"9.2",title:"Reflection",type:"Activity",content:[`When we fold a figure along a line of symmetry, the part of the figure on one side is reflected to the other side.`,`We can generate symmetrical figures using ink blots or by folding and cutting paper!`],ai:"How to make an ink blot symmetry pattern?"}
-]},
-gu:{name:"સંમિતિ",icon:"◆",color:"#9333ea",bg:"linear-gradient(135deg,#9333ea,#7e22ce)",sections:[
-{num:"9.1",title:"સંમિતિ રેખા",type:"સંકલ્પના",content:[`સંમિતિ એટલે આકૃતિનો એવો ભાગ જે કોઈ ચોક્કસ પેટર્નમાં પુનરાવર્તિત થાય છે.`,`જે રેખા આકૃતિને બે સમાન ભાગમાં કાપે છે, જે વાળવાથી એકબીજા પર બરાબર બંધબેસે છે, તેને સંમિતિની રેખા કહે છે.`,`ચોરસમાં ઊભી, આડી અને બંને વિકર્ણ સહિત અનેક સંમિતિ રેખાઓ હોય છે!`],ai:"સંમિતિ રેખા એટલે શું? કાગળ વાળવાના ઉદાહરણથી સમજાવો.",practice:[{q:"ચોરસને કેટલી સંમિતિ રેખાઓ હોય છે?",choices:["1","2","4"],ans:2}]},
-{num:"9.2",title:"પરાવર્તન",type:"પ્રવૃત્તિ",content:[`જ્યારે આપણે કોઈ આકૃતિને સંમિતિ રેખા પર વાળીએ છીએ, ત્યારે એક બાજુનો ભાગ બીજી બાજુ પર પરાવર્તિત (reflect) થાય છે.`,`આપણે શાહીના ડાઘ (ink blot) અથવા કાગળ કાપીને સુંદર સંમિતિવાળી આકૃતિઓ બનાવી શકીએ છીએ!`],ai:"શાહીના ડાઘથી સંમિતિ પેટર્ન કેવી રીતે બનાવવી?"}
-]}
-},
-10:{
-en:{name:"The Other Side of Zero",icon:"⬇️",color:"#0891b2",bg:"linear-gradient(135deg,#0891b2,#0e7490)",sections:[
-{num:"10.1",title:"Negative Numbers",type:"Concept",content:[`A number with a '+' sign in front is called a positive number. A number with a '-' sign in front is called a negative number.`,`Zero is neither a positive nor a negative number. We do not put a sign in front of it.`,`If we number floors in a building, the ground floor is 0, floors above are +1, +2 and floors in the basement are -1, -2.`],ai:"Explain negative numbers using a building lift example.",practice:[{q:"Is zero a positive number?",choices:["Yes","No","Both"],ans:1}]},
-{num:"10.2",title:"Addition and Subtraction",type:"Concept",content:[`We can track movement using logic: Starting Floor + Movement needed = Target Floor.`,`For example, if you are at floor -2 and go up by 4 floors (+4), you will reach floor +2. `],ai:"If I am at floor -3 and go up 5 floors, where am I?"}
-]},
-gu:{name:"શૂન્યની બીજી બાજુ",icon:"⬇️",color:"#0891b2",bg:"linear-gradient(135deg,#0891b2,#0e7490)",sections:[
-{num:"10.1",title:"ઋણ સંખ્યાઓ",type:"સંકલ્પના",content:[`જે સંખ્યાની આગળ '+' ચિહ્ન હોય તેને ધન સંખ્યા કહેવાય છે. જે સંખ્યાની આગળ '-' ચિહ્ન હોય તેને ઋણ સંખ્યા કહેવાય છે.`,`શૂન્ય એ ધન કે ઋણ સંખ્યા નથી. આપણે તેની આગળ કોઈ ચિહ્ન મૂકતા નથી.`,`લિફ્ટમાં ભોંયતળિયું 0 છે, ઉપરના માળ +1, +2 છે અને ભોંયરાના માળ -1, -2 છે.`],ai:"લિફ્ટના ઉદાહરણથી ઋણ સંખ્યાઓ સમજાવો.",practice:[{q:"શું શૂન્ય ધન સંખ્યા છે?",choices:["હા","ના","બંને"],ans:1}]},
-{num:"10.2",title:"સરવાળા અને બાદબાકી",type:"સંકલ્પના",content:[`આપણે હલનચલનને આ તર્કથી સમજી શકીએ: શરૂઆતનો માળ + હલનચલન = ટાર્ગેટ માળ.`,`ઉદાહરણ તરીકે, જો તમે -2 માળ પર છો અને 4 માળ ઉપર જાવ છો (+4), તો તમે +2 માળ પર પહોંચશો.`],ai:"જો હું -3 માળ પર હોઉં અને 5 માળ ઉપર જાઉં, તો હું ક્યાં પહોંચીશ?"}
-]}
+var CHAPTERS = [{
+  id:1, title:"Patterns in Mathematics",
+  color:"#2563eb", bg:"linear-gradient(135deg,#1e3a8a,#2563eb)",
+  available:true,
+  sections:[
+    {id:"1.1", title:"What is Mathematics?",              type:"Concept + Indian Examples"},
+    {id:"1.2", title:"Patterns in Numbers",               type:"Concept + Visual + Practice"},
+    {id:"1.3", title:"Visualising Number Sequences",      type:"Visual + Activity"},
+    {id:"1.4", title:"Relations among Number Sequences",  type:"Pattern + Practice"},
+    {id:"1.5", title:"Patterns in Shapes",                type:"Visual + Activity"},
+    {id:"1.6", title:"Relation to Number Sequences",      type:"Concept + Practice"},
+  ]
+},{
+  id:2, title:"Lines and Angles",
+  color:"#0d9488", bg:"linear-gradient(135deg,#0f766e,#0d9488)",
+  available:true,
+  sections:[
+    {id:"2.1", title:"Point",                             type:"Concept + Visual + Practice"},
+    {id:"2.2", title:"Line Segment",                      type:"Concept + Visual + Practice"},
+    {id:"2.3", title:"Line",                              type:"Concept + Visual + Practice"},
+    {id:"2.4", title:"Ray",                               type:"Concept + Visual + Practice"},
+    {id:"2.5", title:"Angle",                             type:"Concept + Visual + Practice"},
+    {id:"2.6", title:"Comparing Angles",                  type:"Concept + Visual + Practice"},
+    {id:"2.7", title:"Making Angles",                     type:"Concept + Visual + Practice"},
+    {id:"2.8", title:"Special Types of Angles",           type:"Concept + Visual + Practice"},
+    {id:"2.9", title:"Measuring Angles",                  type:"Concept + Visual + Practice"},
+    {id:"2.10", title:"Using a Protractor",               type:"Concept + Steps + Practice"},
+    {id:"2.11", title:"Types of Angles and their Measures",type:"Concept + Visual + Practice"},
+  ]
+},{
+  id:3, title:"Number Play",
+  color:"#f97316", bg:"linear-gradient(135deg,#c2410c,#f97316)",
+  available:true,
+  sections:[
+    {id:"3.1",  title:"Numbers can Tell us Things",      type:"Concept + Puzzle + Practice"},
+    {id:"3.2",  title:"Supercells",                      type:"Concept + Table + Practice"},
+    {id:"3.3",  title:"Patterns on the Number Line",     type:"Concept + Visual + Practice"},
+    {id:"3.4",  title:"Playing with Digits",             type:"Concept + Activity + Practice"},
+    {id:"3.5",  title:"Pretty Palindromic Patterns",     type:"Concept + Pattern + Practice"},
+    {id:"3.6",  title:"The Magic Number of Kaprekar",    type:"Indian Maths + Activity + Practice"},
+    {id:"3.7",  title:"Clock and Calendar Numbers",      type:"Concept + Activity + Practice"},
+    {id:"3.8",  title:"Mental Math",                     type:"Concept + Activity + Practice"},
+    {id:"3.9",  title:"Playing with Number Patterns",    type:"Concept + Collatz + Practice"},
+    {id:"3.10", title:"Playing with Number Patterns 2",  type:"Concept + Pattern + Practice"},
+    {id:"3.11", title:"Simple Estimation",               type:"Concept + Indian Examples + Practice"},
+  ]
+}];
+
+function goBack() {
+  navHistory.pop();
+  var prev = navHistory[navHistory.length-1];
+  if (prev==='home') showHome();
+  else if (prev==='chapter') showChScreen();
 }
-};
+function showHome() {
+  navHistory=['home']; switchTo('homeScreen');
+  document.getElementById('topbarTitle').textContent='Vidhya';
+  document.getElementById('topbarSub').textContent='Your Learning Mitra';
+  document.getElementById('backBtn').classList.remove('vis');
+}
+function showSubject(s, btn) {
+  document.querySelectorAll('.subj-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+}
+function openChapter(id) {
+  var ch = CHAPTERS.find(function(c){return c.id===id;});
+  if (!ch||!ch.available) return;
+  curCh=ch; navHistory.push('chapter');
+  document.getElementById('chNumLabel').textContent='Chapter '+ch.id;
+  document.getElementById('chTitleEl').textContent=ch.title;
+  document.getElementById('chHdr').style.background=ch.bg;
+  document.getElementById('topbarTitle').textContent='Chapter '+ch.id;
+  document.getElementById('topbarSub').textContent=ch.title;
+  document.getElementById('backBtn').classList.add('vis');
+  var list=document.getElementById('sectionsList');
+  list.innerHTML='';
+  ch.sections.forEach(function(sec){
+    var d=document.createElement('div');
+    d.className='section-item';
+    d.style.color=ch.color;
+    d.innerHTML='<div class="sec-num" style="background:'+ch.color+'">'+sec.id+'</div>'
+      +'<div style="flex:1"><div class="sec-title">'+sec.title+'</div>'
+      +'<div class="sec-type">'+sec.type+'</div></div>'
+      +'<span style="color:#94a3b8;font-size:16px">&#x276F;</span>';
+    d.onclick=function(){openSection(sec.id);};
+    list.appendChild(d);
+  });
+  showChScreen();
+}
+function showChScreen(){
+  switchTo('chapterScreen');
+  document.getElementById('topbarTitle').textContent='Chapter '+curCh.id;
+}
 
-function toggleLang(){lang=lang==='en'?'gu':'en';document.getElementById('langBtn').textContent=lang==='en'?'ગુ':'EN';updateTexts()}
-function updateTexts(){document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.getAttribute(`data-${lang}`)})}
-function goBack(){if(navStack.length>0){const prev=navStack.pop();if(prev.screen==='home')showScreen('home');else if(prev.screen==='chapter')openChapter(prev.chapter,false);else if(prev.screen==='content')showContent(prev.chapter,prev.section,false)}}
-function showScreen(screen){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(screen+'Screen').classList.add('active');document.getElementById('backBtn').classList.toggle('vis',screen!=='home');if(screen==='home'){document.getElementById('topbarTitle').textContent='Vidhya';document.getElementById('topbarSub').textContent=document.getElementById('topbarSub').getAttribute(`data-${lang}`)}}
-function openChapter(ch,addToStack=true){if(addToStack)navStack.push({screen:'home'});curChapter=ch;const data=CONTENT[ch][lang];document.getElementById('chHeader').style.background=data.bg;document.getElementById('chLabel').textContent=(lang==='en'?'Chapter ':'પ્રકરણ ')+ch;document.getElementById('chTitle').textContent=data.name;const sectionsList=document.getElementById('sectionsList');sectionsList.innerHTML='';data.sections.forEach(sec=>{const item=document.createElement('div');item.className='section-item';item.onclick=()=>showContent(ch,sec);item.innerHTML=`<div class="sec-num" style="background:${data.color}">${sec.num}</div><div style="flex:1"><div class="sec-title">${sec.title}</div><div class="sec-type">${sec.type}</div></div><div>→</div>`;sectionsList.appendChild(item)});showScreen('chapter');document.getElementById('topbarTitle').textContent=data.name;document.getElementById('topbarSub').textContent=(lang==='en'?'Chapter ':'પ્રકરણ ')+ch}
-function showContent(ch,sec,addToStack=true){if(addToStack)navStack.push({screen:'chapter',chapter:ch});curSection=sec;const data=CONTENT[ch][lang];const body=document.getElementById('contentBody');let html=`<div class="sec-heading" style="color:${data.color}"><span>${data.icon}</span><span>${sec.num} ${sec.title}</span></div>`;sec.content.forEach(p=>{const id='p'+Math.random().toString(36).substr(2,9);html+=`<p id="${id}">${p}<button class="speak-btn" onclick="speakText('${id}')">🔊</button></p>`});if(sec.num==="1.1"||sec.num.includes(".1")){html+=`<div class="concept-box"><div class="cb-title">💡 ${lang==='en'?'Key Idea':'મુખ્ય વિચાર'}</div><p>${sec.content[0]}</p></div>`}if(sec.practice){html+=`<div class="practice-section"><div class="ps-hdr">✏️ ${lang==='en'?'Practice Time':'મહાવરાનો સમય'}</div>`;sec.practice.forEach((q,i)=>{const qid='q'+ch+sec.num+i;html+=`<div class="practice-q"><div class="pq-text">${i+1}. ${q.q}</div><div class="answer-choices">`;q.choices.forEach((c,ci)=>{html+=`<button class="choice-btn" onclick="checkAns('${qid}',${ci},${q.ans},this)">${c}</button>`});html+=`</div><div class="feedback" id="${qid}"></div></div>`});html+=`</div>`}if(sec.ai){html+=`<button class="quiz-gen-btn" onclick="genQuiz(${ch},'${sec.num}')">🎲 ${lang==='en'?'Generate Quiz':'ક્વિઝ બનાવો'}</button>`;html+=`<div class="ai-section"><h3>🤖 ${lang==='en'?'Ask Vidhya AI':'વિદ્યા AI ને પૂછો'}</h3><div class="ai-input-row"><input class="ai-input" id="aiInput" placeholder="${lang==='en'?'Ask any doubt...':'કોઈ પણ શંકા પૂછો...'}"><button class="ai-btn" id="aiBtn" onclick="askAI('${sec.ai}')">${lang==='en'?'Ask':'પૂછો'}</button></div><div class="ai-response" id="aiResp">${lang==='en'?'AI will answer here...':'AI અહીં જવાબ આપશે...'}</div></div>`}body.innerHTML=html;showScreen('content');document.getElementById('topbarTitle').textContent=sec.title;document.getElementById('topbarSub').textContent=data.name}
-function speakText(id){const text=document.getElementById(id).textContent.replace('🔊','').trim();if('speechSynthesis' in window){window.speechSynthesis.cancel();const utter=new SpeechSynthesisUtterance(text);utter.lang=lang==='gu'?'gu-IN':'en-IN';utter.rate=0.9;window.speechSynthesis.speak(utter)}}
-function checkAns(qid,chosen,correct,btn){const fb=document.getElementById(qid);const btns=btn.parentElement.querySelectorAll('.choice-btn');btns.forEach(b=>b.disabled=true);if(chosen===correct){btn.classList.add('correct');fb.textContent=lang==='en'?'✓ Correct! Well done!':'✓ સાચું! શાબાશ!';fb.className='feedback ok'}else{btn.classList.add('wrong');btns[correct].classList.add('correct');fb.textContent=lang==='en'?'✗ Not quite. Correct answer is highlighted.':'✗ બરાબર નથી. સાચો જવાબ બતાવ્યો છે.';fb.className='feedback no'}}
-async function askAI(context){if(!puterReady){document.getElementById('aiResp').textContent=lang==='en'?'AI is loading, please wait...':'AI લોડ થઈ રહ્યું છે, કૃપા કરીને રાહ જુઓ...';return}const q=document.getElementById('aiInput').value.trim();if(!q)return;const btn=document.getElementById('aiBtn');const resp=document.getElementById('aiResp');btn.disabled=true;resp.classList.add('loading');resp.textContent=lang==='en'?'Vidhya is thinking...':'વિદ્યા વિચારી રહી છે...';try{const prompt=`You are Vidhya, a friendly tutor for 6th standard GSEB student. Context: ${context}. Student asks in ${lang==='gu'?'Gujarati':'English'}: "${q}". Answer in simple ${lang==='gu'?'Gujarati':'English'}, max 4 lines, with example. Be encouraging.`;const result=await puter.ai.chat(prompt,{model:'gpt-4.1-nano'});resp.classList.remove('loading');resp.textContent=result.message?.content||result}catch(e){resp.classList.remove('loading');resp.textContent=lang==='en'?'Sorry, error occurred. Try again.':'માફ કરશો, ભૂલ થઈ. ફરી પ્રયત્ન કરો.'}btn.disabled=false;document.getElementById('aiInput').value=''}
-async function genQuiz(ch,secNum){if(!puterReady)return;const btn=event.target;btn.disabled=true;btn.textContent=lang==='en'?'Generating...':'બનાવી રહ્યું છે...';try{const data=CONTENT[ch][lang];const sec=data.sections.find(s=>s.num===secNum);const prompt=`Create 1 MCQ for 6th standard GSEB student on "${sec.title}". Language: ${lang==='gu'?'Gujarati':'English'}. Give JSON: {"q":"question","choices":["A","B","C"],"ans":0}. Topic: ${sec.content[0]}`;const result=await puter.ai.chat(prompt,{model:'gpt-4.1-nano'});
-let content=result.message?.content||result;const jsonMatch=content.match(/\{[\s\S]*\}/);if(jsonMatch)content=jsonMatch[0];
-let q;try{q=JSON.parse(content)}catch{q={q:lang==='en'?'What did you learn?':'તમે શું શીખ્યા?',choices:[lang==='en'?'Option A':'વિકલ્પ A',lang==='en'?'Option B':'વિકલ્પ B',lang==='en'?'Option C':'વિકલ્પ C'],ans:0}}const cont=document.querySelector('.practice-section')||document.createElement('div');if(!document.querySelector('.practice-section')){cont.className='practice-section';cont.innerHTML=`<div class="ps-hdr">✏️ ${lang==='en'?'AI Quiz':'AI ક્વિઝ'}</div>`;document.getElementById('contentBody').insertBefore(cont,document.querySelector('.ai-section'))}const qid='aiq'+Math.random().toString(36).substr(2,9);const qDiv=document.createElement('div');qDiv.className='practice-q';qDiv.innerHTML=`<div class="pq-text">🤖 ${q.q}</div><div class="answer-choices"></div><div class="feedback" id="${qid}"></div>`;const choicesDiv=qDiv.querySelector('.answer-choices');q.choices.forEach((c,ci)=>{const b=document.createElement('button');b.className='choice-btn';b.textContent=c;b.onclick=()=>checkAns(qid,ci,q.ans,b);choicesDiv.appendChild(b)});cont.appendChild(qDiv);btn.textContent=lang==='en'?'✓ Quiz Added':'✓ ક્વિઝ ઉમેરાઈ'}catch(e){btn.textContent=lang==='en'?'Error':'ભૂલ'}setTimeout(()=>{btn.disabled=false;btn.textContent=`🎲 ${lang==='en'?'Generate Quiz':'ક્વિઝ બનાવો'}`},2000)}
+// ── ADDED BY GEMINI: DYNAMIC FEATURE INJECTION IN openSection ──
+function openSection(secId){
+  navHistory.push('content');
+  document.getElementById('topbarTitle').textContent='Section '+secId;
+  document.getElementById('topbarSub').textContent=curCh.title;
+  
+  var rawHtml = buildContent(secId);
+  
+  // Only inject features if content is available
+  if(!rawHtml.includes('Coming soon!')) {
+      var tempDiv = document.createElement('div');
+      tempDiv.innerHTML = rawHtml;
+      
+      // 1. DYNAMIC TTS (Speak) Buttons added to all paragraphs
+      var paras = tempDiv.querySelectorAll('p');
+      paras.forEach(function(p, i) {
+          var pid = 'p_' + secId.replace('.','_') + '_' + i;
+          p.id = pid;
+          var btn = document.createElement('button');
+          btn.className = 'speak-btn';
+          btn.innerHTML = '🔊';
+          btn.onclick = function() { speakText(pid); };
+          p.appendChild(btn);
+      });
+      
+      // 2. DYNAMIC AI & QUIZ Section added at the end
+      var aiHtml = `
+        <div style="margin-top:30px; border-top:2px dashed #e2e8f0; padding-top:20px;">
+          <button class="quiz-gen-btn" onclick="genQuiz('${secId}', this)">🎲 Generate AI Quiz</button>
+          <div class="ai-section">
+            <h3>🤖 Ask Vidhya AI</h3>
+            <div class="ai-input-row">
+              <input type="text" id="aiInput" class="ai-input" placeholder="Ask any doubt about this topic...">
+              <button id="aiBtn" class="ai-btn" onclick="askAI('${secId}')">Ask</button>
+            </div>
+            <div id="aiResp" class="ai-response"></div>
+          </div>
+        </div>
+      `;
+      tempDiv.insertAdjacentHTML('beforeend', aiHtml);
+      rawHtml = tempDiv.innerHTML;
+  }
+  
+  document.getElementById('contentBody').innerHTML = rawHtml;
+  switchTo('contentScreen');
+}
+// ───────────────────────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(()=>{
-        document.getElementById('splash').classList.add('hide');
-    }, 2500);
+function switchTo(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function checkAnswer(btn,correct){
+  var parent=btn.closest('.practice-q');
+  var btns=parent.querySelectorAll('.choice-btn');
+  var fb=parent.querySelector('.feedback');
+  btns.forEach(function(b){b.onclick=null;b.style.cursor='default';});
+  if(correct){
+    btn.classList.add('correct');
+    fb.textContent='Correct! Well done!'; fb.className='feedback ok';
+  } else {
+    btn.classList.add('wrong');
+    fb.textContent='Not quite — try again next time!'; fb.className='feedback no';
+    parent.querySelectorAll('.choice-btn[data-correct="true"]').forEach(function(b){b.classList.add('correct');});
+  }
+}
+
+// ── ADDED BY GEMINI: AI & TTS FUNCTIONS ──
+var puterReady = false;
+
+function speakText(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  // Clone to avoid reading the "🔊" button text
+  var clone = el.cloneNode(true);
+  var btn = clone.querySelector('.speak-btn');
+  if(btn) clone.removeChild(btn);
+  var text = clone.textContent.trim();
+  
+  if('speechSynthesis' in window){
+      window.speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-IN';
+      utter.rate = 0.9;
+      window.speechSynthesis.speak(utter);
+  }
+}
+
+async function askAI(secId){
+  if(typeof puter === 'undefined' || !puterReady){
+      alert('AI is offline. Please connect to internet.');
+      return;
+  }
+  var inputEl = document.getElementById('aiInput');
+  var q = inputEl.value.trim();
+  if(!q) return;
+  
+  var btn = document.getElementById('aiBtn');
+  var resp = document.getElementById('aiResp');
+  
+  btn.disabled = true;
+  resp.style.display = 'block';
+  resp.classList.add('loading');
+  resp.textContent = 'Vidhya is thinking...';
+  
+  try {
+      var contextTitle = curCh.title + " Section " + secId;
+      var prompt = "You are Vidhya, a friendly tutor for 6th standard GSEB student. Context: " + contextTitle + ". Student asks: '" + q + "'. Answer in simple English, max 4 lines with example.";
+      var result = await puter.ai.chat(prompt, {model:'gpt-4.1-nano'});
+      resp.classList.remove('loading');
+      resp.textContent = result.message?.content || result;
+  } catch(e) {
+      resp.classList.remove('loading');
+      resp.textContent = 'Sorry, an error occurred. Please try again.';
+  }
+  btn.disabled = false;
+  inputEl.value = '';
+}
+
+async function genQuiz(secId, btn){
+  if(typeof puter === 'undefined' || !puterReady){
+      alert('AI Quiz needs internet connection.');
+      return;
+  }
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating Quiz...';
+  
+  try {
+      var contextTitle = curCh.title + " Section " + secId;
+      var prompt = "Create 1 MCQ for 6th standard student on topic '" + contextTitle + "'. Return ONLY valid JSON: {\"q\":\"question text\",\"choices\":[\"A\",\"B\",\"C\",\"D\"],\"ans\":0}";
+      var result = await puter.ai.chat(prompt, {model:'gpt-4.1-nano'});
+      
+      var content = result.message?.content || result;
+      var jsonMatch = content.match(/\{[\s\S]*\}/);
+      if(jsonMatch) content = jsonMatch[0];
+      var q = JSON.parse(content);
+      
+      // Render the AI generated quiz safely using the existing checkAnswer logic
+      var choicesHtml = q.choices.map(function(c, i) {
+          var isCorr = (i === q.ans) ? 'data-correct="true"' : '';
+          return '<button class="choice-btn" ' + isCorr + ' onclick="checkAnswer(this, ' + (i === q.ans) + ')">' + c + '</button>';
+      }).join('');
+      
+      var qHtml = '<div class="practice-q" style="margin-top:15px;"><div class="pq-text">🤖 ' + q.q + '</div><div class="answer-choices">' + choicesHtml + '</div><div class="feedback"></div></div>';
+      
+      btn.insertAdjacentHTML('beforebegin', qHtml);
+      btn.textContent = '✓ Added AI Question!';
+  } catch(e) {
+      btn.textContent = '❌ Error generating quiz';
+  }
+  
+  setTimeout(function(){
+      btn.disabled = false;
+      btn.textContent = '🎲 Generate Another Quiz';
+  }, 2000);
+}
+// ─────────────────────────────────────────
+
+// ── SPLASH & AI INIT ──
+window.addEventListener('load', async function(){
+  setTimeout(function(){
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(function(){ document.getElementById('splash').style.display='none'; }, 600);
+  }, 2600);
+
+  if(typeof puter !== 'undefined') {
+      try {
+          await puter.ai.chat('test', {model:'gpt-4.1-nano'});
+          puterReady = true;
+      } catch(e) {
+          console.log('Puter AI error:', e);
+      }
+  }
 });
 
-window.addEventListener('load',async()=>{
-    try{
-        await puter.ai.chat('test',{model:'gpt-4.1-nano'});
-        puterReady=true
-    }catch(e){
-        console.log('AI init:',e)
-    }
-    if('speechSynthesis' in window){
-        voices=window.speechSynthesis.getVoices();
-        window.speechSynthesis.onvoiceschanged=()=>{
-            voices=window.speechSynthesis.getVoices()
-        }
-    }
-    updateTexts()
-});
-</script>
-</body>
-</html>
+// ── CONTENT FUNCTIONS PRESERVED EXACTLY AS PROVIDED ──
+function buildContent(id){
+  var map={
+    '1.1':sec11,'1.2':sec12,'1.3':sec13,'1.4':sec14,'1.5':sec15,'1.6':sec16,
+    '2.1':sec21,'2.2':sec22,'2.3':sec23,'2.4':sec24,'2.5':sec25,
+    '2.6':sec26,'2.7':sec27,'2.8':sec28,'2.9':sec29,
+    '2.10':sec210,'2.11':sec211,
+    '3.1':sec31,'3.2':sec32,'3.3':sec33,'3.4':sec34,'3.5':sec35,
+    '3.6':sec36,'3.7':sec37,'3.8':sec38,'3.9':sec39,'3.10':sec310,'3.11':sec311
+  };
+  return map[id]?map[id]():'<p style="padding:40px;text-align:center;color:#94a3b8">Coming soon!</p>';
+}
+
+function sec11(){return `
+<div class="sec-heading" style="color:#2563eb">&#x1F4A1; 1.1 What is Mathematics?</div>
+<p>Mathematics is all about finding <strong>patterns</strong> — and understanding <em>why</em> those patterns exist.</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Look at a <strong>Rangoli</strong> on the floor — shapes repeat, colours follow a rule. Or think of a <strong>cricket match</strong>: 6 balls = 1 over, always! Maths helps us understand all these patterns!</p>
+</div>
+<p>Patterns are everywhere — in nature, in our homes, in the sky. Look around you!</p>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 155" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="8" width="96" height="62" rx="10" fill="#dbeafe"/>
+  <text x="56" y="32" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#1d4ed8">&#x1F305;</text>
+  <text x="56" y="52" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#1e40af">Sun rises daily</text>
+  <text x="56" y="64" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#3b82f6">same pattern!</text>
+  <rect x="120" y="8" width="96" height="62" rx="10" fill="#dcfce7"/>
+  <text x="168" y="32" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#16a34a">&#x1F3CF;</text>
+  <text x="168" y="52" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#15803d">Cricket: 6 balls</text>
+  <text x="168" y="64" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#16a34a">= 1 over, always</text>
+  <rect x="232" y="8" width="100" height="62" rx="10" fill="#fce7f3"/>
+  <text x="282" y="32" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#db2777">&#x1F33C;</text>
+  <text x="282" y="52" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#be185d">Flower petals</text>
+  <text x="282" y="64" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#db2777">follow a rule!</text>
+  <rect x="8" y="82" width="96" height="62" rx="10" fill="#fffbeb"/>
+  <text x="56" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#d97706">&#x1F372;</text>
+  <text x="56" y="126" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#92400e">Recipe steps</text>
+  <text x="56" y="138" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#b45309">same order, always</text>
+  <rect x="120" y="82" width="96" height="62" rx="10" fill="#ede9fe"/>
+  <text x="168" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#7c3aed">&#x1F6A6;</text>
+  <text x="168" y="126" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#5b21b6">Traffic lights</text>
+  <text x="168" y="138" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#6d28d9">Red, Yellow, Green</text>
+  <rect x="232" y="82" width="100" height="62" rx="10" fill="#fff0f5"/>
+  <text x="282" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#e11d48">&#x1F4C5;</text>
+  <text x="282" y="126" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#9f1239">Calendar</text>
+  <text x="282" y="138" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#be123c">7 days, repeating</text>
+</svg>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Remember this!</div>
+  <p>Maths does not just find patterns — it also explains <em>why</em> the pattern works. That is what makes maths so powerful!</p>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Can you think of 2 more patterns from your daily life? (Think: seasons, festivals, bus timings, school timetable...)</li>
+    <li>How has maths helped make things like mobile phones, trains, and bridges? Discuss with a friend.</li>
+  </ol>
+</div>
+<div class="math-talk">&#x1F4AC; <strong>Think &amp; Talk:</strong>&nbsp;Ask your friend — do they see any pattern in their school timetable?</div>`;}
+
+function sec12(){return `
+<div class="sec-heading" style="color:#2563eb">&#x1F522; 1.2 Patterns in Numbers</div>
+<p>The most basic patterns in maths are <strong>patterns made with numbers</strong>. Let us look at whole numbers:</p>
+<div style="text-align:center;font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#1e293b;margin:10px 0;letter-spacing:3px;">0, 1, 2, 3, 4, ...</div>
+<div class="concept-box">
+  <div class="cb-title">New Word: Number Theory &amp; Number Sequence</div>
+  <p>The part of maths that studies patterns in whole numbers is called <strong>number theory</strong>. A list of numbers that follow a rule is called a <strong>number sequence</strong>.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p><strong>Diwali diyas:</strong> 1 diya, 2 diyas, 3 diyas, 4 diyas... each day you add one more — that is the counting numbers sequence! <strong>Cricket overs:</strong> 6, 12, 18, 24 balls — always adding 6. That is multiples of 6!</p>
+</div>
+<div class="num-table">
+  <div class="nt-title">Table 1: Important Number Sequences</div>
+  <div class="seq-row"><span class="seq-nums">1, 1, 1, 1, 1, ...</span><span class="seq-name">All 1s</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 2, 3, 4, 5, 6, ...</span><span class="seq-name">Counting numbers</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 3, 5, 7, 9, 11, ...</span><span class="seq-name">Odd numbers</span></div>
+  <div class="seq-row"><span class="seq-nums">2, 4, 6, 8, 10, 12, ...</span><span class="seq-name">Even numbers</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 3, 6, 10, 15, 21, ...</span><span class="seq-name">Triangular numbers</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 4, 9, 16, 25, 36, ...</span><span class="seq-name">Square numbers</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 8, 27, 64, 125, ...</span><span class="seq-name">Cube numbers</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 2, 3, 5, 8, 13, 21, ...</span><span class="seq-name">Virahanka numbers</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 2, 4, 8, 16, 32, ...</span><span class="seq-name">Powers of 2</span></div>
+  <div class="seq-row"><span class="seq-nums">1, 3, 9, 27, 81, 243, ...</span><span class="seq-name">Powers of 3</span></div>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Can you see the rule in each sequence? Write the next 3 numbers for each in your notebook.</li>
+    <li>Write the rule in your own words for: Odd numbers, Square numbers, Virahanka numbers.</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. Next number in 2, 4, 6, 8, ... is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">9</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">11</button><button class="choice-btn" onclick="checkAnswer(this,false)">12</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. Which of these is a square number?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">15</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">25</button><button class="choice-btn" onclick="checkAnswer(this,false)">30</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. In cricket, 5 overs = how many balls? (1 over = 6 balls)</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">24</button><button class="choice-btn" onclick="checkAnswer(this,false)">28</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">30</button><button class="choice-btn" onclick="checkAnswer(this,false)">36</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. The sequence 1, 3, 6, 10, 15, ... is called:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Odd numbers</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Triangular numbers</button><button class="choice-btn" onclick="checkAnswer(this,false)">Square numbers</button><button class="choice-btn" onclick="checkAnswer(this,false)">Powers of 2</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec13(){return `
+<div class="sec-heading" style="color:#2563eb">&#x1F441; 1.3 Visualising Number Sequences</div>
+<p>We can <strong>draw pictures</strong> for number sequences. Pictures help us understand them much better!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>During <strong>Navratri</strong>, diyas are arranged in rows: 1, then 2, then 3 — making a triangle! Those are <strong>triangular numbers</strong>. In a <strong>rangoli</strong>, dots in a square grid are <strong>square numbers</strong>!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 225" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Counting Numbers: 1, 2, 3, 4, 5</text>
+  <circle cx="28" cy="40" r="7" fill="#2563eb"/>
+  <text x="28" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">1</text>
+  <circle cx="68" cy="35" r="7" fill="#2563eb"/><circle cx="83" cy="35" r="7" fill="#2563eb"/>
+  <text x="75" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">2</text>
+  <circle cx="120" cy="35" r="7" fill="#2563eb"/><circle cx="135" cy="35" r="7" fill="#2563eb"/><circle cx="150" cy="35" r="7" fill="#2563eb"/>
+  <text x="135" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">3</text>
+  <circle cx="183" cy="35" r="6" fill="#2563eb"/><circle cx="197" cy="35" r="6" fill="#2563eb"/><circle cx="211" cy="35" r="6" fill="#2563eb"/><circle cx="225" cy="35" r="6" fill="#2563eb"/>
+  <text x="204" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">4</text>
+  <circle cx="252" cy="35" r="5" fill="#2563eb"/><circle cx="264" cy="35" r="5" fill="#2563eb"/><circle cx="276" cy="35" r="5" fill="#2563eb"/><circle cx="288" cy="35" r="5" fill="#2563eb"/><circle cx="300" cy="35" r="5" fill="#2563eb"/>
+  <text x="276" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">5</text>
+  <line x1="8" y1="70" x2="332" y2="70" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="170" y="86" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Triangular Numbers (Navratri diya rows!): 1, 3, 6, 10</text>
+  <circle cx="28" cy="104" r="7" fill="#f97316"/>
+  <text x="28" y="124" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">1</text>
+  <circle cx="70" cy="97" r="7" fill="#f97316"/>
+  <circle cx="62" cy="111" r="7" fill="#f97316"/><circle cx="78" cy="111" r="7" fill="#f97316"/>
+  <text x="70" y="129" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">3</text>
+  <circle cx="128" cy="92" r="7" fill="#f97316"/>
+  <circle cx="120" cy="106" r="7" fill="#f97316"/><circle cx="136" cy="106" r="7" fill="#f97316"/>
+  <circle cx="112" cy="120" r="7" fill="#f97316"/><circle cx="128" cy="120" r="7" fill="#f97316"/><circle cx="144" cy="120" r="7" fill="#f97316"/>
+  <text x="128" y="138" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">6</text>
+  <circle cx="205" cy="86" r="6" fill="#f97316"/>
+  <circle cx="198" cy="98" r="6" fill="#f97316"/><circle cx="212" cy="98" r="6" fill="#f97316"/>
+  <circle cx="191" cy="110" r="6" fill="#f97316"/><circle cx="205" cy="110" r="6" fill="#f97316"/><circle cx="219" cy="110" r="6" fill="#f97316"/>
+  <circle cx="184" cy="122" r="6" fill="#f97316"/><circle cx="198" cy="122" r="6" fill="#f97316"/><circle cx="212" cy="122" r="6" fill="#f97316"/><circle cx="226" cy="122" r="6" fill="#f97316"/>
+  <text x="205" y="140" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">10</text>
+  <line x1="8" y1="150" x2="332" y2="150" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="170" y="166" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Square Numbers (Rangoli dot grid!): 1, 4, 9, 16</text>
+  <circle cx="28" cy="190" r="7" fill="#7c3aed"/><text x="28" y="210" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">1</text>
+  <circle cx="67" cy="183" r="6" fill="#7c3aed"/><circle cx="80" cy="183" r="6" fill="#7c3aed"/>
+  <circle cx="67" cy="196" r="6" fill="#7c3aed"/><circle cx="80" cy="196" r="6" fill="#7c3aed"/>
+  <text x="73" y="212" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">4</text>
+  <circle cx="118" cy="178" r="5" fill="#7c3aed"/><circle cx="130" cy="178" r="5" fill="#7c3aed"/><circle cx="142" cy="178" r="5" fill="#7c3aed"/>
+  <circle cx="118" cy="190" r="5" fill="#7c3aed"/><circle cx="130" cy="190" r="5" fill="#7c3aed"/><circle cx="142" cy="190" r="5" fill="#7c3aed"/>
+  <circle cx="118" cy="202" r="5" fill="#7c3aed"/><circle cx="130" cy="202" r="5" fill="#7c3aed"/><circle cx="142" cy="202" r="5" fill="#7c3aed"/>
+  <text x="130" y="216" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">9</text>
+  <circle cx="180" cy="176" r="4" fill="#7c3aed"/><circle cx="190" cy="176" r="4" fill="#7c3aed"/><circle cx="200" cy="176" r="4" fill="#7c3aed"/><circle cx="210" cy="176" r="4" fill="#7c3aed"/>
+  <circle cx="180" cy="186" r="4" fill="#7c3aed"/><circle cx="190" cy="186" r="4" fill="#7c3aed"/><circle cx="200" cy="186" r="4" fill="#7c3aed"/><circle cx="210" cy="186" r="4" fill="#7c3aed"/>
+  <circle cx="180" cy="196" r="4" fill="#7c3aed"/><circle cx="190" cy="196" r="4" fill="#7c3aed"/><circle cx="200" cy="196" r="4" fill="#7c3aed"/><circle cx="210" cy="196" r="4" fill="#7c3aed"/>
+  <circle cx="180" cy="206" r="4" fill="#7c3aed"/><circle cx="190" cy="206" r="4" fill="#7c3aed"/><circle cx="200" cy="206" r="4" fill="#7c3aed"/><circle cx="210" cy="206" r="4" fill="#7c3aed"/>
+  <text x="195" y="220" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">16</text>
+</svg>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Copy these dot patterns in your notebook. Draw the next picture for each sequence.</li>
+    <li>Why are 1, 3, 6, 10... called <strong>triangular numbers</strong>? Why are 1, 4, 9, 16... called <strong>square numbers</strong>?</li>
+    <li>Is 36 both a triangular AND a square number? Try drawing it both ways!</li>
+    <li>Numbers 1, 7, 19, 37... are called <strong>hexagonal numbers</strong>. Draw them! What is the next one?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. Navratri diyas: 1 row, 2 rows, 3 rows, 4 rows. Total diyas in 4 rows?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">8</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">12</button><button class="choice-btn" onclick="checkAnswer(this,false)">6</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. A square rangoli has 5 dots on each side. Total dots?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">20</button><button class="choice-btn" onclick="checkAnswer(this,false)">16</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">25</button><button class="choice-btn" onclick="checkAnswer(this,false)">30</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Next triangular number after 10 is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">12</button><button class="choice-btn" onclick="checkAnswer(this,false)">14</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">15</button><button class="choice-btn" onclick="checkAnswer(this,false)">16</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec14(){return `
+<div class="sec-heading" style="color:#2563eb">&#x1F517; 1.4 Relations among Number Sequences</div>
+<p>Sometimes, two different number sequences are <strong>secretly connected</strong>. Let us discover some beautiful connections!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>In <strong>Ludo</strong>, imagine scores: 1, 1+3=4, 1+3+5=9, 1+3+5+7=16... Each time we add the next odd number, we get a perfect <strong>square number</strong>! This happens every single time — not by luck!</p>
+</div>
+<p><strong>Pattern 1: Adding odd numbers always gives square numbers!</strong></p>
+<div class="pattern-box">
+  <div class="pline">1 = <span class="res">1</span></div>
+  <div class="pline">1 + 3 = <span class="res">4</span></div>
+  <div class="pline">1 + 3 + 5 = <span class="res">9</span></div>
+  <div class="pline">1 + 3 + 5 + 7 = <span class="res">16</span></div>
+  <div class="pline">1 + 3 + 5 + 7 + 9 = <span class="res">25</span></div>
+  <div class="pline">1 + 3 + 5 + 7 + 9 + 11 = <span class="res">36</span></div>
+  <div class="pline" style="font-size:16px">&#x22EE;</div>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 145" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#1e293b">Why? Each L-shape adds the next odd number to make a bigger square!</text>
+  <rect x="55" y="28" width="96" height="96" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <line x1="55" y1="112" x2="151" y2="112" stroke="#ef4444" stroke-width="2.5"/>
+  <line x1="55" y1="112" x2="55" y2="28" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="36" y="124" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#dc2626">+1</text>
+  <line x1="55" y1="96" x2="135" y2="96" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <line x1="135" y1="112" x2="135" y2="96" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="158" y="108" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#ea580c">+3</text>
+  <line x1="55" y1="80" x2="119" y2="80" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <line x1="119" y1="96" x2="119" y2="80" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="158" y="92" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#15803d">+5</text>
+  <line x1="55" y1="64" x2="103" y2="64" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <line x1="103" y1="80" x2="103" y2="64" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="158" y="76" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#6d28d9">+7</text>
+  <text x="158" y="60" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#b91c1c">+9</text>
+  <text x="158" y="44" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#0369a1">+11</text>
+  <text x="103" y="138" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#2563eb">6x6 = 36 !</text>
+</svg>
+</div>
+<p><strong>Pattern 2: Adding counting numbers up and down also gives square numbers!</strong></p>
+<div class="pattern-box">
+  <div class="pline">1 = <span class="res">1</span></div>
+  <div class="pline">1 + 2 + 1 = <span class="res">4</span></div>
+  <div class="pline">1 + 2 + 3 + 2 + 1 = <span class="res">9</span></div>
+  <div class="pline">1 + 2 + 3 + 4 + 3 + 2 + 1 = <span class="res">16</span></div>
+  <div class="pline" style="font-size:16px">&#x22EE;</div>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Sum of first 10 odd numbers = ? (Hint: it is a square number!)</li>
+    <li>What do you get when you add All 1s: 1, 1+1, 1+1+1...? Which sequence?</li>
+    <li>Add pairs of triangular numbers: 1+3, 3+6, 6+10, 10+15... What do you get?</li>
+    <li>Powers of 2 added up: 1, 1+2, 1+2+4, 1+2+4+8... Add 1 to each. What happens?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. 1+3+5+7 = ? (Ludo score with 4 odd numbers)</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">9</button><button class="choice-btn" onclick="checkAnswer(this,false)">15</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">16</button><button class="choice-btn" onclick="checkAnswer(this,false)">18</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. Sum of first 5 odd numbers = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">20</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">25</button><button class="choice-btn" onclick="checkAnswer(this,false)">30</button><button class="choice-btn" onclick="checkAnswer(this,false)">36</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. 1+3, 3+6, 6+10 gives 4, 9, 16... These are:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Odd numbers</button><button class="choice-btn" onclick="checkAnswer(this,false)">Triangular numbers</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Square numbers</button><button class="choice-btn" onclick="checkAnswer(this,false)">Powers of 2</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec15(){return `
+<div class="sec-heading" style="color:#2563eb">&#x1F4D0; 1.5 Patterns in Shapes</div>
+<p>Just like numbers, <strong>shapes also form patterns</strong>! Shapes can be 1D (line), 2D (flat), or 3D (solid).</p>
+<div class="concept-box">
+  <div class="cb-title">New Word: Geometry</div>
+  <p>The part of maths that studies patterns in shapes is called <strong>geometry</strong>. A list of shapes that follow a rule is a <strong>shape sequence</strong>.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>A <strong>honeycomb</strong> (madhumakhi ka chhatta) — all cells are hexagons! <strong>Floor tiles</strong> in a mosque or temple form shape sequences. <strong>Kolam patterns</strong> in South India use regular polygon sequences!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 175" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Regular Polygons — more sides each time!</text>
+  <polygon points="38,52 52,28 66,52" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+  <text x="52" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#b91c1c">Triangle (3)</text>
+  <rect x="88" y="26" width="32" height="32" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
+  <text x="104" y="70" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#c2410c">Square (4)</text>
+  <polygon points="158,24 172,20 184,28 184,42 172,50 158,42 152,32" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+  <text x="168" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#92400e">Hexagon (6)</text>
+  <polygon points="222,30 233,22 246,24 252,35 248,47 234,52 222,46 217,36" fill="#f3e8ff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="234" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#5b21b6">Octagon (8)</text>
+  <text x="302" y="46" text-anchor="middle" font-family="Baloo 2,cursive" font-size="26" font-weight="800" fill="#94a3b8">...</text>
+  <text x="170" y="82" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Sides: 3, 4, 5, 6, 7, 8... = counting numbers starting at 3!</text>
+  <line x1="8" y1="90" x2="332" y2="90" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="170" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Stacked Squares — area = square numbers!</text>
+  <rect x="30" y="114" width="24" height="24" fill="none" stroke="#0284c7" stroke-width="2"/>
+  <text x="42" y="150" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#1e293b">1</text>
+  <rect x="78" y="114" width="16" height="16" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="94" y="114" width="16" height="16" fill="none" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="78" y="130" width="16" height="16" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="94" y="130" width="16" height="16" fill="none" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="94" y="156" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#1e293b">4</text>
+  <rect x="136" y="111" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="148" y="111" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="160" y="111" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="136" y="123" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="148" y="123" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="160" y="123" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="136" y="135" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="148" y="135" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/><rect x="160" y="135" width="12" height="12" fill="none" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="150" y="156" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#1e293b">9</text>
+  <text x="230" y="135" text-anchor="middle" font-family="Baloo 2,cursive" font-size="24" font-weight="800" fill="#94a3b8">...</text>
+  <text x="295" y="128" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#64748b">1, 4, 9, 16, 25...</text>
+  <text x="295" y="143" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#94a3b8">Square numbers!</text>
+  <text x="170" y="170" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Honeycomb, kolam, tiles — all use shape sequences!</text>
+</svg>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Can you see the pattern in each shape sequence? Draw the next shape.</li>
+    <li>Count sides of regular polygons: 3, 4, 5... Which number sequence is this?</li>
+    <li>Why is a 3-sided regular polygon called a "triangle"? Why is 4-sided called "quadrilateral"?</li>
+    <li>Count small squares in stacked squares: 1, 4, 9, 16... Which sequence? Why?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A honeycomb cell has 6 sides. What is it called?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Pentagon</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Hexagon</button><button class="choice-btn" onclick="checkAnswer(this,false)">Heptagon</button><button class="choice-btn" onclick="checkAnswer(this,false)">Octagon</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. Floor tiles in square pattern: 1, 4, 9, 16, __. What comes next?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">20</button><button class="choice-btn" onclick="checkAnswer(this,false)">22</button><button class="choice-btn" onclick="checkAnswer(this,false)">24</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">25</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. A regular polygon has 8 sides. It is called:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Hexagon</button><button class="choice-btn" onclick="checkAnswer(this,false)">Heptagon</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Octagon</button><button class="choice-btn" onclick="checkAnswer(this,false)">Nonagon</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec16(){return `
+<div class="sec-heading" style="color:#2563eb">&#x1F9E9; 1.6 Relation to Number Sequences</div>
+<p>Shape sequences and number sequences are often <strong>secretly connected</strong>! Studying one helps us understand the other.</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>In <strong>kabaddi</strong>, imagine players standing in a polygon: 3 players = triangle (3 sides), 4 players = square (4 sides), 5 players = pentagon (5 sides). The number of sides = counting numbers starting at 3!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 115" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Sides of Regular Polygons → Number Sequence</text>
+  <polygon points="45,50 55,30 65,50" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+  <text x="55" y="65" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#b91c1c">3 sides</text>
+  <text x="55" y="78" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#ef4444">3</text>
+  <rect x="90" y="28" width="26" height="26" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
+  <text x="103" y="65" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#c2410c">4 sides</text>
+  <text x="103" y="78" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#f97316">4</text>
+  <polygon points="158,24 172,20 183,28 181,42 163,48 150,38" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+  <text x="165" y="65" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#92400e">5 sides</text>
+  <text x="165" y="78" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#ca8a04">5</text>
+  <polygon points="216,26 228,20 241,24 245,36 238,47 224,50 212,42" fill="#f3e8ff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="228" y="65" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#5b21b6">6 sides</text>
+  <text x="228" y="78" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#7c3aed">6</text>
+  <polygon points="278,30 289,22 302,24 308,34 304,46 290,50 278,44 273,34" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="290" y="65" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#0369a1">7 sides</text>
+  <text x="290" y="78" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#0284c7">7</text>
+  <text x="170" y="96" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#1e293b">Sequence: 3, 4, 5, 6, 7... = Counting numbers starting at 3!</text>
+  <text x="170" y="110" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Corners also = sides! A triangle has 3 sides AND 3 corners.</text>
+</svg>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Key Idea</div>
+  <p>"<strong>Regular</strong>" means ALL sides are equal AND all corners are equal. We will study corners (angles) in Chapter 2!</p>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Count sides of regular polygons: 3, 4, 5... Which sequence? Count corners too — same sequence? Why?</li>
+    <li>A decagon has 10 sides. How many corners? Why?</li>
+    <li>Count small squares in stacked squares: 1, 4, 9, 16... Which sequence? Why?</li>
+    <li>Can you find a regular hexagon shape in your school or home?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A regular polygon has 9 sides. How many corners?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">8</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">9</button><button class="choice-btn" onclick="checkAnswer(this,false)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">18</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. Kabaddi players in a hexagon = how many sides?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">5</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">6</button><button class="choice-btn" onclick="checkAnswer(this,false)">7</button><button class="choice-btn" onclick="checkAnswer(this,false)">8</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Polygon sides go 3, 4, 5, 6, 7, 8, 9, __. What comes next?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">9</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">11</button><button class="choice-btn" onclick="checkAnswer(this,false)">12</button></div><div class="feedback"></div></div>
+</div>
+<div class="math-talk">&#x1F4A1; <strong>Chapter 1 Complete!</strong>&nbsp; You now know: what maths is, number sequences, how to picture them, patterns between sequences, shape sequences, and how shapes connect to numbers. Amazing work!</div>`;}
+
+// ── CHAPTER 2 ──
+
+function sec21(){return `
+<div class="sec-heading" style="color:#0d9488">&#x1F4CD; 2.1 Point</div>
+<p>Mark a tiny dot on paper with the sharp tip of a pencil. The sharper the tip, the thinner the dot. This tiny dot gives you an idea of a <strong>point</strong>.</p>
+<div class="concept-box">
+  <div class="cb-title">What is a Point?</div>
+  <p>A point is a <strong>precise location</strong>. It has no length, no breadth, no height — it is just a position! We name a point with a capital letter like A, B, or P.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Think of a <strong>bindi</strong> on the forehead — it marks one exact spot. Or the tip of a <strong>compass</strong> (divider) that we use in geometry. Or the tip of a <strong>needle</strong> used in sewing. All these are models of a point!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 120" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Models of a Point</text>
+  <rect x="20" y="28" width="88" height="70" rx="10" fill="#ccfbf1"/>
+  <circle cx="64" cy="56" r="5" fill="#0d9488"/>
+  <text x="64" y="88" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#0f766e">Tip of compass</text>
+  <rect x="126" y="28" width="88" height="70" rx="10" fill="#ccfbf1"/>
+  <circle cx="170" cy="56" r="4" fill="#0d9488"/>
+  <text x="170" y="88" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#0f766e">Tip of pencil</text>
+  <rect x="232" y="28" width="88" height="70" rx="10" fill="#ccfbf1"/>
+  <circle cx="276" cy="56" r="3" fill="#0d9488"/>
+  <text x="276" y="88" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#0f766e">Tip of needle</text>
+  <text x="64" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#0d9488">Z</text>
+  <text x="170" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#0d9488">P</text>
+  <text x="276" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#0d9488">T</text>
+</svg>
+</div>
+<p>If you mark three points on paper, you can name them Z, P and T. We read them as "Point Z", "Point P" and "Point T".</p>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Rihan marked one point on paper. How many lines can he draw through that one point?</li>
+    <li>Sheetal marked two points on paper. How many different lines can she draw through both points?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A point has:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Some length</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">No length or size</button><button class="choice-btn" onclick="checkAnswer(this,false)">A small area</button><button class="choice-btn" onclick="checkAnswer(this,false)">A shape</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. We name a point using a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Small letter (a, b)</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Capital letter (A, B)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Number (1, 2)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Symbol (+, -)</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. The tip of a compass is a model of a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Line</button><button class="choice-btn" onclick="checkAnswer(this,false)">Ray</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Point</button><button class="choice-btn" onclick="checkAnswer(this,false)">Angle</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec22(){return `
+<div class="sec-heading" style="color:#0d9488">&#x1F4CF; 2.2 Line Segment</div>
+<p>Fold a piece of paper and unfold it. Do you see a <strong>crease</strong>? That crease gives you the idea of a <strong>line segment</strong>!</p>
+<div class="concept-box">
+  <div class="cb-title">What is a Line Segment?</div>
+  <p>A line segment is the <strong>shortest path</strong> between two points A and B. It has two end points. We write it as <strong>AB</strong> (with a bar on top). Points A and B are called the <strong>end points</strong>.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>The edge of your <strong>geometry box ruler</strong> is a line segment — it starts at one end and stops at the other. The side of a <strong>cricket bat</strong> is also a line segment. The crease line on a <strong>cricket pitch</strong> is a line segment!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 130" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Line Segment AB — has two end points</text>
+  <circle cx="60" cy="65" r="6" fill="#0d9488"/>
+  <text x="60" y="88" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="#0d9488">A</text>
+  <line x1="60" y1="65" x2="280" y2="65" stroke="#0d9488" stroke-width="3"/>
+  <circle cx="280" cy="65" r="6" fill="#0d9488"/>
+  <text x="280" y="88" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="#0d9488">B</text>
+  <text x="170" y="58" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#0f766e">Line segment AB</text>
+  <text x="60" y="106" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">End point</text>
+  <text x="280" y="106" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">End point</text>
+  <text x="170" y="124" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#0d9488">Shortest path from A to B — it does NOT extend beyond A or B!</text>
+</svg>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Key Idea</div>
+  <p>The <strong>shortest route</strong> from point A to point B is the line segment AB. Any other path (curved, zigzag) would be longer!</p>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Mark two points A and B on paper. Try connecting them by a curved path and a straight path. Which is shorter?</li>
+    <li>Name all the line segments you can see in your geometry box lid.</li>
+    <li>How many line segments does a triangle have? A square? A pentagon?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A line segment has:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">No end points</button><button class="choice-btn" onclick="checkAnswer(this,false)">One end point</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Two end points</button><button class="choice-btn" onclick="checkAnswer(this,false)">Three end points</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. The crease on a folded paper is a model of a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Point</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Line segment</button><button class="choice-btn" onclick="checkAnswer(this,false)">Ray</button><button class="choice-btn" onclick="checkAnswer(this,false)">Angle</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. A triangle has how many line segments (sides)?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">2</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">3</button><button class="choice-btn" onclick="checkAnswer(this,false)">4</button><button class="choice-btn" onclick="checkAnswer(this,false)">5</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. The cricket pitch crease from point A to B is best described as a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Ray AB</button><button class="choice-btn" onclick="checkAnswer(this,false)">Line AB</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Line segment AB</button><button class="choice-btn" onclick="checkAnswer(this,false)">Point A</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec23(){return `
+<div class="sec-heading" style="color:#0d9488">&#x27A1; 2.3 Line</div>
+<p>Imagine taking a line segment AB and extending it <strong>beyond A</strong> in one direction AND <strong>beyond B</strong> in the other direction — going on forever in both directions. This gives you a <strong>line</strong>!</p>
+<div class="concept-box">
+  <div class="cb-title">What is a Line?</div>
+  <p>A line extends <strong>forever in both directions</strong>. It has no end points. We write it as <strong>AB</strong> (with arrows on both ends). A line can also be named by a single small letter like <em>l</em> or <em>m</em>. Any two points determine a unique line.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Imagine a <strong>railway track</strong> that goes on forever in both directions — that is a model of a line! Or think of the <strong>horizon</strong> where the sea meets the sky — it looks like it goes on forever both left and right!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 130" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Difference: Line Segment vs Line</text>
+  <text x="20" y="42" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#0d9488">Line Segment AB:</text>
+  <circle cx="90" cy="58" r="5" fill="#0d9488"/>
+  <text x="90" y="76" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#0d9488">A</text>
+  <line x1="90" y1="58" x2="250" y2="58" stroke="#0d9488" stroke-width="2.5"/>
+  <circle cx="250" cy="58" r="5" fill="#0d9488"/>
+  <text x="250" y="76" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#0d9488">B</text>
+  <text x="170" y="90" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Stops at A and B</text>
+  <text x="20" y="108" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#f97316">Line AB:</text>
+  <line x1="20" y1="118" x2="320" y2="118" stroke="#f97316" stroke-width="2.5"/>
+  <polygon points="14,118 24,114 24,122" fill="#f97316"/>
+  <polygon points="326,118 316,114 316,122" fill="#f97316"/>
+  <circle cx="110" cy="118" r="4" fill="#f97316"/>
+  <text x="110" y="112" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#f97316">A</text>
+  <circle cx="230" cy="118" r="4" fill="#f97316"/>
+  <text x="230" y="112" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#f97316">B</text>
+</svg>
+</div>
+<div class="math-talk">&#x1F4AC; <strong>Think:</strong>&nbsp; Can you draw a complete picture of a line? No! Because it never ends. We show arrows at both ends to show it goes on forever.</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>What is the difference between a line and a line segment?</li>
+    <li>Can two lines intersect (cross) at more than one point? Think and discuss.</li>
+    <li>Name a real-life example of a line from your surroundings.</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A line extends in:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">One direction only</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Both directions forever</button><button class="choice-btn" onclick="checkAnswer(this,false)">No direction</button><button class="choice-btn" onclick="checkAnswer(this,false)">A curved path</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. Railway track going on forever both ways is a model of a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Point</button><button class="choice-btn" onclick="checkAnswer(this,false)">Line segment</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Line</button><button class="choice-btn" onclick="checkAnswer(this,false)">Ray</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. How many end points does a line have?</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">0</button><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" onclick="checkAnswer(this,false)">2</button><button class="choice-btn" onclick="checkAnswer(this,false)">3</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec24(){return `
+<div class="sec-heading" style="color:#0d9488">&#x2192; 2.4 Ray</div>
+<p>A <strong>ray</strong> starts at one point and goes on forever in <strong>one direction only</strong>. It is like half a line!</p>
+<div class="concept-box">
+  <div class="cb-title">What is a Ray?</div>
+  <p>A ray has one <strong>starting point</strong> (called the initial point) and goes on endlessly in one direction. We write ray AP as <strong>AP</strong> (with an arrow on top pointing towards P). Note: Ray AP and Ray PA are different — direction matters!</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p><strong>Sunlight</strong> coming from the sun — it starts at the sun and goes on forever in one direction! A <strong>torch/flashlight</strong> beam starts at the torch and goes forward. The <strong>beam from a lighthouse</strong> that guides ships — all are rays!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 145" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Point, Line Segment, Line, Ray — Comparison</text>
+  <text x="16" y="40" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#64748b">Point:</text>
+  <circle cx="100" cy="36" r="5" fill="#0d9488"/>
+  <text x="100" y="52" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#0d9488">A</text>
+  <text x="200" y="40" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">No size, just location</text>
+
+  <text x="16" y="72" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#64748b">Seg:</text>
+  <circle cx="70" cy="68" r="4" fill="#2563eb"/><line x1="70" y1="68" x2="200" y2="68" stroke="#2563eb" stroke-width="2.5"/><circle cx="200" cy="68" r="4" fill="#2563eb"/>
+  <text x="70" y="82" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#2563eb">A</text><text x="200" y="82" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#2563eb">B</text>
+  <text x="270" y="72" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">2 end points</text>
+
+  <text x="16" y="104" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#64748b">Line:</text>
+  <line x1="50" y1="100" x2="290" y2="100" stroke="#f97316" stroke-width="2.5"/>
+  <polygon points="44,100 54,96 54,104" fill="#f97316"/>
+  <polygon points="296,100 286,96 286,104" fill="#f97316"/>
+  <text x="170" y="114" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">No end points, goes both ways</text>
+
+  <text x="16" y="136" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#64748b">Ray:</text>
+  <circle cx="70" cy="132" r="4" fill="#7c3aed"/>
+  <line x1="70" y1="132" x2="290" y2="132" stroke="#7c3aed" stroke-width="2.5"/>
+  <polygon points="296,132 286,128 286,136" fill="#7c3aed"/>
+  <text x="70" y="145" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#7c3aed">A</text>
+  <text x="200" y="145" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#7c3aed">P</text>
+  <text x="270" y="136" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">1 start point</text>
+</svg>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Ray AP and Ray PA — are they the same? Why or why not?</li>
+    <li>Can a ray have an end point? Where?</li>
+    <li>Name 3 real-life examples of rays from around you.</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A ray has how many end points?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">0</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">1 (starting point only)</button><button class="choice-btn" onclick="checkAnswer(this,false)">2</button><button class="choice-btn" onclick="checkAnswer(this,false)">Infinite</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. Sunlight from the sun is a model of a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Line segment</button><button class="choice-btn" onclick="checkAnswer(this,false)">Line</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Ray</button><button class="choice-btn" onclick="checkAnswer(this,false)">Point</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Ray AP starts at A and goes through P. Ray PA starts at:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">A</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">P</button><button class="choice-btn" onclick="checkAnswer(this,false)">Both A and P</button><button class="choice-btn" onclick="checkAnswer(this,false)">Neither</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. Which has NO starting point and NO ending point?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Ray</button><button class="choice-btn" onclick="checkAnswer(this,false)">Line segment</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Line</button><button class="choice-btn" onclick="checkAnswer(this,false)">Point</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec25(){return `
+<div class="sec-heading" style="color:#0d9488">&#x2220; 2.5 Angle</div>
+<p>When <strong>two rays start from the same point</strong>, they form an <strong>angle</strong>!</p>
+<div class="concept-box">
+  <div class="cb-title">What is an Angle?</div>
+  <p>An angle is formed by two rays having a <strong>common starting point</strong>. The common point is called the <strong>vertex</strong>. The two rays are called the <strong>arms</strong> of the angle. The size of an angle = the amount of <strong>rotation/turn</strong> from one arm to the other.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>When you open a <strong>geometry box</strong> (compass/divider), the two arms form an angle — the more you open it, the bigger the angle! A <strong>cricket bat</strong> hitting a ball changes direction — the change makes an angle. The hands of a <strong>clock</strong> form angles!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 150" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Angle DBE — vertex B, arms BD and BE</text>
+  <circle cx="130" cy="100" r="6" fill="#0d9488"/>
+  <text x="118" y="108" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="#0d9488">B</text>
+  <text x="118" y="120" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">vertex</text>
+  <line x1="130" y1="100" x2="200" y2="40" stroke="#0d9488" stroke-width="2.5"/>
+  <polygon points="204,37 196,44 203,50" fill="#0d9488"/>
+  <text x="210" y="36" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="#0d9488">D</text>
+  <text x="168" y="62" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#64748b">arm</text>
+  <line x1="130" y1="100" x2="220" y2="120" stroke="#0d9488" stroke-width="2.5"/>
+  <polygon points="225,122 216,114 221,125" fill="#0d9488"/>
+  <text x="228" y="126" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="#0d9488">E</text>
+  <text x="185" y="118" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#64748b">arm</text>
+  <path d="M 148 90 A 22 22 0 0 1 152 112" fill="none" stroke="#f97316" stroke-width="2"/>
+  <text x="158" y="95" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#f97316">angle</text>
+  <text x="260" y="65" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#1e293b">Name:</text>
+  <text x="260" y="80" font-family="Nunito,sans-serif" font-size="11" fill="#0d9488">Angle DBE</text>
+  <text x="260" y="94" font-family="Nunito,sans-serif" font-size="11" fill="#0d9488">or Angle EBD</text>
+  <text x="260" y="108" font-family="Nunito,sans-serif" font-size="11" fill="#f97316">or &#x2220;DBE</text>
+  <text x="260" y="122" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">vertex B is always</text>
+  <text x="260" y="134" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">the middle letter!</text>
+</svg>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Size of an Angle</div>
+  <p>The size of an angle = the <strong>amount of rotation</strong> needed to move one arm to reach the other arm. More rotation = bigger angle! The length of the arms does NOT matter — only the rotation matters.</p>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Open your geometry compass a little. Name the angle, its vertex and its arms.</li>
+    <li>Open it more. Is the new angle bigger or smaller? Why?</li>
+    <li>Find 3 angles in your classroom right now. Name the vertex and arms of each.</li>
+    <li>The clock shows 3 o'clock. What angle do the hands make?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. An angle is formed by:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Two line segments</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Two rays from same point</button><button class="choice-btn" onclick="checkAnswer(this,false)">Two points</button><button class="choice-btn" onclick="checkAnswer(this,false)">One ray only</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. In angle DBE, the vertex is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">D</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">B</button><button class="choice-btn" onclick="checkAnswer(this,false)">E</button><button class="choice-btn" onclick="checkAnswer(this,false)">DB</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Opening a compass more makes the angle:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Bigger</button><button class="choice-btn" onclick="checkAnswer(this,false)">Smaller</button><button class="choice-btn" onclick="checkAnswer(this,false)">Same size</button><button class="choice-btn" onclick="checkAnswer(this,false)">Zero</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. The size of an angle depends on:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Length of arms</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Amount of rotation</button><button class="choice-btn" onclick="checkAnswer(this,false)">Colour of arms</button><button class="choice-btn" onclick="checkAnswer(this,false)">Name of vertex</button></div><div class="feedback"></div></div>
+</div>
+<div class="math-talk">&#x1F4A1; <strong>Sections 2.1–2.5 Complete!</strong>&nbsp; You now know: Point, Line Segment, Line, Ray and Angle — the building blocks of geometry!</div>`;}
+
+function sec26(){return `
+<div class="sec-heading" style="color:#0d9488">&#x2194; 2.6 Comparing Angles</div>
+<p>How do we know which angle is <strong>bigger</strong>? Just like we compare lengths, we can compare angles too!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Look at animals opening their mouths — a <strong>crocodile</strong> opens its mouth very wide (big angle!), a <strong>fish</strong> opens it a little (small angle!). The more the jaws open, the bigger the angle — just like a <strong>compass</strong> opened wide vs barely open!</p>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Two ways to compare angles</div>
+  <p><strong>1. By looking:</strong> Sometimes it is easy to just see which is bigger.<br/>
+  <strong>2. By superimposition:</strong> Place one angle exactly over the other — match the vertices and one arm. The angle whose other arm sticks out more is the bigger angle!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 150" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Comparing by Superimposition</text>
+  <text x="60" y="38" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#0d9488">Angle ABC</text>
+  <circle cx="30" cy="100" r="5" fill="#0d9488"/>
+  <text x="22" y="115" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#0d9488">B</text>
+  <line x1="30" y1="100" x2="90" y2="55" stroke="#0d9488" stroke-width="2.5"/>
+  <text x="94" y="52" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#0d9488">A</text>
+  <line x1="30" y1="100" x2="100" y2="100" stroke="#0d9488" stroke-width="2.5"/>
+  <text x="104" y="104" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#0d9488">C</text>
+  <path d="M 50 100 A 20 20 0 0 1 52 83" fill="none" stroke="#0d9488" stroke-width="1.5"/>
+  <text x="170" y="90" text-anchor="middle" font-family="Baloo 2,cursive" font-size="22" font-weight="800" fill="#94a3b8">vs</text>
+  <text x="270" y="38" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#f97316">Angle PQR</text>
+  <circle cx="240" cy="100" r="5" fill="#f97316"/>
+  <text x="232" y="115" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#f97316">Q</text>
+  <line x1="240" y1="100" x2="270" y2="45" stroke="#f97316" stroke-width="2.5"/>
+  <text x="274" y="42" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#f97316">P</text>
+  <line x1="240" y1="100" x2="320" y2="100" stroke="#f97316" stroke-width="2.5"/>
+  <text x="324" y="104" font-family="Baloo 2,cursive" font-size="12" font-weight="800" fill="#f97316">R</text>
+  <path d="M 260 100 A 20 20 0 0 1 263 80" fill="none" stroke="#f97316" stroke-width="1.5"/>
+  <text x="170" y="135" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#1e293b">Superimpose both — whichever arm sticks out more = bigger angle!</text>
+  <text x="170" y="150" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Here angle PQR is bigger than angle ABC</text>
+</svg>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Equal Angles</div>
+  <p>If you superimpose two angles and BOTH arms overlap perfectly — the angles are <strong>equal in size</strong>! The length of the arms does NOT matter — only the rotation matters.</p>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Draw two angles. By looking, guess which is bigger. Then superimpose to check!</li>
+    <li>Open your compass to two different positions. Which angle is bigger? How can you tell?</li>
+    <li>Can two angles be equal even if their arms have different lengths? Think and discuss.</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. To compare two angles by superimposition, we must match the:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Arms only</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Vertices first, then one arm</button><button class="choice-btn" onclick="checkAnswer(this,false)">Arm lengths</button><button class="choice-btn" onclick="checkAnswer(this,false)">Names of angles</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. A crocodile opens its mouth wider than a fish. So the crocodile's jaw angle is:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Bigger</button><button class="choice-btn" onclick="checkAnswer(this,false)">Smaller</button><button class="choice-btn" onclick="checkAnswer(this,false)">Equal</button><button class="choice-btn" onclick="checkAnswer(this,false)">Cannot say</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Two angles are equal when superimposed. This means their:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Arms have same length</button><button class="choice-btn" onclick="checkAnswer(this,false)">Names are same</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Rotation amount is same</button><button class="choice-btn" onclick="checkAnswer(this,false)">Vertices are same point</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec27(){return `
+<div class="sec-heading" style="color:#0d9488">&#x270F; 2.7 Making Angles</div>
+<p>We can make angles and compare them using simple tools — even a <strong>piece of paper</strong>!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>When you fold a <strong>roti</strong> in half, the fold creates a straight angle (180°)! When you fold it again into quarters, you get a right angle (90°)! A folded <strong>paper boat</strong> has many angles you can compare by superimposition.</p>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Comparing without superimposition — using a circle!</div>
+  <p>Place a transparent circle so its <strong>centre is at the vertex</strong> of an angle. Mark where each arm crosses the circle edge. Now move the circle to another angle the same way. Compare the arc lengths — the bigger arc = bigger angle!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 130" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Using a circle to compare angles</text>
+  <circle cx="85" cy="80" r="45" fill="none" stroke="#0d9488" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <circle cx="85" cy="80" r="4" fill="#0d9488"/>
+  <text x="78" y="94" font-family="Baloo 2,cursive" font-size="11" font-weight="700" fill="#0d9488">O</text>
+  <line x1="85" y1="80" x2="118" y2="38" stroke="#0d9488" stroke-width="2"/>
+  <line x1="85" y1="80" x2="130" y2="80" stroke="#0d9488" stroke-width="2"/>
+  <circle cx="118" cy="38" r="3" fill="#f97316"/>
+  <text x="122" y="36" font-family="Baloo 2,cursive" font-size="10" font-weight="700" fill="#f97316">B</text>
+  <circle cx="130" cy="80" r="3" fill="#f97316"/>
+  <text x="134" y="84" font-family="Baloo 2,cursive" font-size="10" font-weight="700" fill="#f97316">A</text>
+  <path d="M 130 80 A 45 45 0 0 1 118 38" fill="none" stroke="#f97316" stroke-width="2.5"/>
+  <text x="85" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Arc AB shows size of angle</text>
+  <text x="255" y="60" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#1e293b">Bigger arc</text>
+  <text x="255" y="74" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#f97316">= Bigger angle!</text>
+  <text x="255" y="90" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Smaller arc</text>
+  <text x="255" y="104" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#0d9488">= Smaller angle</text>
+</svg>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Fold a rectangular paper in half. What angle does the fold make?</li>
+    <li>Fold it in half again. What angle do you get now? How does it compare to the first fold?</li>
+    <li>Make 3 different angles by folding paper. Put them in order from smallest to largest.</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. When comparing using a circle, the centre of the circle must be at the angle's:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Arm</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Vertex</button><button class="choice-btn" onclick="checkAnswer(this,false)">Midpoint</button><button class="choice-btn" onclick="checkAnswer(this,false)">Edge</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. Folding a roti in half gives a fold angle of:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">90°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">180° (straight angle)</button><button class="choice-btn" onclick="checkAnswer(this,false)">360°</button><button class="choice-btn" onclick="checkAnswer(this,false)">45°</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. A bigger arc on the circle means the angle is:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Bigger</button><button class="choice-btn" onclick="checkAnswer(this,false)">Smaller</button><button class="choice-btn" onclick="checkAnswer(this,false)">Equal</button><button class="choice-btn" onclick="checkAnswer(this,false)">Zero</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec28(){return `
+<div class="sec-heading" style="color:#0d9488">&#x26D4; 2.8 Special Types of Angles</div>
+<p>Some angles are so important and so common that we give them <strong>special names</strong>!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>The corner of your <strong>notebook</strong> is a right angle (90°)! The edges of a <strong>door frame</strong> make right angles. A <strong>straight road</strong> going left and right is a straight angle (180°). When you stand straight — your body makes a right angle with the ground!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 175" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">4 Special Types of Angles</text>
+  <rect x="8" y="26" width="74" height="68" rx="8" fill="#dbeafe"/>
+  <line x1="45" y1="82" x2="75" y2="82" stroke="#2563eb" stroke-width="2.5"/>
+  <line x1="45" y1="82" x2="45" y2="50" stroke="#2563eb" stroke-width="2.5"/>
+  <circle cx="45" cy="82" r="3" fill="#2563eb"/>
+  <rect x="45" y="70" width="10" height="12" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="45" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#2563eb">Right</text>
+  <text x="45" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#1d4ed8">= 90°</text>
+  <text x="45" y="130" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#64748b">like 'L' shape</text>
+
+  <rect x="90" y="26" width="74" height="68" rx="8" fill="#dcfce7"/>
+  <line x1="127" y1="82" x2="157" y2="82" stroke="#16a34a" stroke-width="2.5"/>
+  <line x1="97" y1="82" x2="127" y2="82" stroke="#16a34a" stroke-width="2.5"/>
+  <path d="M 137 82 A 10 10 0 0 1 127 72" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+  <circle cx="127" cy="82" r="3" fill="#16a34a"/>
+  <text x="127" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#16a34a">Straight</text>
+  <text x="127" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#15803d">= 180°</text>
+  <text x="127" y="130" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#64748b">flat line</text>
+
+  <rect x="172" y="26" width="74" height="68" rx="8" fill="#fef3c7"/>
+  <line x1="209" y1="82" x2="239" y2="82" stroke="#d97706" stroke-width="2.5"/>
+  <line x1="209" y1="82" x2="230" y2="58" stroke="#d97706" stroke-width="2.5"/>
+  <path d="M 225 82 A 16 16 0 0 1 218 68" fill="none" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="209" cy="82" r="3" fill="#d97706"/>
+  <text x="209" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#d97706">Acute</text>
+  <text x="209" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#92400e">less than 90°</text>
+  <text x="209" y="130" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#64748b">sharp!</text>
+
+  <rect x="254" y="26" width="78" height="68" rx="8" fill="#fee2e2"/>
+  <line x1="293" y1="82" x2="325" y2="82" stroke="#ef4444" stroke-width="2.5"/>
+  <line x1="293" y1="82" x2="302" y2="48" stroke="#ef4444" stroke-width="2.5"/>
+  <path d="M 315 82 A 22 22 0 0 1 303 62" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+  <circle cx="293" cy="82" r="3" fill="#ef4444"/>
+  <text x="293" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#ef4444">Obtuse</text>
+  <text x="293" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#b91c1c">90° to 180°</text>
+  <text x="293" y="130" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#64748b">blunt!</text>
+
+  <text x="170" y="152" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#1e293b">Acute &lt; 90° &lt; Right = 90° &lt; Obtuse &lt; 180° = Straight</text>
+  <text x="170" y="168" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Two right angles = one straight angle. Perpendicular lines meet at 90°.</text>
+</svg>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Key Words</div>
+  <p><strong>Acute</strong> means "sharp" in Latin — acute angles are sharp/small.<br/>
+  <strong>Obtuse</strong> means "blunt" — obtuse angles are wider/blunt.<br/>
+  <strong>Perpendicular</strong> lines meet at exactly 90° (right angle).</p>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Find 3 right angles in your classroom right now.</li>
+    <li>The hands of a clock at 3 o'clock — what type of angle?</li>
+    <li>Acute means sharp, obtuse means blunt. Why are these good names for these angles?</li>
+    <li>A triangle has 3 angles — can it have 2 obtuse angles? Try drawing it!</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. The corner of a notebook is a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Acute angle</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Right angle (90°)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Obtuse angle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Straight angle</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. An angle of 120° is called:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Acute</button><button class="choice-btn" onclick="checkAnswer(this,false)">Right</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Obtuse</button><button class="choice-btn" onclick="checkAnswer(this,false)">Straight</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. A straight angle = how many right angles?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">2</button><button class="choice-btn" onclick="checkAnswer(this,false)">3</button><button class="choice-btn" onclick="checkAnswer(this,false)">4</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. Two lines meeting at 90° are called:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Parallel lines</button><button class="choice-btn" onclick="checkAnswer(this,false)">Equal lines</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Perpendicular lines</button><button class="choice-btn" onclick="checkAnswer(this,false)">Straight lines</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec29(){return `
+<div class="sec-heading" style="color:#0d9488">&#x1F4D0; 2.9 Measuring Angles</div>
+<p>We can compare angles, but can we give them an exact <strong>number</strong>? Yes! We use <strong>degrees</strong>!</p>
+<div class="concept-box">
+  <div class="cb-title">What is a Degree?</div>
+  <p>Mathematicians divided a full circle (one full turn) into <strong>360 equal parts</strong>. Each part is called <strong>1 degree</strong>, written as <strong>1°</strong>. The measure of an angle = how many of these 1° parts fit inside it.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>The <strong>clock</strong> makes a full circle in 12 hours. At 3 o'clock, the minute and hour hand make a <strong>90° angle</strong> (quarter turn). At 6 o'clock they make <strong>180°</strong> (half turn). A full turn of a <strong>chakkar (merry-go-round)</strong> = 360°!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Key Angle Measures in Degrees</text>
+  <circle cx="55" cy="95" r="38" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <line x1="55" y1="95" x2="93" y2="95" stroke="#2563eb" stroke-width="2.5"/>
+  <line x1="55" y1="95" x2="93" y2="95" stroke="#2563eb" stroke-width="2.5"/>
+  <line x1="55" y1="95" x2="55" y2="57" stroke="#f97316" stroke-width="2.5"/>
+  <circle cx="55" cy="95" r="4" fill="#2563eb"/>
+  <rect x="55" y="83" width="10" height="12" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="55" y="148" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#2563eb">90°</text>
+  <text x="55" y="162" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Right angle</text>
+
+  <circle cx="170" cy="95" r="38" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <line x1="132" y1="95" x2="208" y2="95" stroke="#16a34a" stroke-width="2.5"/>
+  <circle cx="170" cy="95" r="4" fill="#16a34a"/>
+  <path d="M 185 95 A 15 15 0 0 1 170 80" fill="none" stroke="#16a34a" stroke-width="2"/>
+  <text x="170" y="148" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#16a34a">180°</text>
+  <text x="170" y="162" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Straight angle</text>
+
+  <circle cx="285" cy="95" r="38" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="285" cy="95" r="4" fill="#d97706"/>
+  <line x1="285" y1="95" x2="323" y2="95" stroke="#d97706" stroke-width="2.5"/>
+  <path d="M 323 95 A 38 38 0 1 1 322 94" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="3,2"/>
+  <text x="285" y="148" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#d97706">360°</text>
+  <text x="285" y="162" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#64748b">Full turn</text>
+</svg>
+</div>
+<div class="num-table" style="background:#f0fdf4; border-color:#86efac;">
+  <div class="nt-title" style="color:#15803d;">Important Angle Measures</div>
+  <div class="seq-row"><span class="seq-nums">Full turn (chakkar)</span><span class="seq-name" style="background:#bbf7d0;color:#15803d;">360°</span></div>
+  <div class="seq-row"><span class="seq-nums">Straight angle (flat line)</span><span class="seq-name" style="background:#bbf7d0;color:#15803d;">180°</span></div>
+  <div class="seq-row"><span class="seq-nums">Right angle (corner of notebook)</span><span class="seq-name" style="background:#bbf7d0;color:#15803d;">90°</span></div>
+  <div class="seq-row"><span class="seq-nums">Acute angle</span><span class="seq-name" style="background:#bbf7d0;color:#15803d;">less than 90°</span></div>
+  <div class="seq-row"><span class="seq-nums">Obtuse angle</span><span class="seq-name" style="background:#bbf7d0;color:#15803d;">90° to 180°</span></div>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>A full turn = 360°. A straight angle = half turn. So straight angle = how many degrees?</li>
+    <li>A right angle = half of straight angle. So right angle = how many degrees?</li>
+    <li>Clock at 3 o'clock — what is the angle between the hands?</li>
+    <li>Clock at 6 o'clock — what is the angle between the hands?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A full turn (chakkar) = how many degrees?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">90°</button><button class="choice-btn" onclick="checkAnswer(this,false)">180°</button><button class="choice-btn" onclick="checkAnswer(this,false)">270°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">360°</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. A straight angle = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">90°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">180°</button><button class="choice-btn" onclick="checkAnswer(this,false)">270°</button><button class="choice-btn" onclick="checkAnswer(this,false)">360°</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Clock hands at 3 o'clock make an angle of:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">90°</button><button class="choice-btn" onclick="checkAnswer(this,false)">180°</button><button class="choice-btn" onclick="checkAnswer(this,false)">45°</button><button class="choice-btn" onclick="checkAnswer(this,false)">360°</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. An angle of 75° is:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Acute (less than 90°)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Right (= 90°)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Obtuse (90°-180°)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Straight (= 180°)</button></div><div class="feedback"></div></div>
+</div>
+<div class="math-talk">&#x1F4A1; <strong>Chapter 2 Complete!</strong>&nbsp; You now know: Point, Line Segment, Line, Ray, Angle, Comparing Angles, Making Angles, Special Types and Measuring in Degrees. Chapter 2 done! &#x1F3C6;</div>`;}
+
+function sec210(){return `
+<div class="sec-heading" style="color:#0d9488">&#x1F4D0; 2.10 Using a Protractor</div>
+<p>We know angles are measured in degrees. But how do we actually <strong>measure</strong> or <strong>draw</strong> an exact angle? We use a tool called a <strong>protractor</strong>!</p>
+<div class="concept-box">
+  <div class="cb-title">What is a Protractor?</div>
+  <p>A protractor is a semicircular tool divided into <strong>180 equal parts</strong>. Each part = 1°. It has two scales — inner and outer — both starting from 0° but going in opposite directions.</p>
+</div>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>The <strong>Ashoka Chakra</strong> on our national flag has 24 spokes. Each spoke divides the circle equally. The angle between two spokes = 360° ÷ 24 = <strong>15°</strong>! A protractor helps us measure and draw such precise angles.</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 150" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">How to Measure an Angle with Protractor</text>
+  <rect x="10" y="26" width="148" height="110" rx="8" fill="#ccfbf1"/>
+  <text x="84" y="44" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#0f766e">Step 1</text>
+  <text x="84" y="56" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#065f46">Place centre of</text>
+  <text x="84" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#065f46">protractor on</text>
+  <text x="84" y="80" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#065f46">the vertex</text>
+  <circle cx="84" cy="110" r="8" fill="#0d9488"/>
+  <text x="84" y="114" text-anchor="middle" font-family="Nunito,sans-serif" font-size="8" font-weight="700" fill="white">O</text>
+  <rect x="182" y="26" width="148" height="110" rx="8" fill="#ccfbf1"/>
+  <text x="256" y="44" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#0f766e">Step 2</text>
+  <text x="256" y="56" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#065f46">Align one arm</text>
+  <text x="256" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#065f46">with the 0° line</text>
+  <text x="256" y="80" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#065f46">of protractor</text>
+  <line x1="210" y1="118" x2="302" y2="118" stroke="#0d9488" stroke-width="2.5"/>
+  <circle cx="210" cy="118" r="5" fill="#0d9488"/>
+  <text x="256" y="135" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#065f46">0° aligned here</text>
+  <text x="170" y="145" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#0d9488">Step 3: Read the degree where the other arm crosses the scale!</text>
+</svg>
+</div>
+<div class="concept-box">
+  <div class="cb-title">How to Draw an Angle of given degrees</div>
+  <p>1. Draw a ray IN.<br/>
+  2. Place protractor centre on I, align IN with 0°.<br/>
+  3. Mark point T at the required degree on the scale.<br/>
+  4. Join I to T — angle TIN is your required angle!</p>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Use your protractor to measure angles of 30°, 90°, 120°, 180°.</li>
+    <li>Draw angles of: 40°, 75°, 110°, 134°.</li>
+    <li>The Ashoka Chakra has 24 spokes. What is the angle between adjacent spokes?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A protractor is shaped like a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Full circle</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Semicircle (half circle)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Triangle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Square</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. When measuring an angle with protractor, we place its centre on the angle's:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Arm</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Vertex</button><button class="choice-btn" onclick="checkAnswer(this,false)">Midpoint</button><button class="choice-btn" onclick="checkAnswer(this,false)">Endpoint</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Ashoka Chakra has 24 spokes equally spaced. Angle between 2 spokes = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">24°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">15°</button><button class="choice-btn" onclick="checkAnswer(this,false)">20°</button><button class="choice-btn" onclick="checkAnswer(this,false)">30°</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. A protractor has how many equal divisions?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">90</button><button class="choice-btn" onclick="checkAnswer(this,false)">360</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">180</button><button class="choice-btn" onclick="checkAnswer(this,false)">270</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec211(){return `
+<div class="sec-heading" style="color:#0d9488">&#x2606; 2.11 Types of Angles and their Measures</div>
+<p>Let us bring together <strong>all types of angles</strong> with their exact degree ranges — the complete picture!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>A <strong>kite</strong> (patang) has both acute and obtuse angles. The <strong>Eiffel Tower-like structures</strong> in Indian bridges use reflex angles in their design. When you open a <strong>door fully flat against a wall</strong> — that is a reflex angle (more than 180°)!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">All 5 Types of Angles</text>
+  <rect x="6" y="24" width="62" height="78" rx="8" fill="#dbeafe"/>
+  <line x1="37" y1="88" x2="61" y2="88" stroke="#2563eb" stroke-width="2"/>
+  <line x1="37" y1="88" x2="37" y2="62" stroke="#2563eb" stroke-width="2"/>
+  <rect x="37" y="76" width="9" height="12" fill="none" stroke="#2563eb" stroke-width="1.5"/>
+  <circle cx="37" cy="88" r="3" fill="#2563eb"/>
+  <text x="37" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#2563eb">Right</text>
+  <text x="37" y="120" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#1d4ed8">= 90°</text>
+
+  <rect x="74" y="24" width="62" height="78" rx="8" fill="#fef3c7"/>
+  <line x1="105" y1="88" x2="129" y2="88" stroke="#d97706" stroke-width="2"/>
+  <line x1="105" y1="88" x2="122" y2="65" stroke="#d97706" stroke-width="2"/>
+  <path d="M 119 88 A 14 14 0 0 1 114 76" fill="none" stroke="#d97706" stroke-width="1.5"/>
+  <circle cx="105" cy="88" r="3" fill="#d97706"/>
+  <text x="105" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#d97706">Acute</text>
+  <text x="105" y="120" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#92400e">0°–90°</text>
+
+  <rect x="142" y="24" width="62" height="78" rx="8" fill="#fee2e2"/>
+  <line x1="173" y1="88" x2="197" y2="88" stroke="#ef4444" stroke-width="2"/>
+  <line x1="173" y1="88" x2="178" y2="58" stroke="#ef4444" stroke-width="2"/>
+  <path d="M 189 88 A 16 16 0 0 1 178 73" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+  <circle cx="173" cy="88" r="3" fill="#ef4444"/>
+  <text x="173" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#ef4444">Obtuse</text>
+  <text x="173" y="120" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#b91c1c">90°–180°</text>
+
+  <rect x="210" y="24" width="62" height="78" rx="8" fill="#dcfce7"/>
+  <line x1="241" y1="75" x2="265" y2="75" stroke="#16a34a" stroke-width="2"/>
+  <line x1="217" y1="75" x2="241" y2="75" stroke="#16a34a" stroke-width="2"/>
+  <circle cx="241" cy="75" r="3" fill="#16a34a"/>
+  <path d="M 252 75 A 11 11 0 0 1 241 64" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="241" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#16a34a">Straight</text>
+  <text x="241" y="120" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#15803d">= 180°</text>
+
+  <rect x="278" y="24" width="56" height="78" rx="8" fill="#f3e8ff"/>
+  <circle cx="306" cy="70" r="3" fill="#7c3aed"/>
+  <line x1="306" y1="70" x2="328" y2="70" stroke="#7c3aed" stroke-width="2"/>
+  <path d="M 322 70 A 16 16 0 1 0 306 54" fill="none" stroke="#7c3aed" stroke-width="2"/>
+  <text x="306" y="108" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#7c3aed">Reflex</text>
+  <text x="306" y="120" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#6d28d9">180°–360°</text>
+
+  <rect x="6" y="136" width="328" height="56" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="170" y="154" text-anchor="middle" font-family="Baloo 2,cursive" font-size="11" font-weight="800" fill="#1e293b">Complete Order: Acute &lt; Right &lt; Obtuse &lt; Straight &lt; Reflex</text>
+  <text x="170" y="169" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#475569">0° ........... 90° ........... 180° ........... 360°</text>
+  <text x="37" y="184" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#d97706">Acute</text>
+  <text x="105" y="184" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#2563eb">Right</text>
+  <text x="173" y="184" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#ef4444">Obtuse</text>
+  <text x="241" y="184" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#16a34a">Straight</text>
+  <text x="306" y="184" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#7c3aed">Reflex</text>
+</svg>
+</div>
+<div class="num-table" style="background:#f5f3ff; border-color:#c4b5fd;">
+  <div class="nt-title" style="color:#5b21b6;">All Angle Types — Quick Summary</div>
+  <div class="seq-row"><span class="seq-nums">Acute angle</span><span class="seq-name" style="background:#ede9fe;color:#5b21b6;">0° to 90° (not including)</span></div>
+  <div class="seq-row"><span class="seq-nums">Right angle</span><span class="seq-name" style="background:#ede9fe;color:#5b21b6;">exactly 90°</span></div>
+  <div class="seq-row"><span class="seq-nums">Obtuse angle</span><span class="seq-name" style="background:#ede9fe;color:#5b21b6;">90° to 180° (not including)</span></div>
+  <div class="seq-row"><span class="seq-nums">Straight angle</span><span class="seq-name" style="background:#ede9fe;color:#5b21b6;">exactly 180°</span></div>
+  <div class="seq-row"><span class="seq-nums">Reflex angle</span><span class="seq-name" style="background:#ede9fe;color:#5b21b6;">180° to 360° (not including)</span></div>
+  <div class="seq-row"><span class="seq-nums">Full turn</span><span class="seq-name" style="background:#ede9fe;color:#5b21b6;">exactly 360°</span></div>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>A door opened past 180° — what type of angle does it make?</li>
+    <li>Name the type of angle: 45°, 90°, 135°, 180°, 270°.</li>
+    <li>Can a triangle have a reflex angle? Why or why not?</li>
+    <li>Puzzle: I am an acute angle. Double me = still acute. Triple me = still acute. Quadruple me = still acute. But 5 times me = obtuse! What could I be?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. A reflex angle is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Less than 90°</button><button class="choice-btn" onclick="checkAnswer(this,false)">Exactly 180°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Between 180° and 360°</button><button class="choice-btn" onclick="checkAnswer(this,false)">Exactly 90°</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. An angle of 200° is a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Obtuse angle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Straight angle</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Reflex angle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Right angle</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. A kite (patang) has a sharp tip angle of 35°. This is a:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Acute angle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Right angle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Obtuse angle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Reflex angle</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q4. Which angle type comes between Obtuse and Reflex?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Acute</button><button class="choice-btn" onclick="checkAnswer(this,false)">Right</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Straight (180°)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Full turn</button></div><div class="feedback"></div></div>
+</div>
+<div class="math-talk">&#x1F3C6; <strong>Chapter 2 — 100% Complete!</strong>&nbsp; Point, Line Segment, Line, Ray, Angle, Comparing, Making, Special Types, Measuring, Protractor, All Angle Types — badhu cover thayu! Chapter 2 done! &#x1F4AF;</div>`;}
+
+// ── CHAPTER 3 ──
+
+function sec31(){return `
+<div class="sec-heading" style="color:#f97316">&#x1F4AC; 3.1 Numbers can Tell us Things</div>
+<p>Numbers are not just for counting — they <strong>tell us information</strong> about the world around us!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Think of a <strong>cricket scorecard</strong> — 10/2 means 10 runs, 2 wickets. The jersey number of a <strong>cricket player</strong> identifies who they are. A <strong>PIN code</strong> like 395001 tells us the area in Surat! Numbers give meaning beyond just counting.</p>
+</div>
+<p>In this activity, children stand in a line. Each child says a number based on how many taller neighbours they have:</p>
+<div class="concept-box">
+  <div class="cb-title">The Rule</div>
+  <p>A child says <strong>0</strong> if neither neighbour is taller.<br/>
+  A child says <strong>1</strong> if exactly one neighbour is taller.<br/>
+  A child says <strong>2</strong> if both neighbours are taller.</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 110" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Children in line — numbers show taller neighbours</text>
+  <rect x="15" y="55" width="28" height="40" rx="4" fill="#fed7aa" stroke="#f97316" stroke-width="1.5"/>
+  <text x="29" y="75" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#1e293b">h=5</text>
+  <text x="29" y="50" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#f97316">0</text>
+
+  <rect x="58" y="40" width="28" height="55" rx="4" fill="#fed7aa" stroke="#f97316" stroke-width="1.5"/>
+  <text x="72" y="62" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#1e293b">h=7</text>
+  <text x="72" y="35" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#f97316">0</text>
+
+  <rect x="101" y="60" width="28" height="35" rx="4" fill="#fed7aa" stroke="#f97316" stroke-width="1.5"/>
+  <text x="115" y="80" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#1e293b">h=4</text>
+  <text x="115" y="55" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#f97316">2</text>
+
+  <rect x="144" y="35" width="28" height="60" rx="4" fill="#fed7aa" stroke="#f97316" stroke-width="1.5"/>
+  <text x="158" y="58" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#1e293b">h=8</text>
+  <text x="158" y="30" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#f97316">1</text>
+
+  <rect x="187" y="50" width="28" height="45" rx="4" fill="#fed7aa" stroke="#f97316" stroke-width="1.5"/>
+  <text x="201" y="70" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#1e293b">h=6</text>
+  <text x="201" y="45" text-anchor="middle" font-family="Baloo 2,cursive" font-size="16" font-weight="800" fill="#f97316">1</text>
+
+  <text x="170" y="105" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#64748b">Each number = count of taller neighbours on left/right</text>
+</svg>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Can children arrange themselves so that ALL say 0? When would that happen?</li>
+    <li>Can the end children ever say 2? Why or why not?</li>
+    <li>Think of 3 other situations in daily life where numbers tell us something meaningful.</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. In cricket, what does 10/2 on the scoreboard mean?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">10 players, 2 overs</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">10 runs, 2 wickets fallen</button><button class="choice-btn" onclick="checkAnswer(this,false)">10 overs, 2 runs</button><button class="choice-btn" onclick="checkAnswer(this,false)">10 balls, 2 fours</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. A child in the middle of the line has both neighbours taller. They say:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">0</button><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">2</button><button class="choice-btn" onclick="checkAnswer(this,false)">3</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. The tallest child in any arrangement will always say:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">0</button><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" onclick="checkAnswer(this,false)">2</button><button class="choice-btn" onclick="checkAnswer(this,false)">Depends</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec32(){return `
+<div class="sec-heading" style="color:#f97316">&#x1F7E7; 3.2 Supercells</div>
+<p>In a row of numbers, a cell is a <strong>supercell</strong> if its number is <strong>greater than all its neighbours</strong>!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Think of cricket batting scores in a row: 45, <strong>78</strong>, 32, <strong>91</strong>, 60, 15, <strong>88</strong>. The bolded scores — 78, 91, 88 — are "supercell" scores! Each is bigger than both its neighbours. In a <strong>mango market</strong>, the stall with the highest price compared to neighbours on both sides is a "supercell stall"!</p>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Supercell Rule</div>
+  <p>A number is a supercell if it is <strong>greater than all its adjacent (neighbouring) cells</strong>. End cells only have one neighbour, so they just need to beat that one neighbour!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Supercells are highlighted (bigger than neighbours)</text>
+  <rect x="10" y="28" width="44" height="32" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="32" y="49" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="700" fill="#1e293b">43</text>
+  <rect x="58" y="22" width="44" height="38" rx="4" fill="#f97316"/>
+  <text x="80" y="45" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="white">79</text>
+  <text x="80" y="72" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" font-weight="700" fill="#f97316">supercell!</text>
+  <rect x="106" y="28" width="44" height="32" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="128" y="49" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="700" fill="#1e293b">75</text>
+  <rect x="154" y="28" width="44" height="32" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="176" y="49" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="700" fill="#1e293b">10</text>
+  <rect x="202" y="22" width="44" height="38" rx="4" fill="#f97316"/>
+  <text x="224" y="45" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="white">29</text>
+  <text x="224" y="72" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" font-weight="700" fill="#f97316">supercell!</text>
+  <rect x="250" y="28" width="44" height="32" rx="4" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="272" y="49" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="700" fill="#1e293b">28</text>
+  <rect x="298" y="22" width="38" height="38" rx="4" fill="#f97316"/>
+  <text x="317" y="45" text-anchor="middle" font-family="Baloo 2,cursive" font-size="14" font-weight="800" fill="white">34</text>
+  <text x="317" y="72" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" font-weight="700" fill="#f97316">end cell!</text>
+</svg>
+</div>
+<div class="fig-out">
+  <div class="fo-hdr">&#x2699; Figure it Out</div>
+  <ol>
+    <li>Mark supercells: 6828, 670, 9435, 3780, 3708, 7308, 8000, 5583, 52</li>
+    <li>Can a table have NO supercells? Try to fill one!</li>
+    <li>Can the smallest number in a table be a supercell? Why or why not?</li>
+  </ol>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. In the row 45, 78, 32, 91, 60 — which is a supercell?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">45</button><button class="choice-btn" onclick="checkAnswer(this,false)">78</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">91</button><button class="choice-btn" onclick="checkAnswer(this,false)">60</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q2. In row: 5, 3, 8, 6, 9 — how many supercells are there?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">2</button><button class="choice-btn" onclick="checkAnswer(this,false)">3</button><button class="choice-btn" onclick="checkAnswer(this,false)">4</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. The largest number in a row is always a supercell. True or false?</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">True — it beats all neighbours</button><button class="choice-btn" onclick="checkAnswer(this,false)">False — it depends</button><button class="choice-btn" onclick="checkAnswer(this,false)">Only if it is at the end</button><button class="choice-btn" onclick="checkAnswer(this,false)">Never true</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec33(){return `
+<div class="sec-heading" style="color:#f97316">&#x2194; 3.3 Patterns on the Number Line</div>
+<p>A <strong>number line</strong> helps us see the order and position of numbers visually. Every number has exactly one position on the number line!</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Think of <strong>house numbers on a street</strong> in Surat — they go in order. Or <strong>km markers on a highway</strong> — each marker is at a specific position. A number line works exactly like this!</p>
+</div>
+<div class="visual-wrap">
+<svg viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font
