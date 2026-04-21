@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vidhya — Your Learning Mitra</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://js.puter.com/v2/"></script>
+<script async src="https://js.puter.com/v2/"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height:100vh;overflow-x:hidden}
@@ -22,7 +22,7 @@ body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height
 .pill-green{background:rgba(16,185,129,0.25);color:#6ee7b7}
 .splash-gseb{margin-top:12px;font-size:11px;color:rgba(255,255,255,0.4);animation:fadeUp 0.8s ease 0.9s both}
 .splash-loader{margin-top:40px;width:48px;height:3px;background:rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;animation:fadeUp 0.8s ease 0.9s both}
-.splash-loader-fill{height:100%;width:0%;background:#fbbf24;border-radius:10px;animation:loadFill 2s ease 0.5s forwards}
+.splash-loader-fill{height:100%;width:0%;background:#fbbf24;border-radius:10px;animation:loadFill 1.5s ease 0.5s forwards}
 @keyframes loadFill{to{width:100%}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .topbar{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 60%,#0d9488 100%);padding:11px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,58,138,0.25)}
@@ -32,9 +32,6 @@ body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height
 .topbar-logo{width:32px;height:32px;border-radius:50%;background:#1e3a8a;border:1.5px solid rgba(251,191,36,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .topbar-name{font-family:'EB Garamond',Georgia,serif;font-size:20px;font-weight:700;color:white;line-height:1}
 .topbar-sub{font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:1px}
-.topbar-right{margin-left:auto;display:flex;gap:8px}
-.lang-btn{background:rgba(255,255,255,0.18);border:none;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;transition:background 0.2s}
-.lang-btn:hover{background:rgba(255,255,255,0.3)}
 .screen{display:none}
 .screen.active{display:block;animation:fadeIn 0.25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -158,10 +155,8 @@ body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height
 </div>
 <div style="flex:1">
 <div class="topbar-name" id="topbarTitle">Vidhya</div>
-<div class="topbar-sub" id="topbarSub" data-en="Your Learning Mitra" data-gu="તમારી શીખવાની સાથી">Your Learning Mitra</div>
+<div class="topbar-sub" id="topbarSub">Your Learning Mitra</div>
 </div>
-<div class="topbar-right">
-<button class="lang-btn" onclick="toggleLang()" id="langBtn">ગુ</button>
 </div>
 
 <div class="screen active" id="homeScreen">
@@ -182,48 +177,33 @@ body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height
 <ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
 </svg>
 <div class="hero-vidhya">Vidhya</div>
-<div class="hero-tagline" data-en="Your Learning Mitra" data-gu="તમારી શીખવાની સાથી">Your Learning Mitra</div>
+<div class="hero-tagline">Your Learning Mitra</div>
 <div class="hero-pills">
-<span class="hero-pill hp-blue" data-en="Standard 6" data-gu="ધોરણ 6">Standard 6</span>
+<span class="hero-pill hp-blue">Standard 6</span>
 <span class="hero-pill hp-green">GSEB</span>
-<span class="hero-pill hp-yellow" data-en="English Medium" data-gu="અંગ્રેજી માધ્યમ">English Medium</span>
+<span class="hero-pill hp-yellow">English Medium</span>
 </div>
 </div>
 
 <div class="subject-bar">
-<button class="subj-btn active">📐 <span data-en="Mathematics" data-gu="ગણિત">Mathematics</span></button>
-<button class="subj-btn locked">🔬 <span data-en="Science (Soon)" data-gu="વિજ્ઞાન (ટૂંક સમયમાં)">Science (Soon)</span></button>
+<button class="subj-btn active">📐 <span>Mathematics</span></button>
+<button class="subj-btn locked">🔬 <span>Science (Soon)</span></button>
 </div>
 
 <div id="mathsPanel">
 <div class="chapters-grid">
-<div class="chapter-card ch-1" onclick="openChapter(1)">
-<span class="ch-icon">🔢</span>
-<div class="ch-num">1</div>
-<div class="ch-name" data-en="Patterns in Mathematics" data-gu="ગણિતમાં ભાત">Patterns in Mathematics</div>
-<span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span>
+<div class="chapter-card ch-1" onclick="openChapter(1)"><span class="ch-icon">🔢</span><div class="ch-num">1</div><div class="ch-name">Patterns in Mathematics</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-2" onclick="openChapter(2)"><span class="ch-icon">📏</span><div class="ch-num">2</div><div class="ch-name">Lines and Angles</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-3" onclick="openChapter(3)"><span class="ch-icon">🎲</span><div class="ch-num">3</div><div class="ch-name">Number Play</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-4" onclick="openChapter(4)"><span class="ch-icon">📊</span><div class="ch-num">4</div><div class="ch-name">Data Handling</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-5" onclick="openChapter(5)"><span class="ch-icon">🌟</span><div class="ch-num">5</div><div class="ch-name">Prime Time</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-6" onclick="openChapter(6)"><span class="ch-icon">⬜</span><div class="ch-num">6</div><div class="ch-name">Perimeter and Area</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-7" onclick="openChapter(7)"><span class="ch-icon">½</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-8" onclick="openChapter(8)"><span class="ch-icon">📐</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-9" onclick="openChapter(9)"><span class="ch-icon">◆</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-10" onclick="openChapter(10)"><span class="ch-icon">⬇️</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">✅ Available</span></div>
 </div>
-<div class="chapter-card ch-2" onclick="openChapter(2)">
-<span class="ch-icon">📏</span>
-<div class="ch-num">2</div>
-<div class="ch-name" data-en="Lines and Angles" data-gu="રેખા અને ખૂણા">Lines and Angles</div>
-<span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span>
-</div>
-<div class="chapter-card ch-3" onclick="openChapter(3)">
-<span class="ch-icon">🎲</span>
-<div class="ch-num">3</div>
-<div class="ch-name" data-en="Number Play" data-gu="સંખ્યા સાથે રમત">Number Play</div>
-<span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span>
-</div>
-<div class="chapter-card ch-4" onclick="openChapter(4)"><span class="ch-icon">📊</span><div class="ch-num">4</div><div class="ch-name" data-en="Data Handling" data-gu="માહિતીનું વ્યવસ્થાપન">Data Handling</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-5" onclick="openChapter(5)"><span class="ch-icon">🌟</span><div class="ch-num">5</div><div class="ch-name" data-en="Prime Time" data-gu="અવિભાજ્ય સમય">Prime Time</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-6" onclick="openChapter(6)"><span class="ch-icon">⬜</span><div class="ch-num">6</div><div class="ch-name" data-en="Perimeter and Area" data-gu="પરિમિતિ અને ક્ષેત્રફળ">Perimeter and Area</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-7" onclick="openChapter(7)"><span class="ch-icon">½</span><div class="ch-num">7</div><div class="ch-name" data-en="Fractions" data-gu="અપૂર્ણાંક">Fractions</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-8" onclick="openChapter(8)"><span class="ch-icon">📐</span><div class="ch-num">8</div><div class="ch-name" data-en="Playing with Constructions" data-gu="રચનાઓ સાથે રમત">Playing with Constructions</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-9" onclick="openChapter(9)"><span class="ch-icon">◆</span><div class="ch-num">9</div><div class="ch-name" data-en="Symmetry" data-gu="સંમિતિ">Symmetry</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-<div class="chapter-card ch-10" onclick="openChapter(10)"><span class="ch-icon">⬇️</span><div class="ch-num">10</div><div class="ch-name" data-en="The Other Side of Zero" data-gu="શૂન્યની બીજી બાજુ">The Other Side of Zero</div><span class="ch-badge" data-en="✅ Available" data-gu="✅ ઉપલબ્ધ">✅ Available</span></div>
-</div>
-<div class="vidhya-footer">🪔 Vidhya • <span data-en="Your Learning Mitra" data-gu="તમારી શીખવાની સાથી">Your Learning Mitra</span></div>
+<div class="vidhya-footer">🪔 Vidhya • <span>Your Learning Mitra</span></div>
 </div>
 
 <div class="screen" id="chapterScreen">
@@ -238,11 +218,10 @@ body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height
 <div class="content-body" id="contentBody"></div>
 </div>
 <script>
-let lang='en',curChapter=1,curSection=null,navStack=[],chData={},voices=[],puterReady=false,unlockState={};
+let curChapter=1,curSection=null,navStack=[],puterReady=false;
 
 const CONTENT={
-1:{
-en:{name:"Patterns in Mathematics",icon:"🔢",color:"#2563eb",bg:"linear-gradient(135deg,#2563eb,#1d4ed8)",sections:[
+1:{name:"Patterns in Mathematics",icon:"🔢",color:"#2563eb",bg:"linear-gradient(135deg,#2563eb,#1d4ed8)",sections:[
 {num:"1.1",title:"What is Mathematics?",type:"Concept",content:[
 `Mathematics is not just numbers. It is about patterns and solving problems. We use math every day without knowing.`,
 `When you arrange books or count money, you use math. When you share sweets equally, that is division.`,
@@ -277,44 +256,7 @@ en:{name:"Patterns in Mathematics",icon:"🔢",color:"#2563eb",bg:"linear-gradie
 `Share your pattern with friends. Can they guess your rule?`
 ],ai:"Suggest 3 easy pattern-making activities for kids."}
 ]},
-gu:{name:"ગણિતમાં ભાત",icon:"🔢",color:"#2563eb",bg:"linear-gradient(135deg,#2563eb,#1d4ed8)",sections:[
-{num:"1.1",title:"ગણિત એટલે શું?",type:"સંકલ્પના",content:[
-`ગણિત એ ફક્ત સંખ્યા નથી. એ ભાત અને સમસ્યા ઉકેલવા વિશે છે. આપણે રોજ ગણિત વાપરીએ છીએ.`,
-`જ્યારે તમે ચોપડી ગોઠવો કે પૈસા ગણો, ત્યારે ગણિત વાપરો છો. મીઠાઈ સરખે ભાગે વહેંચવી એ ભાગાકાર છે.`,
-`ગણિત આપણને સ્પષ્ટ વિચારવામાં અને જવાબ શોધવામાં મદદ કરે છે. એ મગજ માટેનું સાધન છે.`,
-`આ પ્રકરણમાં આપણે સંખ્યા અને આકારમાં ભાત શોધીશું. ભાત શોધવાની મજા આવે છે.`
-],ai:"ભાત શું છે તે રોજિંદા ઉદાહરણથી સમજાવો."},
-{num:"1.2",title:"આકારમાં ભાત",type:"પ્રવૃત્તિ",content:[
-`આ ભાત જુઓ: △ □ △ □ △ □ ... હવે શું આવશે? ત્રિકોણ.`,
-`ભાત એક નિયમથી પુનરાવર્તન થાય છે. નિયમ ખબર પડે એટલે આગળ શું આવશે તે ખબર પડે.`,
-`ઉદાહરણ: 2, 4, 6, 8, ... દર વખતે 2 ઉમેરાય છે. એટલે પછી 10.`,
-`ઉદાહરણ: 1, 3, 6, 10, ... અહીં 2, પછી 3, પછી 4 ઉમેરાય છે. પછી 15.`,
-`નિયમ શોધવાથી તમે ભાત જાસૂસ બનો છો.`
-],ai:"બાળક માટે 3 સરળ ભાતના પ્રશ્ન બનાવો.",practice:[
-{q:"આગળ શું: 5, 10, 15, 20, ?",choices:["22","25","30"],ans:1},
-{q:"નિયમ શોધો: 3, 6, 9, 12, ?",choices:["14","15","18"],ans:1}
-]},
-{num:"1.3",title:"સંખ્યામાં ભાત",type:"મહાવરો",content:[
-`સંખ્યાની ભાત બધે છે. કેલેન્ડરની તારીખ 1, 8, 15, 22. એટલે 7 ઉમેરાય છે.`,
-`એકી સંખ્યા: 2, 4, 6, 8, 10... બેકી સંખ્યા: 1, 3, 5, 7, 9...`,
-`ઘડિયા એ ભાત છે. 3, 6, 9, 12... દર વખતે 3 ઉમેરાય છે.`,
-`વર્ગ સંખ્યા: 1, 4, 9, 16, 25... આ 1×1, 2×2, 3×3, 4×4, 5×5 છે.`,
-`જ્યારે ભાત દેખાય, નિયમ લખી લો. તેનાથી ઝડપથી ઉકેલ મળે.`
-],ai:"વર્ગ સંખ્યા સરળ રીતે ચિત્રથી સમજાવો.",practice:[
-{q:"25 પછીની વર્ગ સંખ્યા કઈ?",choices:["30","36","40"],ans:1},
-{q:"7×7 કેટલા?",choices:["47","49","56"],ans:1}
-]},
-{num:"1.4",title:"તમારી પોતાની ભાત બનાવો",type:"પ્રોજેક્ટ",content:[
-`હવે તમે ભાત બનાવો. આકારથી શરૂ કરો. દોરો: વર્તુળ, તારો, વર્તુળ, તારો...`,
-`સંખ્યાથી: 5 થી શરૂ કરો, દર વખતે 4 ઉમેરો. 5, 9, 13, 17...`,
-`તમારા નામથી ભાત બનાવો. જો A=1, B=2... તો VIDHYA શું ભાત બનાવે?`,
-`V=22, I=9, D=4, H=8, Y=25, A=1. કોઈ સ્પષ્ટ નિયમ નથી, પણ તમે પ્રયત્ન કર્યો. એ જ ગણિતની વિચારશક્તિ છે.`,
-`તમારી ભાત મિત્રો સાથે વહેંચો. તેઓ નિયમ શોધી શકે છે?`
-],ai:"બાળકો માટે ભાત બનાવવાની 3 સરળ પ્રવૃત્તિ સૂચવો."}
-]},
-
-2:{
-en:{name:"Lines and Angles",icon:"📏",color:"#0d9488",bg:"linear-gradient(135deg,#0d9488,#0f766e)",sections:[
+2:{name:"Lines and Angles",icon:"📏",color:"#0d9488",bg:"linear-gradient(135deg,#0d9488,#0f766e)",sections:[
 {num:"2.1",title:"Point, Line, Ray, Segment",type:"Concept",content:[
 `A point is a dot. It shows a location. It has no size.`,
 `A line goes on forever in both sides. We draw arrows to show this.`,
@@ -339,34 +281,7 @@ en:{name:"Lines and Angles",icon:"📏",color:"#0d9488",bg:"linear-gradient(135d
 `Estimate first, then measure. This makes you better at guessing.`
 ],ai:"How to use a protractor - 4 simple steps."}
 ]},
-gu:{name:"રેખા અને ખૂણા",icon:"📏",color:"#0d9488",bg:"linear-gradient(135deg,#0d9488,#0f766e)",sections:[
-{num:"2.1",title:"બિંદુ, રેખા, કિરણ, રેખાખંડ",type:"સંકલ્પના",content:[
-`બિંદુ એ ટપકું છે. એ સ્થાન બતાવે છે. એને માપ નથી.`,
-`રેખા બંને બાજુ અનંત સુધી જાય છે. આપણે તીર દોરીએ છીએ એ બતાવવા.`,
-`કિરણ એક બિંદુથી શરૂ થઈને એક જ બાજુ અનંત જાય છે. સૂર્યના કિરણ જેવું.`,
-`રેખાખંડને બે છેડા હોય છે. એ રેખાનો ટુકડો છે. તમારી પેન્સિલ રેખાખંડ છે.`
-],ai:"બિંદુ, રેખા, કિરણ, રેખાખંડ વર્ગખંડની વસ્તુથી સમજાવો."},
-{num:"2.2",title:"ખૂણાના પ્રકાર",type:"સંકલ્પના",content:[
-`ખૂણો ત્યારે બને જ્યારે બે કિરણ એક બિંદુએ મળે. એ બિંદુને શિરોબિંદુ કહે છે.`,
-`કાટખૂણો: બરાબર 90 અંશ. તમારી ચોપડીના ખૂણા જેવો.`,
-`લઘુકોણ: 90 અંશથી નાનો. ચોપડીના ખૂણાથી નાનો.`,
-`ગુરુકોણ: 90 થી મોટો પણ 180 થી નાનો. ચોપડીના ખૂણાથી મોટો.`,
-`સરળકોણ: 180 અંશ. સીધી લીટી.`
-],ai:"દરેક ખૂણાના પ્રકાર માટે 3 રોજિંદા ઉદાહરણ આપો.",practice:[
-{q:"ચોપડીનો ખૂણો કયો?",choices:["લઘુકોણ","કાટખૂણો","ગુરુકોણ"],ans:1},
-{q:"90° થી નાનો ખૂણો?",choices:["લઘુકોણ","કાટખૂણો","સરળકોણ"],ans:0}
-]},
-{num:"2.3",title:"ખૂણા માપવા",type:"પ્રવૃત્તિ",content:[
-`ખૂણા માપવા કોણમાપક વાપરીએ. એ અડધા વર્તુળ જેવું હોય છે, નંબર સાથે.`,
-`કોણમાપકનું મધ્યબિંદુ શિરોબિંદુ પર મૂકો. એક કિરણ 0 સાથે ગોઠવો.`,
-`બીજું કિરણ જે નંબરે અડે તે વાંચો. એ ખૂણાનું માપ છે.`,
-`તમારી ચોપડીથી પ્રયત્ન કરો. ખૂણો 90 અંશ વંચાવો જોઈએ.`,
-`પહેલા અંદાજ કરો, પછી માપો. આનાથી અંદાજ સારો થશે.`
-],ai:"કોણમાપક વાપરવાના 4 સરળ પગલાં."}
-]},
-
-3:{
-en:{name:"Number Play",icon:"🎲",color:"#f97316",bg:"linear-gradient(135deg,#f97316,#ea580c)",sections:[
+3:{name:"Number Play",icon:"🎲",color:"#f97316",bg:"linear-gradient(135deg,#f97316,#ea580c)",sections:[
 {num:"3.1",title:"Place Value",type:"Concept",content:[
 `In 456, the 4 is not just 4. It is 400 because it is in hundreds place.`,
 `Place value: Ones, Tens, Hundreds, Thousands.`,
@@ -395,57 +310,34 @@ en:{name:"Number Play",icon:"🎲",color:"#f97316",bg:"linear-gradient(135deg,#f
 {q:"Round 96 to nearest 10",choices:["90","100","95"],ans:1}
 ]}
 ]},
-gu:{name:"સંખ્યા સાથે રમત",icon:"🎲",color:"#f97316",bg:"linear-gradient(135deg,#f97316,#ea580c)",sections:[
-{num:"3.1",title:"સ્થાન કિંમત",type:"સંકલ્પના",content:[
-`456 માં 4 ફક્ત 4 નથી. એ 400 છે કારણ કે સેંકડાના સ્થાને છે.`,
-`સ્થાન કિંમત: એકમ, દશક, શતક, હજાર.`,
-`ઉદાહરણ: 2,345 = 2000 + 300 + 40 + 5.`,
-`સ્થાન કિંમત બદલે છે. 50 માં 5 એ 5 કરતાં દસ ગણો મોટો છે.`,
-`આ પદ્ધતિથી મોટી સંખ્યા સરળતાથી લખાય છે.`
-],ai:"સ્થાન કિંમત પૈસાથી સમજાવો: 1, 10, 100 રૂપિયાની નોટ.",practice:[
-{q:"7,482 માં 4 ની કિંમત?",choices:["4","40","400"],ans:2},
-{q:"હજારના સ્થાને 3 એટલે?",choices:["3","30","3000"],ans:2}
-]},
-{num:"3.2",title:"મોટી સંખ્યાઓ",type:"સંકલ્પના",content:[
-`હજાર પછી દસ હજાર, પછી લાખ આવે.`,
-`1 લાખ = 100 હજાર = 1,00,000.`,
-`ભારતીય પદ્ધતિ: એકમ, દશક, શતક, હજાર, દસ હજાર, લાખ, દસ લાખ, કરોડ.`,
-`ઉદાહરણ: ભારતની વસ્તી 1,40,00,00,000 થી વધુ. એટલે 140 કરોડ.`,
-`અલ્પવિરામ વાંચવામાં મદદ કરે: 12,34,567 એટલે 12 લાખ 34 હજાર 567.`
-],ai:"મોટી સંખ્યામાં અલ્પવિરામ કેમ મૂકીએ? સરળ રીતે સમજાવો."},
-{num:"3.3",title:"અંદાજ",type:"પ્રવૃત્તિ",content:[
-`અંદાજ એટલે જવાબની નજીકનું અનુમાન. આપણે સંખ્યાને પૂર્ણાંક કરીએ.`,
-`47 ને 50 કરો. 23 ને 20 કરો. પછી 47 + 23 એટલે લગભગ 50 + 20 = 70.`,
-`ખરો જવાબ 70 છે. આપણો અંદાજ બરાબર હતો.`,
-`દુકાનમાં અંદાજ વાપરો. ટોફી ₹7 અને બિસ્કિટ ₹12, તો કુલ લગભગ ₹20.`,
-`અંદાજથી સમય બચે. દુકાનદાર ખોટું પરચુરણ આપે તો ખબર પડે.`
-],ai:"દુકાનના 3 ઉદાહરણ આપો જ્યાં અંદાજ મદદ કરે.",practice:[
-{q:"78 + 31 નો અંદાજ",choices:["100","110","120"],ans:1},
-{q:"96 ને નજીકના દશકમાં ફેરવો",choices:["90","100","95"],ans:1}
-]}
-]},
+4:{name:"Data Handling",icon:"📊",color:"#7c3aed",bg:"linear-gradient(135deg,#7c3aed,#6d28d9)",sections:[{num:"4.1",title:"Pictographs",type:"Concept",content:[`Data is information. How many students like cricket? That is data.`,`Pictograph uses pictures to show data. 🍎🍎🍎 means 3 apples if 1 🍎 = 1 apple.`,`If 1 🍎 = 5 apples, then 🍎🍎🍎 = 15 apples. Read the key first.`,`We use pictographs because pictures are easy to understand.`,`Make one: Ask 5 friends their favourite fruit. Draw fruits to show.`],ai:"Explain pictograph with a simple example of 10 students and pets."}]},
+5:{name:"Prime Time",icon:"🌟",color:"#ef4444",bg:"linear-gradient(135deg,#ef4444,#dc2626)",sections:[{num:"5.1",title:"Factors",type:"Concept",content:[`Factors are numbers that divide exactly. Factors of 6 are 1,2,3,6.`,`Because 1×6=6, 2×3=6. No remainder.`,`Every number has 1 and itself as factors.`,`Find factors by dividing. For 10: 10÷1=10, 10÷2=5, 10÷5=2, 10÷10=1. So factors are 1,2,5,10.`,`Factors are like building blocks of numbers.`],ai:"What are factors? Explain with chocolates example.",practice:[{q:"Factors of 8?",choices:["1,2,4,8","1,3,8","2,4,6"],ans:0}]}]},
+6:{name:"Perimeter and Area",icon:"⬜",color:"#16a34a",bg:"linear-gradient(135deg,#16a34a,#15803d)",sections:[{num:"6.1",title:"Perimeter",type:"Concept",content:[`Perimeter is the distance around a shape. Walk around a park - that distance is perimeter.`,`For rectangle: Perimeter = 2 × (length + breadth).`,`Example: Rectangle length 5cm, breadth 3cm. Perimeter = 2 × (5+3) = 16cm.`,`For square: Perimeter = 4 × side.`,`We use perimeter to put a fence around a field.`],ai:"Explain perimeter with a garden fence example.",practice:[{q:"Square side 6cm, perimeter?",choices:["12cm","24cm","36cm"],ans:1}]}]},
+7:{name:"Fractions",icon:"½",color:"#db2777",bg:"linear-gradient(135deg,#db2777,#be185d)",sections:[{num:"7.1",title:"What is a Fraction",type:"Concept",content:[`Fraction is a part of a whole. 1/2 means 1 part out of 2 equal parts.`,`Top number is numerator - how many parts we have.`,`Bottom number is denominator - how many equal parts total.`,`In 3/4, we have 3 parts out of 4 equal parts.`,`Pizza cut in 8 slices, you eat 3. You ate 3/8 of pizza.`],ai:"Explain fractions using chocolate bar example.",practice:[{q:"In 5/8, numerator is?",choices:["5","8","13"],ans:0}]}]},
+8:{name:"Playing with Constructions",icon:"📐",color:"#0284c7",bg:"linear-gradient(135deg,#0284c7,#0369a1)",sections:[{num:"8.1",title:"Using Compass",type:"Activity",content:[`Compass draws circles. It has a sharp point and a pencil.`,`To draw circle: Put sharp point on paper. Turn pencil around.`,`The sharp point is center. Distance from center to edge is radius.`,`All points on circle are same distance from center.`,`Practice: Draw circles of different sizes. Make a flower with circles.`],ai:"How to use a compass safely - 3 tips for kids."}]},
+9:{name:"Symmetry",icon:"◆",color:"#9333ea",bg:"linear-gradient(135deg,#9333ea,#7e22ce)",sections:[{num:"9.1",title:"Line of Symmetry",type:"Concept",content:[`Symmetry means one half is mirror image of other half.`,`Fold a paper. If both sides match exactly, fold line is line of symmetry.`,`Butterfly has symmetry. Left wing matches right wing.`,`Letter A has one line of symmetry. Letter H has two.`,`Circle has many lines of symmetry. Any line through center works.`],ai:"List 5 things in home that have symmetry.",practice:[{q:"Which letter has symmetry?",choices:["F","M","P"],ans:1}]}]},
+10:{name:"The Other Side of Zero",icon:"⬇️",color:"#0891b2",bg:"linear-gradient(135deg,#0891b2,#0e7490)",sections:[{num:"10.1",title:"Negative Numbers",type:"Concept",content:[`Numbers less than zero are negative. We write minus sign: -1, -2, -3.`,`On number line, negative numbers are left of zero.`,`Temperature can be negative. -5°C means 5 degrees below zero. Very cold.`,`If you have ₹10 and spend ₹15, you owe ₹5. That is -5.`,`Negative and positive are opposite. +5 and -5 cancel each other.`],ai:"Explain negative numbers using stairs or lift example.",practice:[{q:"Which is smaller: -3 or -1?",choices:["-3","-1","Same"],ans:0}]}]}
+};
 
-4:{en:{name:"Data Handling",icon:"📊",color:"#7c3aed",bg:"linear-gradient(135deg,#7c3aed,#6d28d9)",sections:[{num:"4.1",title:"Pictographs",type:"Concept",content:[`Data is information. How many students like cricket? That is data.`,`Pictograph uses pictures to show data. 🍎🍎🍎 means 3 apples if 1 🍎 = 1 apple.`,`If 1 🍎 = 5 apples, then 🍎🍎🍎 = 15 apples. Read the key first.`,`We use pictographs because pictures are easy to understand.`,`Make one: Ask 5 friends their favourite fruit. Draw fruits to show.`],ai:"Explain pictograph with a simple example of 10 students and pets."}]},gu:{name:"માહિતીનું વ્યવસ્થાપન",icon:"📊",color:"#7c3aed",bg:"linear-gradient(135deg,#7c3aed,#6d28d9)",sections:[{num:"4.1",title:"ચિત્રાલેખ",type:"સંકલ્પના",content:[`માહિતી એટલે જાણકારી. કેટલા વિદ્યાર્થીને ક્રિકેટ ગમે? એ માહિતી છે.`,`ચિત્રાલેખ માહિતી બતાવવા ચિત્ર વાપરે. 🍎🍎🍎 એટલે 3 સફરજન જો 1 🍎 = 1 સફરજન.`,`જો 1 🍎 = 5 સફરજન, તો 🍎🍎🍎 = 15 સફરજન. પહેલા ચાવી વાંચો.`,`ચિત્રાલેખ વાપરીએ કારણ કે ચિત્ર સમજવા સરળ છે.`,`એક બનાવો: 5 મિત્રોને મનપસંદ ફળ પૂછો. ફળ દોરીને બતાવો.`],ai:"10 વિદ્યાર્થી અને પાળતુ પ્રાણીના ઉદાહરણથી ચિત્રાલેખ સમજાવો."}]}},
-5:{en:{name:"Prime Time",icon:"🌟",color:"#ef4444",bg:"linear-gradient(135deg,#ef4444,#dc2626)",sections:[{num:"5.1",title:"Factors",type:"Concept",content:[`Factors are numbers that divide exactly. Factors of 6 are 1,2,3,6.`,`Because 1×6=6, 2×3=6. No remainder.`,`Every number has 1 and itself as factors.`,`Find factors by dividing. For 10: 10÷1=10, 10÷2=5, 10÷5=2, 10÷10=1. So factors are 1,2,5,10.`,`Factors are like building blocks of numbers.`],ai:"What are factors? Explain with chocolates example.",practice:[{q:"Factors of 8?",choices:["1,2,4,8","1,3,8","2,4,6"],ans:0}]}]},gu:{name:"અવિભાજ્ય સમય",icon:"🌟",color:"#ef4444",bg:"linear-gradient(135deg,#ef4444,#dc2626)",sections:[{num:"5.1",title:"અવયવ",type:"સંકલ્પના",content:[`અવયવ એવી સંખ્યા જે બરાબર ભાગે. 6 ના અવયવ 1,2,3,6 છે.`,`કારણ કે 1×6=6, 2×3=6. શેષ વધતો નથી.`,`દરેક સંખ્યાને 1 અને પોતે અવયવ હોય છે.`,`ભાગાકાર કરીને અવયવ શોધો. 10 માટે: 10÷1=10, 10÷2=5. એટલે અવયવ 1,2,5,10.`,`અવયવ એ સંખ્યાના બાંધકામના ટુકડા છે.`],ai:"અવયવ શું છે? ચોકલેટના ઉદાહરણથી સમજાવો.",practice:[{q:"8 ના અવયવ?",choices:["1,2,4,8","1,3,8","2,4,6"],ans:0}]}]}},
-6:{en:{name:"Perimeter and Area",icon:"⬜",color:"#16a34a",bg:"linear-gradient(135deg,#16a34a,#15803d)",sections:[{num:"6.1",title:"Perimeter",type:"Concept",content:[`Perimeter is the distance around a shape. Walk around a park - that distance is perimeter.`,`For rectangle: Perimeter = 2 × (length + breadth).`,`Example: Rectangle length 5cm, breadth 3cm. Perimeter = 2 × (5+3) = 16cm.`,`For square: Perimeter = 4 × side.`,`We use perimeter to put a fence around a field.`],ai:"Explain perimeter with a garden fence example.",practice:[{q:"Square side 6cm, perimeter?",choices:["12cm","24cm","36cm"],ans:1}]}]},gu:{name:"પરિમિતિ અને ક્ષેત્રફળ",icon:"⬜",color:"#16a34a",bg:"linear-gradient(135deg,#16a34a,#15803d)",sections:[{num:"6.1",title:"પરિમિતિ",type:"સંકલ્પના",content:[`પરિમિતિ એ આકારની ફરતેનું અંતર છે. બગીચાની ફરતે ચાલો - એ અંતર પરિમિતિ છે.`,`લંબચોરસ માટે: પરિમિતિ = 2 × (લંબાઈ + પહોળાઈ).`,`ઉદાહરણ: લંબચોરસ લંબાઈ 5સેમી, પહોળાઈ 3સેમી. પરિમિતિ = 2 × (5+3) = 16સેમી.`,`ચોરસ માટે: પરિમિતિ = 4 × બાજુ.`,`ખેતર ફરતે વાડ કરવા પરિમિતિ વાપરીએ.`],ai:"બગીચાની વાડના ઉદાહરણથી પરિમિતિ સમજાવો.",practice:[{q:"ચોરસ બાજુ 6સેમી, પરિમિતિ?",choices:["12સેમી","24સેમી","36સેમી"],ans:1}]}]}},
-7:{en:{name:"Fractions",icon:"½",color:"#db2777",bg:"linear-gradient(135deg,#db2777,#be185d)",sections:[{num:"7.1",title:"What is a Fraction",type:"Concept",content:[`Fraction is a part of a whole. 1/2 means 1 part out of 2 equal parts.`,`Top number is numerator - how many parts we have.`,`Bottom number is denominator - how many equal parts total.`,`In 3/4, we have 3 parts out of 4 equal parts.`,`Pizza cut in 8 slices, you eat 3. You ate 3/8 of pizza.`],ai:"Explain fractions using chocolate bar example.",practice:[{q:"In 5/8, numerator is?",choices:["5","8","13"],ans:0}]}]},gu:{name:"અપૂર્ણાંક",icon:"½",color:"#db2777",bg:"linear-gradient(135deg,#db2777,#be185d)",sections:[{num:"7.1",title:"અપૂર્ણાંક એટલે શું",type:"સંકલ્પના",content:[`અપૂર્ણાંક એ પૂર્ણનો ભાગ છે. 1/2 એટલે 2 સરખા ભાગમાંથી 1 ભાગ.`,`ઉપરની સંખ્યા અંશ - આપણી પાસે કેટલા ભાગ છે.`,`નીચેની સંખ્યા છેદ - કુલ કેટલા સરખા ભાગ છે.`,`3/4 માં, 4 સરખા ભાગમાંથી આપણી પાસે 3 ભાગ છે.`,`પિઝાના 8 ટુકડા, તમે 3 ખાધા. તમે 3/8 પિઝા ખાધો.`],ai:"ચોકલેટ બારના ઉદાહરણથી અપૂર્ણાંક સમજાવો.",practice:[{q:"5/8 માં અંશ કયો?",choices:["5","8","13"],ans:0}]}]}},
-8:{en:{name:"Playing with Constructions",icon:"📐",color:"#0284c7",bg:"linear-gradient(135deg,#0284c7,#0369a1)",sections:[{num:"8.1",title:"Using Compass",type:"Activity",content:[`Compass draws circles. It has a sharp point and a pencil.`,`To draw circle: Put sharp point on paper. Turn pencil around.`,`The sharp point is center. Distance from center to edge is radius.`,`All points on circle are same distance from center.`,`Practice: Draw circles of different sizes. Make a flower with circles.`],ai:"How to use a compass safely - 3 tips for kids."}]},gu:{name:"રચનાઓ સાથે રમત",icon:"📐",color:"#0284c7",bg:"linear-gradient(135deg,#0284c7,#0369a1)",sections:[{num:"8.1",title:"પરિકર વાપરવું",type:"પ્રવૃત્તિ",content:[`પરિકર વર્તુળ દોરે છે. એને અણી અને પેન્સિલ હોય છે.`,`વર્તુળ દોરવા: અણી કાગળ પર મૂકો. પેન્સિલ ફેરવો.`,`અણી એ કેન્દ્ર છે. કેન્દ્રથી ધાર સુધીનું અંતર ત્રિજ્યા છે.`,`વર્તુળ પરના બધા બિંદુ કેન્દ્રથી સરખે અંતરે છે.`,`મહાવરો: જુદા માપના વર્તુળ દોરો. વર્તુળોથી ફૂલ બનાવો.`],ai:"બાળકો માટે પરિકર સલામત રીતે વાપરવાની 3 ટીપ."}]}},
-9:{en:{name:"Symmetry",icon:"◆",color:"#9333ea",bg:"linear-gradient(135deg,#9333ea,#7e22ce)",sections:[{num:"9.1",title:"Line of Symmetry",type:"Concept",content:[`Symmetry means one half is mirror image of other half.`,`Fold a paper. If both sides match exactly, fold line is line of symmetry.`,`Butterfly has symmetry. Left wing matches right wing.`,`Letter A has one line of symmetry. Letter H has two.`,`Circle has many lines of symmetry. Any line through center works.`],ai:"List 5 things in home that have symmetry.",practice:[{q:"Which letter has symmetry?",choices:["F","M","P"],ans:1}]}]},gu:{name:"સંમિતિ",icon:"◆",color:"#9333ea",bg:"linear-gradient(135deg,#9333ea,#7e22ce)",sections:[{num:"9.1",title:"સંમિતિ રેખા",type:"સંકલ્પના",content:[`સંમિતિ એટલે એક અડધો ભાગ બીજા અડધાનું દર્પણ પ્રતિબિંબ છે.`,`કાગળ વાળો. જો બંને બાજુ બરાબર મળે, તો વાળવાની લીટી સંમિતિ રેખા છે.`,`પતંગિયામાં સંમિતિ છે. ડાબી પાંખ જમણી પાંખ સાથે મળે છે.`,`A અક્ષરને એક સંમિતિ રેખા છે. H ને બે છે.`,`વર્તુળને ઘણી સંમિતિ રેખા છે. કેન્દ્રમાંથી જતી કોઈ પણ રેખા ચાલે.`],ai:"ઘરની 5 વસ્તુની યાદી આપો જેમાં સંમિતિ હોય.",practice:[{q:"કયા અક્ષરમાં સંમિતિ છે?",choices:["F","M","P"],ans:1}]}]}},
-10:{en:{name:"The Other Side of Zero",icon:"⬇️",color:"#0891b2",bg:"linear-gradient(135deg,#0891b2,#0e7490)",sections:[{num:"10.1",title:"Negative Numbers",type:"Concept",content:[`Numbers less than zero are negative. We write minus sign: -1, -2, -3.`,`On number line, negative numbers are left of zero.`,`Temperature can be negative. -5°C means 5 degrees below zero. Very cold.`,`If you have ₹10 and spend ₹15, you owe ₹5. That is -5.`,`Negative and positive are opposite. +5 and -5 cancel each other.`],ai:"Explain negative numbers using stairs or lift example.",practice:[{q:"Which is smaller: -3 or -1?",choices:["-3","-1","Same"],ans:0}]}]},gu:{name:"શૂન્યની બીજી બાજુ",icon:"⬇️",color:"#0891b2",bg:"linear-gradient(135deg,#0891b2,#0e7490)",sections:[{num:"10.1",title:"ઋણ સંખ્યા",type:"સંકલ્પના",content:[`શૂન્યથી નાની સંખ્યા ઋણ છે. આપણે ઓછાની નિશાની લખીએ: -1, -2, -3.`,`સંખ્યા રેખા પર, ઋણ સંખ્યા શૂન્યની ડાબી બાજુ છે.`,`તાપમાન ઋણ હોઈ શકે. -5°C એટલે શૂન્યથી 5 અંશ નીચે. ખૂબ ઠંડી.`,`જો તમારી પાસે ₹10 હોય અને ₹15 વાપરો, તો ₹5 દેવું થાય. એ -5 છે.`,`ઋણ અને ધન વિરુદ્ધ છે. +5 અને -5 એકબીજાને રદ કરે.`],ai:"દાદર અથવા લિફ્ટના ઉદાહરણથી ઋણ સંખ્યા સમજાવો.",practice:[{q:"કયું નાનું: -3 કે -1?",choices:["-3","-1","સરખું"],ans:0}]}]}};
-
-function toggleLang(){lang=lang==='en'?'gu':'en';document.getElementById('langBtn').textContent=lang==='en'?'ગુ':'EN';updateTexts()}
-function updateTexts(){document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.getAttribute(`data-${lang}`)})}
 function goBack(){if(navStack.length>0){const prev=navStack.pop();if(prev.screen==='home')showScreen('home');else if(prev.screen==='chapter')openChapter(prev.chapter,false);else if(prev.screen==='content')showContent(prev.chapter,prev.section,false)}}
-function showScreen(screen){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(screen+'Screen').classList.add('active');document.getElementById('backBtn').classList.toggle('vis',screen!=='home');if(screen==='home'){document.getElementById('topbarTitle').textContent='Vidhya';document.getElementById('topbarSub').textContent=document.getElementById('topbarSub').getAttribute(`data-${lang}`)}}
+
+function showScreen(screen){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(screen+'Screen').classList.add('active');
+    document.getElementById('backBtn').classList.toggle('vis',screen!=='home');
+    if(screen==='home'){
+        document.getElementById('topbarTitle').textContent='Vidhya';
+        document.getElementById('topbarSub').textContent='Your Learning Mitra';
+    }
+}
 
 function openChapter(ch,addToStack=true){
     if(addToStack)navStack.push({screen:'home'});
     curChapter=ch;
-    // Check if chapter exists to prevent crash
     if(!CONTENT[ch]) return; 
-    const data=CONTENT[ch][lang];
+    const data=CONTENT[ch];
     document.getElementById('chHeader').style.background=data.bg;
-    document.getElementById('chLabel').textContent=(lang==='en'?'Chapter ':'પ્રકરણ ')+ch;
+    document.getElementById('chLabel').textContent='Chapter '+ch;
     document.getElementById('chTitle').textContent=data.name;
     const sectionsList=document.getElementById('sectionsList');
     sectionsList.innerHTML='';
@@ -458,13 +350,13 @@ function openChapter(ch,addToStack=true){
     });
     showScreen('chapter');
     document.getElementById('topbarTitle').textContent=data.name;
-    document.getElementById('topbarSub').textContent=(lang==='en'?'Chapter ':'પ્રકરણ ')+ch
+    document.getElementById('topbarSub').textContent='Chapter '+ch
 }
 
 function showContent(ch,sec,addToStack=true){
     if(addToStack)navStack.push({screen:'chapter',chapter:ch});
     curSection=sec;
-    const data=CONTENT[ch][lang];
+    const data=CONTENT[ch];
     const body=document.getElementById('contentBody');
     let html=`<div class="sec-heading" style="color:${data.color}"><span>${data.icon}</span><span>${sec.num} ${sec.title}</span></div>`;
     sec.content.forEach(p=>{
@@ -472,10 +364,10 @@ function showContent(ch,sec,addToStack=true){
         html+=`<p id="${id}">${p}<button class="speak-btn" onclick="speakText('${id}')">🔊</button></p>`
     });
     if(sec.num==="1.1"||sec.num.includes(".1")){
-        html+=`<div class="concept-box"><div class="cb-title">💡 ${lang==='en'?'Key Idea':'મુખ્ય વિચાર'}</div><p>${sec.content[0]}</p></div>`
+        html+=`<div class="concept-box"><div class="cb-title">💡 Key Idea</div><p>${sec.content[0]}</p></div>`
     }
     if(sec.practice){
-        html+=`<div class="practice-section"><div class="ps-hdr">✏️ ${lang==='en'?'Practice Time':'મહાવરાનો સમય'}</div>`;
+        html+=`<div class="practice-section"><div class="ps-hdr">✏️ Practice Time</div>`;
         sec.practice.forEach((q,i)=>{
             const qid='q'+ch+sec.num+i;
             html+=`<div class="practice-q"><div class="pq-text">${i+1}. ${q.q}</div><div class="answer-choices">`;
@@ -487,8 +379,8 @@ function showContent(ch,sec,addToStack=true){
         html+=`</div>`
     }
     if(sec.ai){
-        html+=`<button class="quiz-gen-btn" onclick="genQuiz(${ch},'${sec.num}')">🎲 ${lang==='en'?'Generate Quiz':'ક્વિઝ બનાવો'}</button>`;
-        html+=`<div class="ai-section"><h3>🤖 ${lang==='en'?'Ask Vidhya AI':'વિદ્યા AI ને પૂછો'}</h3><div class="ai-input-row"><input class="ai-input" id="aiInput" placeholder="${lang==='en'?'Ask any doubt...':'કોઈ પણ શંકા પૂછો...'}"><button class="ai-btn" id="aiBtn" onclick="askAI('${sec.ai}')">${lang==='en'?'Ask':'પૂછો'}</button></div><div class="ai-response" id="aiResp">${lang==='en'?'AI will answer here...':'AI અહીં જવાબ આપશે...'}</div></div>`
+        html+=`<button class="quiz-gen-btn" onclick="genQuiz(${ch},'${sec.num}')">🎲 Generate Quiz</button>`;
+        html+=`<div class="ai-section"><h3>🤖 Ask Vidhya AI</h3><div class="ai-input-row"><input class="ai-input" id="aiInput" placeholder="Ask any doubt..."><button class="ai-btn" id="aiBtn" onclick="askAI('${sec.ai}')">Ask</button></div><div class="ai-response" id="aiResp">AI will answer here...</div></div>`
     }
     body.innerHTML=html;
     showScreen('content');
@@ -496,18 +388,15 @@ function showContent(ch,sec,addToStack=true){
     document.getElementById('topbarSub').textContent=data.name
 }
 
-// FIXED: Better Voice Selection for Gujarati and English
 function speakText(id){
     const text=document.getElementById(id).textContent.replace('🔊','').trim();
     if('speechSynthesis' in window){
         window.speechSynthesis.cancel();
         const utter=new SpeechSynthesisUtterance(text);
-        
-        const targetLang = lang === 'gu' ? 'gu-IN' : 'en-IN';
-        utter.lang = targetLang;
+        utter.lang = 'en-IN';
         
         const availableVoices = window.speechSynthesis.getVoices();
-        const selectedVoice = availableVoices.find(v => v.lang === targetLang || v.lang.includes(lang));
+        const selectedVoice = availableVoices.find(v => v.lang === 'en-IN' || v.lang.includes('en'));
         if(selectedVoice){
             utter.voice = selectedVoice;
         }
@@ -523,19 +412,19 @@ function checkAns(qid,chosen,correct,btn){
     btns.forEach(b=>b.disabled=true);
     if(chosen===correct){
         btn.classList.add('correct');
-        fb.textContent=lang==='en'?'✓ Correct! Well done!':'✓ સાચું! શાબાશ!';
+        fb.textContent='✓ Correct! Well done!';
         fb.className='feedback ok'
     }else{
         btn.classList.add('wrong');
         btns[correct].classList.add('correct');
-        fb.textContent=lang==='en'?'✗ Not quite. Correct answer is highlighted.':'✗ બરાબર નથી. સાચો જવાબ બતાવ્યો છે.';
+        fb.textContent='✗ Not quite. Correct answer is highlighted.';
         fb.className='feedback no'
     }
 }
 
 async function askAI(context){
-    if(!puterReady){
-        document.getElementById('aiResp').textContent=lang==='en'?'AI is loading, please wait...':'AI લોડ થઈ રહ્યું છે, કૃપા કરીને રાહ જુઓ...';
+    if(typeof puter === 'undefined' || !puterReady){
+        document.getElementById('aiResp').textContent='Offline mode: Connect to internet for AI features.';
         return
     }
     const q=document.getElementById('aiInput').value.trim();
@@ -544,30 +433,32 @@ async function askAI(context){
     const resp=document.getElementById('aiResp');
     btn.disabled=true;
     resp.classList.add('loading');
-    resp.textContent=lang==='en'?'Vidhya is thinking...':'વિદ્યા વિચારી રહી છે...';
+    resp.textContent='Vidhya is thinking...';
     try{
-        const prompt=`You are Vidhya, a friendly tutor for 6th standard GSEB student. Context: ${context}. Student asks in ${lang==='gu'?'Gujarati':'English'}: "${q}". Answer in simple ${lang==='gu'?'Gujarati':'English'}, max 4 lines, with example. Be encouraging.`;
+        const prompt=`You are Vidhya, a friendly tutor for 6th standard GSEB student. Context: ${context}. Student asks: "${q}". Answer in simple English, max 4 lines, with example. Be encouraging.`;
         const result=await puter.ai.chat(prompt,{model:'gpt-4.1-nano'});
         resp.classList.remove('loading');
         resp.textContent=result.message?.content||result
     }catch(e){
         resp.classList.remove('loading');
-        resp.textContent=lang==='en'?'Sorry, error occurred. Try again.':'માફ કરશો, ભૂલ થઈ. ફરી પ્રયત્ન કરો.'
+        resp.textContent='Sorry, error occurred. Try again.'
     }
     btn.disabled=false;
     document.getElementById('aiInput').value=''
 }
 
-// FIXED: Better JSON Parsing Logic with Regex
 async function genQuiz(ch,secNum){
-    if(!puterReady)return;
+    if(typeof puter === 'undefined' || !puterReady) {
+        alert("Offline mode: AI Quiz generation requires an active internet connection.");
+        return;
+    }
     const btn=event.target;
     btn.disabled=true;
-    btn.textContent=lang==='en'?'Generating...':'બનાવી રહ્યું છે...';
+    btn.textContent='Generating...';
     try{
-        const data=CONTENT[ch][lang];
+        const data=CONTENT[ch];
         const sec=data.sections.find(s=>s.num===secNum);
-        const prompt=`Create 1 MCQ for 6th standard GSEB student on "${sec.title}". Language: ${lang==='gu'?'Gujarati':'English'}. Give JSON: {"q":"question","choices":["A","B","C"],"ans":0}. Topic: ${sec.content[0]}`;
+        const prompt=`Create 1 MCQ for 6th standard GSEB student on "${sec.title}". Language: English. Give JSON: {"q":"question","choices":["A","B","C"],"ans":0}. Topic: ${sec.content[0]}`;
         const result=await puter.ai.chat(prompt,{model:'gpt-4.1-nano'});
         
         let content = result.message?.content || result;
@@ -580,13 +471,13 @@ async function genQuiz(ch,secNum){
         try{
             q=JSON.parse(content)
         }catch{
-            q={q:lang==='en'?'What did you learn?':'તમે શું શીખ્યા?',choices:[lang==='en'?'Option A':'વિકલ્પ A',lang==='en'?'Option B':'વિકલ્પ B',lang==='en'?'Option C':'વિકલ્પ C'],ans:0}
+            q={q:'What did you learn?',choices:['Option A','Option B','Option C'],ans:0}
         }
         
         const cont=document.querySelector('.practice-section')||document.createElement('div');
         if(!document.querySelector('.practice-section')){
             cont.className='practice-section';
-            cont.innerHTML=`<div class="ps-hdr">✏️ ${lang==='en'?'AI Quiz':'AI ક્વિઝ'}</div>`;
+            cont.innerHTML=`<div class="ps-hdr">✏️ AI Quiz</div>`;
             document.getElementById('contentBody').insertBefore(cont,document.querySelector('.ai-section'))
         }
         
@@ -604,33 +495,34 @@ async function genQuiz(ch,secNum){
             choicesDiv.appendChild(b)
         });
         cont.appendChild(qDiv);
-        btn.textContent=lang==='en'?'✓ Quiz Added':'✓ ક્વિઝ ઉમેરાઈ'
+        btn.textContent='✓ Quiz Added'
     }catch(e){
-        btn.textContent=lang==='en'?'Error':'ભૂલ'
+        btn.textContent='Error'
     }
     setTimeout(()=>{
         btn.disabled=false;
-        btn.textContent=`🎲 ${lang==='en'?'Generate Quiz':'ક્વિઝ બનાવો'}`
+        btn.textContent=`🎲 Generate Quiz`
     },2000)
 }
 
-window.addEventListener('load',async()=>{
+// FIXED: Remove dependency on window.onload for basic UI functionality
+document.addEventListener('DOMContentLoaded', () => {
+    // Hide splash screen immediately after 1.5 seconds, even if offline
     setTimeout(()=>{
-        document.getElementById('splash').classList.add('hide')
-    },2500);
-    try{
-        await puter.ai.chat('test',{model:'gpt-4.1-nano'});
-        puterReady=true
-    }catch(e){
-        console.log('AI init:',e)
-    }
-    if('speechSynthesis' in window){
-        voices=window.speechSynthesis.getVoices();
-        window.speechSynthesis.onvoiceschanged=()=>{
-            voices=window.speechSynthesis.getVoices()
+        document.getElementById('splash').classList.add('hide');
+    }, 1500);
+});
+
+// Load AI script lazily if online
+window.addEventListener('load', async()=>{
+    if(typeof puter !== 'undefined') {
+        try{
+            await puter.ai.chat('test',{model:'gpt-4.1-nano'});
+            puterReady=true;
+        }catch(e){
+            console.log('AI init error (might be offline):', e);
         }
     }
-    updateTexts()
 });
 </script>
 </body>
