@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vidhya — Your Learning Mitra</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
+<script async src="https://js.puter.com/v2/"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#f0f9ff;color:#1e293b;min-height:100vh;overflow-x:hidden}
+#splash{position:fixed;inset:0;z-index:999;background:#1e3a8a;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.6s ease}
+#splash.hide{opacity:0;pointer-events:none}
+.splash-ring{width:140px;height:140px;border-radius:50%;background:#1e3a8a;border:2px solid rgba(251,191,36,0.3);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:24px;animation:pulseRing 2s ease-in-out infinite}
+@keyframes pulseRing{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0.2)}50%{box-shadow:0 0 0 16px rgba(251,191,36,0)}}
+.diya-svg{width:90px;height:90px}
+.splash-name{font-family:'EB Garamond',Georgia,serif;font-size:42px;font-weight:700;color:white;letter-spacing:2px;animation:fadeUp 0.8s ease 0.3s both}
+.splash-tagline{font-size:13px;font-weight:700;color:#93c5fd;letter-spacing:3px;text-transform:uppercase;margin-top:6px;animation:fadeUp 0.8s ease 0.5s both}
+.splash-pills{display:flex;gap:10px;margin-top:20px;animation:fadeUp 0.8s ease 0.7s both}
+.splash-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700}
+.pill-blue{background:rgba(59,130,246,0.25);color:#93c5fd}
+.pill-green{background:rgba(16,185,129,0.25);color:#6ee7b7}
+.splash-gseb{margin-top:12px;font-size:11px;color:rgba(255,255,255,0.4);animation:fadeUp 0.8s ease 0.9s both}
+.splash-loader{margin-top:40px;width:48px;height:3px;background:rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;animation:fadeUp 0.8s ease 0.9s both}
+.splash-loader-fill{height:100%;width:0%;background:#fbbf24;border-radius:10px;animation:loadFill 1.5s ease 0.5s forwards}
+@keyframes loadFill{to{width:100%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.topbar{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 60%,#0d9488 100%);padding:11px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,58,138,0.25)}
+.back-btn{background:rgba(255,255,255,0.18);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:17px;cursor:pointer;display:none;align-items:center;justify-content:center;transition:background 0.2s}
+.back-btn.vis{display:flex}
+.back-btn:hover{background:rgba(255,255,255,0.3)}
+.topbar-logo{width:32px;height:32px;border-radius:50%;background:#1e3a8a;border:1.5px solid rgba(251,191,36,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.topbar-name{font-family:'EB Garamond',Georgia,serif;font-size:20px;font-weight:700;color:white;line-height:1}
+.topbar-sub{font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:1px}
+.screen{display:none}
+.screen.active{display:block;animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hero{background:linear-gradient(160deg,#1e3a8a 0%,#1e40af 50%,#0d9488 100%);padding:28px 16px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:rgba(251,191,36,0.06);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-30px;left:-30px;width:130px;height:130px;background:rgba(13,148,136,0.1);border-radius:50%}
+.hero-vidhya{font-family:'EB Garamond',Georgia,serif;font-size:38px;font-weight:700;color:white;position:relative;z-index:1;letter-spacing:2px}
+.hero-tagline{font-size:12px;font-weight:700;color:#93c5fd;letter-spacing:3px;text-transform:uppercase;position:relative;z-index:1;margin-top:3px}
+.hero-pills{display:flex;gap:8px;justify-content:center;margin-top:14px;position:relative;z-index:1;flex-wrap:wrap}
+.hero-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+.hp-blue{background:rgba(59,130,246,0.25);color:#bfdbfe}
+.hp-green{background:rgba(16,185,129,0.22);color:#a7f3d0}
+.hp-yellow{background:rgba(251,191,36,0.22);color:#fde68a}
+.subject-bar{display:flex;gap:0;background:white;border-bottom:2px solid #e2e8f0;position:sticky;top:54px;z-index:90}
+.subj-btn{flex:1;padding:11px 4px;border:none;background:transparent;font-family:'Baloo 2',cursive;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px}
+.subj-btn.active{color:#1e40af;border-bottom-color:#1e40af}
+.subj-btn.locked{color:#cbd5e1;cursor:default}
+.chapters-grid{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:11px;max-width:500px;margin:0 auto}
+.chapter-card{background:white;border-radius:14px;padding:14px 12px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:relative;overflow:hidden}
+.chapter-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.chapter-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
+.ch-num{font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;line-height:1}
+.ch-icon{font-size:22px;float:right}
+.ch-name{font-size:11px;font-weight:700;margin-top:6px;line-height:1.3}
+.ch-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:6px}
+.ch-1::before{background:#2563eb}.ch-1 .ch-num{color:#2563eb}.ch-1 .ch-badge{background:#dbeafe;color:#1d4ed8}
+.ch-2::before{background:#0d9488}.ch-2 .ch-num{color:#0d9488}.ch-2 .ch-badge{background:#ccfbf1;color:#0f766e}
+.ch-3::before{background:#f97316}.ch-3 .ch-num{color:#f97316}.ch-3 .ch-badge{background:#ffedd5;color:#c2410c}
+.ch-4::before{background:#7c3aed}.ch-4 .ch-num{color:#7c3aed}.ch-4 .ch-badge{background:#ede9fe;color:#6d28d9}
+.ch-5::before{background:#ef4444}.ch-5 .ch-num{color:#ef4444}.ch-5 .ch-badge{background:#fee2e2;color:#b91c1c}
+.ch-6::before{background:#16a34a}.ch-6 .ch-num{color:#16a34a}.ch-6 .ch-badge{background:#dcfce7;color:#15803d}
+.ch-7::before{background:#db2777}.ch-7 .ch-num{color:#db2777}.ch-7 .ch-badge{background:#fce7f3;color:#be185d}
+.ch-8::before{background:#0284c7}.ch-8 .ch-num{color:#0284c7}.ch-8 .ch-badge{background:#e0f2fe;color:#0369a1}
+.ch-9::before{background:#9333ea}.ch-9 .ch-num{color:#9333ea}.ch-9 .ch-badge{background:#f3e8ff;color:#7e22ce}
+.ch-10::before{background:#0891b2}.ch-10 .ch-num{color:#0891b2}.ch-10 .ch-badge{background:#cffafe;color:#0e7490}
+.ch-header{padding:20px 14px 16px;color:white}
+.ch-number-label{font-size:11px;font-weight:700;opacity:0.8;text-transform:uppercase;letter-spacing:1px}
+.ch-header h2{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;margin-top:3px}
+.sections-list{padding:12px;max-width:500px;margin:0 auto}
+.section-item{background:white;border-radius:12px;padding:13px 14px;margin-bottom:9px;cursor:pointer;display:flex;align-items:center;gap:11px;box-shadow:0 2px 6px rgba(0,0,0,0.06);border:2px solid transparent;transition:all 0.2s}
+.section-item:hover{transform:translateX(4px)}
+.sec-num{font-family:'Baloo 2',cursive;font-size:13px;font-weight:800;min-width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white}
+.sec-title{font-weight:700;font-size:13px}
+.sec-type{font-size:11px;color:#64748b;margin-top:1px}
+.content-body{padding:14px 13px 50px;max-width:600px;margin:0 auto}
+.sec-heading{font-family:'Baloo 2',cursive;font-size:19px;font-weight:800;margin-bottom:13px;padding-bottom:7px;border-bottom:3px solid currentColor;display:flex;align-items:center;gap:7px}
+.content-body p{margin-bottom:11px;font-size:14px;line-height:1.7;position:relative;padding-right:30px}
+.speak-btn{position:absolute;right:0;top:0;background:#e0f2fe;border:none;color:#0284c7;width:26px;height:26px;border-radius:50%;font-size:14px;cursor:pointer;opacity:0.7;transition:0.2s}
+.speak-btn:hover{opacity:1;transform:scale(1.1)}
+.concept-box{background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;padding:11px 13px;margin:13px 0}
+.concept-box .cb-title{font-weight:800;color:#1d4ed8;font-size:12px;margin-bottom:5px}
+.concept-box p{font-size:13px;margin:0;color:#1e3a5f;padding-right:0}
+.practice-section{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:13px;padding:14px;margin:16px 0}
+.practice-section .ps-hdr{font-family:'Baloo 2',cursive;font-size:14px;font-weight:800;color:#15803d;margin-bottom:11px}
+.practice-q{background:white;border-radius:10px;padding:11px 13px;margin-bottom:9px;border:1.5px solid #bbf7d0}
+.pq-text{font-size:13px;font-weight:700;color:#14532d;margin-bottom:9px}
+.answer-choices{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.choice-btn{background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:7px 8px;font-size:12px;font-weight:700;color:#15803d;cursor:pointer;transition:all 0.2s;text-align:center;font-family:'Nunito',sans-serif}
+.choice-btn:hover{background:#dcfce7}
+.choice-btn.correct{background:#16a34a !important;color:white !important;border-color:#16a34a !important}
+.choice-btn.wrong{background:#fee2e2 !important;color:#b91c1c !important;border-color:#fca5a5 !important}
+.feedback{font-size:12px;margin-top:7px;font-weight:700;min-height:16px}
+.feedback.ok{color:#16a34a}.feedback.no{color:#dc2626}
+.ai-section{background:linear-gradient(135deg,#ede9fe,#f3e8ff);border:2px solid #a78bfa;border-radius:16px;padding:16px;margin:20px 0}
+.ai-section h3{font-family:'Baloo 2',cursive;font-size:16px;font-weight:800;color:#6d28d9;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ai-input-row{display:flex;gap:8px}
+.ai-input{flex:1;padding:10px 12px;border:2px solid #c4b5fd;border-radius:10px;font-size:13px;font-family:'Nunito',sans-serif}
+.ai-btn{background:#7c3aed;color:white;border:none;padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:0.2s;white-space:nowrap}
+.ai-btn:hover{background:#6d28d9}
+.ai-btn:disabled{background:#c4b5fd;cursor:not-allowed}
+.ai-response{background:white;border-radius:10px;padding:12px;margin-top:12px;font-size:13px;line-height:1.6;border:1px solid #ddd6fe;min-height:40px;white-space:pre-wrap}
+.ai-response.loading{color:#a78bfa;font-style:italic}
+.quiz-gen-btn{background:#0d9488;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin:10px 0;display:inline-flex;align-items:center;gap:5px}
+.quiz-gen-btn:hover{background:#0f766e}
+.quiz-gen-btn:disabled{background:#5eead4;cursor:not-allowed}
+.vidhya-footer{text-align:center;padding:20px;color:#cbd5e1;font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="splash">
+<div class="splash-ring">
+<svg class="diya-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+<circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
+<circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
+<circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
+<circle cx="72" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
+<circle cx="45" cy="84" r="2.5" fill="#fbbf24" opacity="0.5"/>
+<circle cx="18" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
+<circle cx="6" cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
+<circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
+<ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
+<ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
+<ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
+<ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
+<ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
+<ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
+<ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
+<ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
+</svg>
+</div>
+<div class="splash-name">Vidhya</div>
+<div class="splash-tagline">Your Learning Mitra</div>
+<div class="splash-pills">
+<span class="splash-pill pill-blue">Mathematics</span>
+<span class="splash-pill pill-green">Science</span>
+</div>
+<div class="splash-gseb">Standard 6 • GSEB • English Medium</div>
+<div class="splash-loader"><div class="splash-loader-fill"></div></div>
+</div>
+
+<div class="topbar">
+<button class="back-btn" id="backBtn" onclick="goBack()">←</button>
+<div class="topbar-logo">
+<svg width="20" height="20" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="45" cy="62" rx="20" ry="7" fill="#d97706"/>
+<ellipse cx="45" cy="59" rx="17" ry="5" fill="#fbbf24"/>
+<ellipse cx="45" cy="38" rx="10" ry="17" fill="#f97316" opacity="0.8"/>
+<ellipse cx="45" cy="34" rx="7" ry="12" fill="#fbbf24"/>
+<ellipse cx="45" cy="30" rx="4" ry="8" fill="#fef3c7"/>
+</svg>
+</div>
+<div style="flex:1">
+<div class="topbar-name" id="topbarTitle">Vidhya</div>
+<div class="topbar-sub" id="topbarSub">Your Learning Mitra</div>
+</div>
+</div>
+
+<div class="screen active" id="homeScreen">
+<div class="hero">
+<svg width="56" height="56" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:8px;position:relative;z-index:1">
+<circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
+<circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
+<circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
+<circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
+<circle cx="6" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
+<ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
+<ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
+<ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
+<ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
+<ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
+<ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
+<ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
+<ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
+</svg>
+<div class="hero-vidhya">Vidhya</div>
+<div class="hero-tagline">Your Learning Mitra</div>
+<div class="hero-pills">
+<span class="hero-pill hp-blue">Standard 6</span>
+<span class="hero-pill hp-green">GSEB</span>
+<span class="hero-pill hp-yellow">English Medium</span>
+</div>
+</div>
+
+<div class="subject-bar">
+<button class="subj-btn active">📐 <span>Mathematics</span></button>
+<button class="subj-btn locked">🔬 <span>Science (Soon)</span></button>
+</div>
+
+<div id="mathsPanel">
+<div class="chapters-grid">
+<div class="chapter-card ch-1" onclick="openChapter(1)"><span class="ch-icon">🔢</span><div class="ch-num">1</div><div class="ch-name">Patterns in Mathematics</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-2" onclick="openChapter(2)"><span class="ch-icon">📏</span><div class="ch-num">2</div><div class="ch-name">Lines and Angles</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-3" onclick="openChapter(3)"><span class="ch-icon">🎲</span><div class="ch-num">3</div><div class="ch-name">Number Play</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-4" onclick="openChapter(4)"><span class="ch-icon">📊</span><div class="ch-num">4</div><div class="ch-name">Data Handling</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-5" onclick="openChapter(5)"><span class="ch-icon">🌟</span><div class="ch-num">5</div><div class="ch-name">Prime Time</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-6" onclick="openChapter(6)"><span class="ch-icon">⬜</span><div class="ch-num">6</div><div class="ch-name">Perimeter and Area</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-7" onclick="openChapter(7)"><span class="ch-icon">½</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-8" onclick="openChapter(8)"><span class="ch-icon">📐</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-9" onclick="openChapter(9)"><span class="ch-icon">◆</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">✅ Available</span></div>
+<div class="chapter-card ch-10" onclick="openChapter(10)"><span class="ch-icon">⬇️</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">✅ Available</span></div>
+</div>
+<div class="vidhya-footer">🪔 Vidhya • <span>Your Learning Mitra</span></div>
+</div>
+
+<div class="screen" id="chapterScreen">
+<div class="ch-header" id="chHeader">
+<div class="ch-number-label" id="chLabel">Chapter 1</div>
+<h2 id="chTitle">Patterns in Mathematics</h2>
+</div>
+<div class="sections-list" id="sectionsList"></div>
+</div>
+
+<div class="screen" id="contentScreen">
+<div class="content-body" id="contentBody"></div>
+</div>
+
+<script>
+let curChapter=1,curSection=null,navStack=[],puterReady=false;
+
+const CONTENT={
+1:{name:"Patterns in Mathematics",icon:"🔢",color:"#2563eb",bg:"linear-gradient(135deg,#2563eb,#1d4ed8)",sections:[
+{num:"1.1",title:"What is Mathematics?",type:"Concept",content:[
+`Mathematics is not just numbers. It is about patterns and solving problems. We use math every day without knowing.`,
+`When you arrange books or count money, you use math. When you share sweets equally, that is division.`,
+`Math helps us think clearly and find answers. It is a tool for our brain.`,
+`In this chapter, we will look for patterns in numbers and shapes. Patterns are fun to find.`
+],ai:"Explain patterns in simple terms with daily examples."},
+{num:"1.2",title:"Patterns in Shapes",type:"Activity",content:[
+`Look at this pattern: △ □ △ □ △ □ ... What comes next? A triangle.`,
+`Patterns repeat in a rule. If you know the rule, you know what comes next.`,
+`Example: 2, 4, 6, 8, ... Each time we add 2. So next is 10.`,
+`Example: 1, 3, 6, 10, ... Here we add 2, then 3, then 4. Next is 15.`,
+`Finding rules makes you a pattern detective.`
+],ai:"Create 3 simple pattern questions for a child.",practice:[
+{q:"What comes next: 5, 10, 15, 20, ?",choices:["22","25","30"],ans:1},
+{q:"Find the rule: 3, 6, 9, 12, ?",choices:["14","15","18"],ans:1}
+]},
+{num:"1.3",title:"Patterns in Numbers",type:"Practice",content:[
+`Number patterns are everywhere. Calendar dates go 1, 8, 15, 22. That is adding 7.`,
+`Even numbers: 2, 4, 6, 8, 10... Odd numbers: 1, 3, 5, 7, 9...`,
+`Multiplication tables are patterns. 3, 6, 9, 12... you add 3 each time.`,
+`Square numbers: 1, 4, 9, 16, 25... These are 1×1, 2×2, 3×3, 4×4, 5×5.`,
+`When you see a pattern, write the rule. It helps you solve faster.`
+],ai:"Explain square numbers with simple visuals.",practice:[
+{q:"Next square number after 25?",choices:["30","36","40"],ans:1},
+{q:"What is 7×7?",choices:["47","49","56"],ans:1}
+]},
+{num:"1.4",title:"Making Your Own Patterns",type:"Project",content:[
+`Now you create patterns. Start with shapes. Draw: Circle, Star, Circle, Star...`,
+`With numbers: Start at 5, add 4 each time. 5, 9, 13, 17...`,
+`Make a pattern with your name. If A=1, B=2... what pattern does VIDHYA make?`,
+`V=22, I=9, D=4, H=8, Y=25, A=1. No clear rule, but you tried. That is math thinking.`,
+`Share your pattern with friends. Can they guess your rule?`
+],ai:"Suggest 3 easy pattern-making activities for kids."}
+]},
+2:{name:"Lines and Angles",icon:"📏",color:"#0d9488",bg:"linear-gradient(135deg,#0d9488,#0f766e)",sections:[
+{num:"2.1",title:"Point, Line, Ray, Segment",type:"Concept",content:[
+`A point is a dot. It shows a location. It has no size.`,
+`A line goes on forever in both sides. We draw arrows to show this.`,
+`A ray starts at one point and goes forever on one side only. Like a sun ray.`,
+`A line segment has two ends. It is a piece of a line. Your pencil is a segment.`
+],ai:"Explain point, line, ray, segment with classroom objects."},
+{num:"2.2",title:"Types of Angles",type:"Concept",content:[
+`An angle is made when two rays meet at a point. The point is called vertex.`,
+`Right angle: Exactly 90 degrees. Like corner of your book.`,
+`Acute angle: Less than 90 degrees. Smaller than book corner.`,
+`Obtuse angle: More than 90 but less than 180 degrees. Bigger than book corner.`,
+`Straight angle: 180 degrees. A straight line.`
+],ai:"Give 3 real-life examples for each type of angle.",practice:[
+{q:"Angle of book corner?",choices:["Acute","Right","Obtuse"],ans:1},
+{q:"Angle less than 90° is?",choices:["Acute","Right","Straight"],ans:0}
+]},
+{num:"2.3",title:"Measuring Angles",type:"Activity",content:[
+`We use a protractor to measure angles. It is like half a circle with numbers.`,
+`Place the center of protractor on the vertex. Line up one ray with 0.`,
+`Read the number where the other ray touches. That is the angle.`,
+`Try with your book. The corner should read 90 degrees.`,
+`Estimate first, then measure. This makes you better at guessing.`
+],ai:"How to use a protractor - 4 simple steps."}
+]},
+3:{name:"Number Play",icon:"🎲",color:"#f97316",bg:"linear-gradient(135deg,#f97316,#ea580c)",sections:[
+{num:"3.1",title:"Place Value",type:"Concept",content:[
+`In 456, the 4 is not just 4. It is 400 because it is in hundreds place.`,
+`Place value: Ones, Tens, Hundreds, Thousands.`,
+`Example: 2,345 = 2000 + 300 + 40 + 5.`,
+`The place changes the value. 5 in 50 is ten times bigger than 5 in 5.`,
+`This system helps us write big numbers easily.`
+],ai:"Explain place value using money: 1, 10, 100 rupee notes.",practice:[
+{q:"In 7,482 what is the value of 4?",choices:["4","40","400"],ans:2},
+{q:"3 in thousands place means?",choices:["3","30","3000"],ans:2}
+]},
+{num:"3.2",title:"Large Numbers",type:"Concept",content:[
+`After Thousands comes Ten Thousands, then Lakhs.`,
+`1 Lakh = 100 Thousands = 1,00,000.`,
+`Indian system: Ones, Tens, Hundreds, Thousands, Ten Thousands, Lakhs, Ten Lakhs, Crores.`,
+`Example: India’s population is over 1,40,00,00,000. That is 140 Crores.`,
+`Commas help read: 12,34,567 is 12 Lakh 34 Thousand 567.`
+],ai:"Why do we put commas in big numbers? Explain simply."},
+{num:"3.3",title:"Estimation",type:"Activity",content:[
+`Estimation is guessing close to the answer. We round numbers.`,
+`Round 47 to 50. Round 23 to 20. Then 47 + 23 is about 50 + 20 = 70.`,
+`Real answer is 70. Our estimate was perfect.`,
+`Use estimation in shop. If toffee is ₹7 and biscuit is ₹12, total is about ₹20.`,
+`Estimation saves time. You know if shopkeeper gives wrong change.`
+],ai:"Give 3 shop examples where estimation helps.",practice:[
+{q:"Estimate 78 + 31",choices:["100","110","120"],ans:1},
+{q:"Round 96 to nearest 10",choices:["90","100","95"],ans:1}
+]}
+]},
+4:{name:"Data Handling",icon:"📊",color:"#7c3aed",bg:"linear-gradient(135deg,#7c3aed,#6d28d9)",sections:[
+{num:"4.1",title:"Pictographs",type:"Concept",content:[
+`Data is information. How many students like cricket? That is data.`,
+`Pictograph uses pictures to show data. 🍎🍎🍎 means 3 apples if 1 🍎 = 1 apple.`,
+`If 1 🍎 = 5 apples, then 🍎🍎🍎 = 15 apples. Read the key first.`,
+`We use pictographs because pictures are easy to understand.`,
+`Make one: Ask 5 friends their favourite fruit. Draw fruits to show.`
+],ai:"Explain pictograph with a simple example of 10 students and pets."}
+]},
+5:{name:"Prime Time",icon:"🌟",color:"#ef4444",bg:"linear-gradient(135deg,#ef4444,#dc2626)",sections:[
+{num:"5.1",title:"Factors",type:"Concept",content:[
+`Factors are numbers that divide exactly. Factors of 6 are 1,2,3,6.`,
+`Because 1×6=6, 2×3=6. No remainder.`,
+`Every number has 1 and itself as factors.`,
+`Find factors by dividing. For 10: 10÷1=10, 10÷2=5, 10÷5=2, 10÷10=1. So factors are 1,2,5,10.`,
+`Factors are like building blocks of numbers.`
+],ai:"What are factors? Explain with chocolates example.",practice:[
+{q:"Factors of 8?",choices:["1,2,4,8","1,3,8","2,4,6"],ans:0}
+]}
+]},
+6:{name:"Perimeter and Area",icon:"⬜",color:"#16a34a",bg:"linear-gradient(135deg,#16a34a,#15803d)",sections:[
+{num:"6.1",title:"Perimeter",type:"Concept",content:[
+`Perimeter is the distance around a shape. Walk around a park - that distance is perimeter.`,
+`For rectangle: Perimeter = 2 × (length + breadth).`,
+`Example: Rectangle length 5cm, breadth 3cm. Perimeter = 2 × (5+3) = 16cm.`,
+`For square: Perimeter = 4 × side.`,
+`We use perimeter to put a fence around a field.`
+],ai:"Explain perimeter with a garden fence example.",practice:[
+{q:"Square side 6cm, perimeter?",choices:["12cm","24cm","36cm"],ans:1}
+]}
+]},
+7:{name:"Fractions",icon:"½",color:"#db2777",bg:"linear-gradient(135deg,#db2777,#be185d)",sections:[
+{num:"7.1",title:"What is a Fraction",type:"Concept",content:[
+`Fraction is a part of a whole. 1/2 means 1 part out of 2 equal parts.`,
+`Top number is numerator - how many parts we have.`,
+`Bottom number is denominator - how many equal parts total.`,
+`In 3/4, we have 3 parts out of 4 equal parts.`,
+`Pizza cut in 8 slices, you eat 3. You ate 3/8 of pizza.`
+],ai:"Explain fractions using chocolate bar example.",practice:[
+{q:"In 5/8, numerator is?",choices:["5","8","13"],ans:0}
+]}
+]},
+8:{name:"Playing with Constructions",icon:"📐",color:"#0284c7",bg:"linear-gradient(135deg,#0284c7,#0369a1)",sections:[
+{num:"8.1",title:"Using Compass",type:"Activity",content:[
+`Compass draws circles. It has a sharp point and a pencil.`,
+`To draw circle: Put sharp point on paper. Turn pencil around.`,
+`The sharp point is center. Distance from center to edge is radius.`,
+`All points on circle are same distance from center.`,
+`Practice: Draw circles of different sizes. Make a flower with circles.`
+],ai:"How to use a compass safely - 3 tips for kids."}
+]},
+9:{name:"Symmetry",icon:"◆",color:"#9333ea",bg:"linear-gradient(135deg,#9333ea,#7e22ce)",sections:[
+{num:"9.1",title:"Line of Symmetry",type:"Concept",content:[
+`Symmetry means one half is mirror image of other half.`,
+`Fold a paper. If both sides match exactly, fold line is line of symmetry.`,
+`Butterfly has symmetry. Left wing matches right wing.`,
+`Letter A has one line of symmetry. Letter H has two.`,
+`Circle has many lines of symmetry. Any line through center works.`
+],ai:"List 5 things in home that have symmetry.",practice:[
+{q:"Which letter has symmetry?",choices:["F","M","P"],ans:1}
+]}
+]},
+10:{name:"The Other Side of Zero",icon:"⬇️",color:"#0891b2",bg:"linear-gradient(135deg,#0891b2,#0e7490)",sections:[
+{num:"10.1",title:"Negative Numbers",type:"Concept",content:[
+`Numbers less than zero are negative. We write minus sign: -1, -2, -3.`,
+`On number line, negative numbers are left of zero.`,
+`Temperature can be negative. -5°C means 5 degrees below zero. Very cold.`,
+`If you have ₹10 and spend ₹15, you owe ₹5. That is -5.`,
+`Negative and positive are opposite. +5 and -5 cancel each other.`
+],ai:"Explain negative numbers using stairs or lift example.",practice:[
+{q:"Which is smaller: -3 or -1?",choices:["-3","-1","Same"],ans:0}
+]}
+]}
+};
+
+function goBack(){if(navStack.length>0){const prev=navStack.pop();if(prev.screen==='home')showScreen('home');else if(prev.screen==='chapter')openChapter(prev.chapter,false);else if(prev.screen==='content')showContent(prev.chapter,prev.section,false)}}
+
+function showScreen(screen){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(screen+'Screen').classList.add('active');
+    document.getElementById('backBtn').classList.toggle('vis',screen!=='home');
+    if(screen==='home'){
+        document.getElementById('topbarTitle').textContent='Vidhya';
+        document.getElementById('topbarSub').textContent='Your Learning Mitra';
+    }
+}
+
+function openChapter(ch,addToStack=true){
+    if(addToStack)navStack.push({screen:'home'});
+    curChapter=ch;
+    if(!CONTENT[ch]) return; 
+    const data=CONTENT[ch];
+    document.getElementById('chHeader').style.background=data.bg;
+    document.getElementById('chLabel').textContent='Chapter '+ch;
+    document.getElementById('chTitle').textContent=data.name;
+    const sectionsList=document.getElementById('sectionsList');
+    sectionsList.innerHTML='';
+    data.sections.forEach(sec=>{
+        const item=document.createElement('div');
+        item.className='section-item';
+        item.onclick=()=>showContent(ch,sec);
+        item.innerHTML=`<div class="sec-num" style="background:${data.color}">${sec.num}</div><div style="flex:1"><div class="sec-title">${sec.title}</div><div class="sec-type">${sec.type}</div></div><div>→</div>`;
+        sectionsList.appendChild(item)
+    });
+    showScreen('chapter');
+    document.getElementById('topbarTitle').textContent=data.name;
+    document.getElementById('topbarSub').textContent='Chapter '+ch
+}
+
+function showContent(ch,sec,addToStack=true){
+    if(addToStack)navStack.push({screen:'chapter',chapter:ch});
+    curSection=sec;
+    const data=CONTENT[ch];
+    const body=document.getElementById('contentBody');
+    let html=`<div class="sec-heading" style="color:${data.color}"><span>${data.icon}</span><span>${sec.num} ${sec.title}</span></div>`;
+    sec.content.forEach(p=>{
+        const id='p'+Math.random().toString(36).substr(2,9);
+        html+=`<p id="${id}">${p}<button class="speak-btn" onclick="speakText('${id}')">🔊</button></p>`
+    });
+    if(sec.num==="1.1"||sec.num.includes(".1")){
+        html+=`<div class="concept-box"><div class="cb-title">💡 Key Idea</div><p>${sec.content[0]}</p></div>`
+    }
+    if(sec.practice){
+        html+=`<div class="practice-section"><div class="ps-hdr">✏️ Practice Time</div>`;
+        sec.practice.forEach((q,i)=>{
+            const qid='q'+ch+sec.num+i;
+            html+=`<div class="practice-q"><div class="pq-text">${i+1}. ${q.q}</div><div class="answer-choices">`;
+            q.choices.forEach((c,ci)=>{
+                html+=`<button class="choice-btn" onclick="checkAns('${qid}',${ci},${q.ans},this)">${c}</button>`
+            });
+            html+=`</div><div class="feedback" id="${qid}"></div></div>`
+        });
+        html+=`</div>`
+    }
+    if(sec.ai){
+        html+=`<button class="quiz-gen-btn" onclick="genQuiz(${ch},'${sec.num}')">🎲 Generate Quiz</button>`;
+        html+=`<div class="ai-section"><h3>🤖 Ask Vidhya AI</h3><div class="ai-input-row"><input class="ai-input" id="aiInput" placeholder="Ask any doubt..."><button class="ai-btn" id="aiBtn" onclick="askAI('${sec.ai}')">Ask</button></div><div class="ai-response" id="aiResp">AI will answer here...</div></div>`
+    }
+    body.innerHTML=html;
+    showScreen('content');
+    document.getElementById('topbarTitle').textContent=sec.title;
+    document.getElementById('topbarSub').textContent=data.name
+}
+
+function speakText(id){
+    const text=document.getElementById(id).textContent.replace('🔊','').trim();
+    if('speechSynthesis' in window){
+        window.speechSynthesis.cancel();
+        const utter=new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-IN';
+        
+        const availableVoices = window.speechSynthesis.getVoices();
+        const selectedVoice = availableVoices.find(v => v.lang === 'en-IN' || v.lang.includes('en'));
+        if(selectedVoice){
+            utter.voice = selectedVoice;
+        }
+        
+        utter.rate=0.9;
+        window.speechSynthesis.speak(utter)
+    }
+}
+
+function checkAns(qid,chosen,correct,btn){
+    const fb=document.getElementById(qid);
+    const btns=btn.parentElement.querySelectorAll('.choice-btn');
+    btns.forEach(b=>b.disabled=true);
+    if(chosen===correct){
+        btn.classList.add('correct');
+        fb.textContent='✓ Correct! Well done!';
+        fb.className='feedback ok'
+    }else{
+        btn.classList.add('wrong');
+        btns[correct].classList.add('correct');
+        fb.textContent='✗ Not quite. Correct answer is highlighted.';
+        fb.className='feedback no'
+    }
+}
+
+async function askAI(context){
+    if(typeof puter === 'undefined' || !puterReady){
+        document.getElementById('aiResp').textContent='Offline mode: Connect to internet for AI features.';
+        return
+    }
+    const q=document.getElementById('aiInput').value.trim();
+    if(!q)return;
+    const btn=document.getElementById('aiBtn');
+    const resp=document.getElementById('aiResp');
+    btn.disabled=true;
+    resp.classList.add('loading');
+    resp.textContent='Vidhya is thinking...';
+    try{
+        const prompt=`You are Vidhya, a friendly tutor for 6th standard GSEB student. Context: ${context}. Student asks: "${q}". Answer in simple English, max 4 lines, with example. Be encouraging.`;
+        const result=await puter.ai.chat(prompt,{model:'gpt-4.1-nano'});
+        resp.classList.remove('loading');
+        resp.textContent=result.message?.content||result
+    }catch(e){
+        resp.classList.remove('loading');
+        resp.textContent='Sorry, error occurred. Try again.'
+    }
+    btn.disabled=false;
+    document.getElementById('aiInput').value=''
+}
+
+async function genQuiz(ch,secNum){
+    if(typeof puter === 'undefined' || !puterReady) {
+        alert("Offline mode: AI Quiz generation requires an active internet connection.");
+        return;
+    }
+    const btn=event.target;
+    btn.disabled=true;
+    btn.textContent='Generating...';
+    try{
+        const data=CONTENT[ch];
+        const sec=data.sections.find(s=>s.num===secNum);
+        const prompt=`Create 1 MCQ for 6th standard GSEB student on "${sec.title}". Language: English. Give JSON: {"q":"question","choices":["A","B","C"],"ans":0}. Topic: ${sec.content[0]}`;
+        const result=await puter.ai.chat(prompt,{model:'gpt-4.1-nano'});
+        
+        let content = result.message?.content || result;
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            content = jsonMatch[0];
+        }
+
+        let q;
+        try{
+            q=JSON.parse(content)
+        }catch{
+            q={q:'What did you learn?',choices:['Option A','Option B','Option C'],ans:0}
+        }
+        
+        const cont=document.querySelector('.practice-section')||document.createElement('div');
+        if(!document.querySelector('.practice-section')){
+            cont.className='practice-section';
+            cont.innerHTML=`<div class="ps-hdr">✏️ AI Quiz</div>`;
+            document.getElementById('contentBody').insertBefore(cont,document.querySelector('.ai-section'))
+        }
+        
+        const qid='aiq'+Math.random().toString(36).substr(2,9);
+        const qDiv=document.createElement('div');
+        qDiv.className='practice-q';
+        qDiv.innerHTML=`<div class="pq-text">🤖 ${q.q}</div><div class="answer-choices"></div><div class="feedback" id="${qid}"></div>`;
+        
+        const choicesDiv=qDiv.querySelector('.answer-choices');
+        q.choices.forEach((c,ci)=>{
+            const b=document.createElement('button');
+            b.className='choice-btn';
+            b.textContent=c;
+            b.onclick=()=>checkAns(qid,ci,q.ans,b);
+            choicesDiv.appendChild(b)
+        });
+        cont.appendChild(qDiv);
+        btn.textContent='✓ Quiz Added'
+    }catch(e){
+        btn.textContent='Error'
+    }
+    setTimeout(()=>{
+        btn.disabled=false;
+        btn.textContent=`🎲 Generate Quiz`
+    },2000)
+}
+
+// Splash screen will ALWAYS disappear after 1.5s, online or offline
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(()=>{
+        document.getElementById('splash').classList.add('hide');
+    }, 1500);
+});
+
+// Load AI script lazily if online, won't block UI if offline
+window.addEventListener('load', async()=>{
+    if(typeof puter !== 'undefined') {
+        try{
+            await puter.ai.chat('test',{model:'gpt-4.1-nano'});
+            puterReady=true;
+        }catch(e){
+            console.log('AI init error (might be offline):', e);
+        }
+    }
+});
+</script>
+</body>
+</html>
