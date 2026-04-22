@@ -2,1321 +2,468 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Vidhya — Your Learning Mitra</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
+<!-- Puter.js AI Integration -->
 <script src="https://js.puter.com/v2/"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; min-height: 100vh; overflow-x: hidden; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent;}
+body { background: #f0f9ff; color: #1e293b; min-height: 100vh; overflow-x: hidden; }
 
-/* ── SPLASH ── */
-#splash {
-  position: fixed; inset: 0; z-index: 999;
-  background: #1e3a8a;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  transition: opacity 0.6s ease;
-}
+/* Splash Screen */
+#splash { position: fixed; inset: 0; z-index: 999; background: #1e3a8a; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease; }
 #splash.hide { opacity: 0; pointer-events: none; }
-
-.splash-ring {
-  width: 140px; height: 140px; border-radius: 50%;
-  background: #1e3a8a;
-  border: 2px solid rgba(251,191,36,0.3);
-  display: flex; align-items: center; justify-content: center;
-  position: relative; margin-bottom: 24px;
-  animation: pulseRing 2s ease-in-out infinite;
-}
-@keyframes pulseRing {
-  0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.2); }
-  50% { box-shadow: 0 0 0 16px rgba(251,191,36,0); }
-}
-
+.splash-ring { width: 140px; height: 140px; border-radius: 50%; background: #1e3a8a; border: 2px solid rgba(251,191,36,0.3); display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 24px; animation: pulseRing 2s ease-in-out infinite; }
+@keyframes pulseRing { 0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.2); } 50% { box-shadow: 0 0 0 16px rgba(251,191,36,0); } }
 .diya-svg { width: 90px; height: 90px; }
-
-.splash-name {
-  font-family: 'EB Garamond', Georgia, serif;
-  font-size: 42px; font-weight: 700;
-  color: white; letter-spacing: 2px;
-  animation: fadeUp 0.8s ease 0.3s both;
-}
-.splash-tagline {
-  font-size: 13px; font-weight: 700;
-  color: #93c5fd; letter-spacing: 3px;
-  text-transform: uppercase; margin-top: 6px;
-  animation: fadeUp 0.8s ease 0.5s both;
-}
-.splash-pills {
-  display: flex; gap: 10px; margin-top: 20px;
-  animation: fadeUp 0.8s ease 0.7s both;
-}
-.splash-pill {
-  padding: 5px 14px; border-radius: 20px;
-  font-size: 12px; font-weight: 700;
-}
-.pill-blue { background: rgba(59,130,246,0.25); color: #93c5fd; }
-.pill-green { background: rgba(16,185,129,0.25); color: #6ee7b7; }
-.splash-gseb {
-  margin-top: 12px; font-size: 11px; color: rgba(255,255,255,0.4);
-  animation: fadeUp 0.8s ease 0.9s both;
-}
-.splash-loader {
-  margin-top: 40px; width: 48px; height: 3px;
-  background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden;
-  animation: fadeUp 0.8s ease 0.9s both;
-}
-.splash-loader-fill {
-  height: 100%; width: 0%; background: #fbbf24; border-radius: 10px;
-  animation: loadFill 2s ease 0.5s forwards;
-}
+.splash-name { font-family: 'EB Garamond', serif; font-size: 42px; font-weight: 700; color: white; letter-spacing: 2px; animation: fadeUp 0.8s ease 0.3s both; }
+.splash-tagline { font-size: 13px; font-weight: 700; color: #93c5fd; letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; animation: fadeUp 0.8s ease 0.5s both; }
+.splash-loader { margin-top: 40px; width: 48px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden; animation: fadeUp 0.8s ease 0.9s both; }
+.splash-loader-fill { height: 100%; width: 0%; background: #fbbf24; border-radius: 10px; animation: loadFill 2s ease 0.5s forwards; }
 @keyframes loadFill { to { width: 100%; } }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: none; }
-}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-/* ── TOPBAR ── */
-.topbar {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #0d9488 100%);
-  padding: 11px 14px;
-  display: flex; align-items: center; gap: 10px;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 16px rgba(30,58,138,0.25);
-}
-.back-btn {
-  background: rgba(255,255,255,0.18); border: none; color: white;
-  width: 32px; height: 32px; border-radius: 50%; font-size: 17px;
-  cursor: pointer; display: none; align-items: center; justify-content: center;
-  transition: background 0.2s;
-}
+/* App Bar */
+.topbar { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #0d9488 100%); padding: 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white; }
+.back-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; display: none; align-items: center; justify-content: center; cursor: pointer; }
 .back-btn.vis { display: flex; }
-.back-btn:hover { background: rgba(255,255,255,0.3); }
+.topbar-name { font-family: 'Baloo 2', cursive; font-size: 22px; font-weight: 700; line-height: 1; }
+.topbar-sub { font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
 
-.topbar-logo {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: #1e3a8a; border: 1.5px solid rgba(251,191,36,0.4);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.topbar-name {
-  font-family: 'EB Garamond', Georgia, serif;
-  font-size: 20px; font-weight: 700; color: white; line-height: 1;
-}
-.topbar-sub { font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; margin-top: 1px; }
+/* Screens */
+.screen { display: none; flex-direction: column; min-height: 100vh; animation: slideIn 0.3s ease forwards; padding-bottom: 40px;}
+.screen.active { display: flex; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
 
-/* ── SCREENS ── */
-.screen { display: none; }
-.screen.active { display: block; animation: fadeIn 0.25s ease; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+/* Home Dashboard */
+.hero-card { background: white; margin: 16px; padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.hero-title { font-family: 'Baloo 2', cursive; font-size: 28px; color: #1e3a8a; }
+.tags { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;}
+.tag { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #dbeafe; color: #1d4ed8; }
 
-/* ── HOME ── */
-.hero {
-  background: linear-gradient(160deg, #1e3a8a 0%, #1e40af 50%, #0d9488 100%);
-  padding: 28px 16px 36px; text-align: center; position: relative; overflow: hidden;
-}
-.hero::before {
-  content:''; position:absolute; top:-40px; right:-40px;
-  width:180px; height:180px; background:rgba(251,191,36,0.06); border-radius:50%;
-}
-.hero::after {
-  content:''; position:absolute; bottom:-30px; left:-30px;
-  width:130px; height:130px; background:rgba(13,148,136,0.1); border-radius:50%;
-}
-.hero-vidhya {
-  font-family: 'EB Garamond', Georgia, serif;
-  font-size: 38px; font-weight: 700; color: white;
-  position: relative; z-index: 1; letter-spacing: 2px;
-}
-.hero-tagline {
-  font-size: 12px; font-weight: 700; color: #93c5fd;
-  letter-spacing: 3px; text-transform: uppercase;
-  position: relative; z-index: 1; margin-top: 3px;
-}
-.hero-pills {
-  display: flex; gap: 8px; justify-content: center;
-  margin-top: 14px; position: relative; z-index: 1; flex-wrap: wrap;
-}
-.hero-pill {
-  padding: 4px 12px; border-radius: 20px;
-  font-size: 11px; font-weight: 700;
-}
-.hp-blue { background: rgba(59,130,246,0.25); color: #bfdbfe; }
-.hp-green { background: rgba(16,185,129,0.22); color: #a7f3d0; }
-.hp-yellow { background: rgba(251,191,36,0.22); color: #fde68a; }
+.section-title { padding: 0 16px 8px; font-size: 14px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+.chapters-grid { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.chapter-card { background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer; border-left: 4px solid transparent; }
+.ch-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
+.ch-details { flex: 1; }
+.ch-num { font-size: 12px; font-weight: 700; color: #64748b; }
+.ch-name { font-size: 16px; font-weight: 700; color: #1e293b; font-family: 'Baloo 2', cursive; line-height: 1.2; }
 
-/* Subject selector */
-.subject-bar {
-  display: flex; gap: 0; background: white;
-  border-bottom: 2px solid #e2e8f0; position: sticky; top: 54px; z-index: 90;
-}
-.subj-btn {
-  flex: 1; padding: 11px 4px; border: none; background: transparent;
-  font-family: 'Baloo 2', cursive; font-size: 13px; font-weight: 700;
-  color: #94a3b8; cursor: pointer; border-bottom: 3px solid transparent;
-  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
-}
-.subj-btn.active { color: #1e40af; border-bottom-color: #1e40af; }
-.subj-btn.locked { color: #cbd5e1; cursor: default; }
+/* Content Areas */
+.content-body { padding: 16px; max-width: 800px; margin: 0 auto; width: 100%; }
+.concept-box { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
+.concept-title { font-family: 'Baloo 2', cursive; font-size: 20px; margin-bottom: 12px; padding-right: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;}
+.concept-text { font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 15px; }
 
-/* Chapter grid */
-.chapters-grid {
-  padding: 14px; display: grid; grid-template-columns: 1fr 1fr;
-  gap: 11px; max-width: 500px; margin: 0 auto;
-}
-.chapter-card {
-  background: white; border-radius: 14px; padding: 14px 12px;
-  cursor: pointer; border: 2px solid transparent;
-  transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  position: relative; overflow: hidden;
-}
-.chapter-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
-.chapter-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.12); }
-.chapter-card.locked { opacity:0.5; cursor:default; }
-.ch-num { font-family:'Baloo 2',cursive; font-size:24px; font-weight:800; line-height:1; }
-.ch-icon { font-size:22px; float:right; }
-.ch-name { font-size:11px; font-weight:700; margin-top:6px; line-height:1.3; }
-.ch-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; display:inline-block; margin-top:6px; }
+/* Gujarati Text */
+.guj-text { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1; color: #0369a1; font-size: 14px; font-weight: bold; line-height: 1.6; }
 
-.ch-1::before{background:#2563eb;} .ch-1 .ch-num{color:#2563eb;} .ch-1 .ch-badge{background:#dbeafe;color:#1d4ed8;}
-.ch-2::before{background:#0d9488;} .ch-2 .ch-num{color:#0d9488;} .ch-2 .ch-badge{background:#ccfbf1;color:#0f766e;}
-.ch-3::before{background:#f97316;} .ch-3 .ch-num{color:#f97316;} .ch-3 .ch-badge{background:#ffedd5;color:#c2410c;}
-.ch-4::before{background:#7c3aed;} .ch-4 .ch-num{color:#7c3aed;} .ch-4 .ch-badge{background:#ede9fe;color:#6d28d9;}
-.ch-5::before{background:#ef4444;} .ch-5 .ch-num{color:#ef4444;} .ch-5 .ch-badge{background:#fee2e2;color:#b91c1c;}
-.ch-6::before{background:#16a34a;} .ch-6 .ch-num{color:#16a34a;} .ch-6 .ch-badge{background:#dcfce7;color:#15803d;}
-.ch-7::before{background:#db2777;} .ch-7 .ch-num{color:#db2777;} .ch-7 .ch-badge{background:#fce7f3;color:#be185d;}
-.ch-8::before{background:#0284c7;} .ch-8 .ch-num{color:#0284c7;} .ch-8 .ch-badge{background:#e0f2fe;color:#0369a1;}
-.ch-9::before{background:#9333ea;} .ch-9 .ch-num{color:#9333ea;} .ch-9 .ch-badge{background:#f3e8ff;color:#7e22ce;}
-.ch-10::before{background:#0891b2;} .ch-10 .ch-num{color:#0891b2;} .ch-10 .ch-badge{background:#cffafe;color:#0e7490;}
+.speak-btn { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; border: none; background: #e0f2fe; color: #0284c7; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;}
 
-/* ── CHAPTER SCREEN ── */
-.ch-header { padding: 20px 14px 16px; color: white; }
-.ch-number-label { font-size:11px; font-weight:700; opacity:0.8; text-transform:uppercase; letter-spacing:1px; }
-.ch-header h2 { font-family:'Baloo 2',cursive; font-size:22px; font-weight:800; margin-top:3px; }
+/* Practice & AI */
+.practice-q { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-top: 15px; }
+.pq-text { font-weight: 700; margin-bottom: 10px; font-size: 14px; color: #0f172a;}
+.choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choice-btn { background: white; border: 2px solid #cbd5e1; padding: 10px; border-radius: 8px; font-weight: 700; color: #475569; cursor: pointer; }
+.choice-btn.correct { background: #10b981; color: white; border-color: #10b981; }
+.choice-btn.wrong { background: #ef4444; color: white; border-color: #ef4444; }
+.feedback { font-size: 13px; font-weight: bold; margin-top: 8px; min-height: 18px; }
 
-.sections-list { padding:12px; max-width:500px; margin:0 auto; }
-.section-item {
-  background:white; border-radius:12px; padding:13px 14px; margin-bottom:9px;
-  cursor:pointer; display:flex; align-items:center; gap:11px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.06); border:2px solid transparent; transition:all 0.2s;
-}
-.section-item:hover { transform:translateX(4px); }
-.sec-num {
-  font-family:'Baloo 2',cursive; font-size:13px; font-weight:800;
-  min-width:40px; height:40px; border-radius:10px;
-  display:flex; align-items:center; justify-content:center; color:white;
-}
-.sec-title { font-weight:700; font-size:13px; }
-.sec-type { font-size:11px; color:#64748b; margin-top:1px; }
-
-/* ── CONTENT ── */
-.content-body { padding:14px 13px 50px; max-width:600px; margin:0 auto; }
-.sec-heading {
-  font-family:'Baloo 2',cursive; font-size:19px; font-weight:800;
-  margin-bottom:13px; padding-bottom:7px; border-bottom:3px solid currentColor;
-  display:flex; align-items:center; gap:7px;
-}
-.content-body p { margin-bottom:11px; font-size:14px; line-height:1.7; position:relative; }
-
-/* Read Aloud Button Injection */
-.speak-btn {
-  position: absolute; right: 0; top: 0;
-  background: #e0f2fe; border: none; color: #0284c7;
-  width: 26px; height: 26px; border-radius: 50%;
-  font-size: 14px; cursor: pointer; opacity: 0.7; transition: 0.2s;
-}
-.speak-btn:hover { opacity: 1; transform: scale(1.1); }
-
-.india-example {
-  background:#fff7ed; border-left:4px solid #f97316;
-  border-radius:0 12px 12px 0; padding:11px 13px; margin:13px 0;
-}
-.india-example .ie-label {
-  font-size:10px; font-weight:800; color:#c2410c; text-transform:uppercase;
-  letter-spacing:0.5px; margin-bottom:5px;
-}
-.india-example p { font-size:13px; margin:0; color:#431407; }
-
-.concept-box {
-  background:#eff6ff; border:2px solid #bfdbfe; border-radius:12px;
-  padding:11px 13px; margin:13px 0;
-}
-.concept-box .cb-title { font-weight:800; color:#1d4ed8; font-size:12px; margin-bottom:5px; }
-.concept-box p { font-size:13px; margin:0; color:#1e3a5f; }
-
-/* Gujarati Translation Text */
-.guj-text {
-  color: #0369a1; font-size: 13px; font-weight: bold; margin-top: 6px; border-top: 1px dashed #bfdbfe; padding-top: 6px;
-}
-
-.num-table { background:#fffbeb; border:2px solid #fde68a; border-radius:12px; padding:13px; margin:13px 0; }
-.num-table .nt-title { font-family:'Baloo 2',cursive; font-size:13px; font-weight:700; color:#92400e; margin-bottom:9px; text-align:center; }
-.seq-row { display:flex; justify-content:space-between; align-items:center; padding:5px 7px; border-radius:7px; margin-bottom:3px; font-size:12px; }
-.seq-row:nth-child(odd) { background:rgba(251,191,36,0.15); }
-.seq-nums { font-weight:700; font-family:'Baloo 2',cursive; color:#1e293b; }
-.seq-name { font-weight:700; font-size:10px; padding:2px 7px; border-radius:20px; background:#fde68a; color:#92400e; }
-
-.fig-out {
-  background:linear-gradient(135deg,#ede9fe,#ddd6fe); border:2px solid #7c3aed;
-  border-radius:13px; padding:14px; margin:16px 0;
-}
-.fig-out .fo-hdr { font-family:'Baloo 2',cursive; font-size:14px; font-weight:800; color:#5b21b6; margin-bottom:9px; }
-.fig-out ol { padding-left:17px; }
-.fig-out li { margin-bottom:7px; font-size:13px; color:#3b0764; font-weight:600; }
-
-.practice-section {
-  background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:2px solid #86efac;
-  border-radius:13px; padding:14px; margin:16px 0;
-}
-.practice-section .ps-hdr { font-family:'Baloo 2',cursive; font-size:14px; font-weight:800; color:#15803d; margin-bottom:11px; }
-.practice-q { background:white; border-radius:10px; padding:11px 13px; margin-bottom:9px; border:1.5px solid #bbf7d0; }
-.pq-text { font-size:13px; font-weight:700; color:#14532d; margin-bottom:9px; }
-.answer-choices { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.choice-btn {
-  background:#f0fdf4; border:2px solid #86efac; border-radius:8px;
-  padding:7px 8px; font-size:12px; font-weight:700; color:#15803d;
-  cursor:pointer; transition:all 0.2s; text-align:center; font-family:'Nunito',sans-serif;
-}
-.choice-btn:hover { background:#dcfce7; }
-.choice-btn.correct { background:#16a34a !important; color:white !important; border-color:#16a34a !important; }
-.choice-btn.wrong { background:#fee2e2 !important; color:#b91c1c !important; border-color:#fca5a5 !important; }
-.feedback { font-size:12px; margin-top:7px; font-weight:700; min-height:16px; }
-.feedback.ok { color:#16a34a; } .feedback.no { color:#dc2626; }
-
-.pattern-box {
-  background:#f0fdf4; border:2px solid #86efac; border-radius:11px;
-  padding:13px; margin:13px 0; font-family:'Baloo 2',cursive;
-  font-size:13px; text-align:center;
-}
-.pline { margin:3px 0; }
-.pline .res { color:#dc2626; font-weight:800; }
-
-.math-talk {
-  background:white; border:2px dashed #f97316; border-radius:10px;
-  padding:9px 12px; margin:11px 0; font-size:12px; color:#9a3412;
-  font-weight:600; display:flex; gap:7px; align-items:flex-start;
-}
-
-.visual-wrap { margin:13px 0; border-radius:11px; overflow:hidden; border:2px solid #e2e8f0; }
-.visual-wrap svg { display:block; width:100%; }
-
-.vidhya-footer {
-  text-align: center; padding: 20px; color: #cbd5e1; font-size: 11px; font-weight: 700;
-}
-
-/* AI Chat Box */
-.ai-box { background: white; border: 2px solid #c4b5fd; border-radius: 12px; padding: 15px; margin-top: 20px; }
-.ai-box h3 { font-family: 'Baloo 2', cursive; color: #6d28d9; font-size: 16px; margin-bottom: 10px; }
-.ai-input { width: 100%; padding: 10px; border: 1px solid #ddd6fe; border-radius: 8px; font-size: 13px; margin-bottom: 10px; }
-.ai-btn-row { display: flex; gap: 10px; }
-.ai-btn { background: #7c3aed; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
-.ai-btn:hover { background: #6d28d9; }
-.ai-response { background: #f8fafc; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; color: #1e293b; display: none; }
+.ai-container { background: linear-gradient(135deg, #ede9fe, #f3e8ff); border-radius: 16px; padding: 16px; margin-top: 15px; border: 1px solid #ddd6fe; }
+.ai-title { font-family: 'Baloo 2', cursive; font-size: 16px; color: #6d28d9; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.ai-input-row { display: flex; gap: 8px; flex-direction: column;}
+.ai-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #c4b5fd; outline: none; font-family: 'Nunito'; }
+.ai-btn-group { display: flex; gap: 8px; }
+.ai-btn { background: #7c3aed; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; flex: 1; }
+.ai-btn.quiz { background: #0d9488; }
+.ai-response { background: white; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 14px; display: none; color: #4c1d95; line-height: 1.5; }
 </style>
 </head>
 <body>
 
+<!-- Splash Screen -->
 <div id="splash">
-  <div class="splash-ring">
-    <svg class="diya-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
-      <circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
-      <circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
-      <circle cx="72" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
-      <circle cx="45" cy="84" r="2.5" fill="#fbbf24" opacity="0.5"/>
-      <circle cx="18" cy="72" r="2" fill="#fbbf24" opacity="0.4"/>
-      <circle cx="6"  cy="45" r="2" fill="#fbbf24" opacity="0.4"/>
-      <circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.4"/>
-      <ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
-      <ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
-      <ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
-      <ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
-      <ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
-      <ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
-      <ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
-      <ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
-    </svg>
-  </div>
-  <div class="splash-name">Vidhya</div>
-  <div class="splash-tagline">Your Learning Mitra</div>
-  <div class="splash-pills">
-    <span class="splash-pill pill-blue">Mathematics</span>
-    <span class="splash-pill pill-green">Science</span>
-  </div>
-  <div class="splash-gseb">Standard 6 &bull; GSEB &bull; English Medium</div>
-  <div class="splash-loader"><div class="splash-loader-fill"></div></div>
-</div>
-
-<div class="topbar">
-  <button class="back-btn" id="backBtn" onclick="goBack()">&#8592;</button>
-  <div class="topbar-logo">
-    <svg width="20" height="20" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="45" cy="62" rx="20" ry="7" fill="#d97706"/>
-      <ellipse cx="45" cy="59" rx="17" ry="5" fill="#fbbf24"/>
-      <ellipse cx="45" cy="38" rx="10" ry="17" fill="#f97316" opacity="0.8"/>
-      <ellipse cx="45" cy="34" rx="7" ry="12" fill="#fbbf24"/>
-      <ellipse cx="45" cy="30" rx="4" ry="8" fill="#fef3c7"/>
-    </svg>
-  </div>
-  <div style="flex:1">
-    <div class="topbar-name" id="topbarTitle">Vidhya</div>
-    <div class="topbar-sub" id="topbarSub">Your Learning Mitra</div>
-  </div>
-</div>
-
-<div class="screen active" id="homeScreen">
-  <div class="hero">
-    <svg width="56" height="56" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:8px;position:relative;z-index:1">
-      <circle cx="45" cy="6" r="2.5" fill="#fbbf24" opacity="0.5"/>
-      <circle cx="72" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
-      <circle cx="84" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
-      <circle cx="18" cy="18" r="2" fill="#fbbf24" opacity="0.35"/>
-      <circle cx="6" cy="45" r="2" fill="#fbbf24" opacity="0.35"/>
-      <ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
-      <ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
-      <ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
-      <ellipse cx="45" cy="55" rx="5" ry="2.5" fill="#1e3a8a"/>
-      <ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
-      <ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
-      <ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
-      <ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
-    </svg>
-    <div class="hero-vidhya">Vidhya</div>
-    <div class="hero-tagline">Your Learning Mitra</div>
-    <div class="hero-pills">
-      <span class="hero-pill hp-blue">Standard 6</span>
-      <span class="hero-pill hp-green">GSEB</span>
-      <span class="hero-pill hp-yellow">English Medium</span>
+    <div class="splash-ring">
+        <svg class="diya-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="45" cy="62" rx="22" ry="8" fill="#92400e" opacity="0.85"/>
+            <ellipse cx="45" cy="59" rx="20" ry="6.5" fill="#d97706"/>
+            <ellipse cx="45" cy="57" rx="17" ry="5" fill="#fbbf24"/>
+            <ellipse cx="45" cy="38" rx="12" ry="19" fill="#f97316" opacity="0.7"/>
+            <ellipse cx="45" cy="34" rx="8.5" ry="14" fill="#fbbf24"/>
+            <ellipse cx="45" cy="30" rx="5.5" ry="10" fill="#fef3c7"/>
+            <ellipse cx="45" cy="27" rx="3" ry="6" fill="white" opacity="0.85"/>
+        </svg>
     </div>
-  </div>
+    <div class="splash-name">Vidhya</div>
+    <div class="splash-tagline">Your Learning Mitra</div>
+    <div class="splash-loader"><div class="splash-loader-fill"></div></div>
+</div>
 
-  <div class="subject-bar">
-    <button class="subj-btn active" onclick="showSubject('maths',this)">&#x1F4D0; Mathematics</button>
-    <button class="subj-btn locked">&#x1F52C; Science (Soon)</button>
-  </div>
-
-  <div id="mathsPanel">
-    <div class="chapters-grid">
-      <div class="chapter-card ch-1" onclick="openChapter(1)">
-        <span class="ch-icon">&#x1F522;</span>
-        <div class="ch-num">1</div>
-        <div class="ch-name">Patterns in Mathematics</div>
-        <span class="ch-badge">&#x2705; Available</span>
-      </div>
-      <div class="chapter-card ch-2" onclick="openChapter(2)">
-        <span class="ch-icon">&#x1F4CF;</span>
-        <div class="ch-num">2</div>
-        <div class="ch-name">Lines and Angles</div>
-        <span class="ch-badge">&#x2705; Available</span>
-      </div>
-      <div class="chapter-card ch-3" onclick="openChapter(3)">
-        <span class="ch-icon">&#x1F3B2;</span>
-        <div class="ch-num">3</div>
-        <div class="ch-name">Number Play</div>
-        <span class="ch-badge">&#x2705; Available</span>
-      </div>
-      <div class="chapter-card ch-4 locked"><span class="ch-icon">&#x1F4CA;</span><div class="ch-num">4</div><div class="ch-name">Data Handling</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-5 locked"><span class="ch-icon">&#x1F31F;</span><div class="ch-num">5</div><div class="ch-name">Prime Time</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-6 locked"><span class="ch-icon">&#x25A1;</span><div class="ch-num">6</div><div class="ch-name">Perimeter and Area</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-7 locked"><span class="ch-icon">&#xBD;</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-8 locked"><span class="ch-icon">&#x1F4D0;</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-9 locked"><span class="ch-icon">&#x25C6;</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-10 locked"><span class="ch-icon">&#x2B07;</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">&#x1F512; Soon</span></div>
+<!-- Main App Bar -->
+<div class="topbar" id="appBar">
+    <button class="back-btn" id="backBtn" onclick="goHome()">←</button>
+    <div>
+        <div class="topbar-name" id="topTitle">Ganita Prakash</div>
+        <div class="topbar-sub" id="topSub">Standard 6 Mathematics</div>
     </div>
-    <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
-  </div>
 </div>
 
-<div class="screen" id="chapterScreen">
-  <div id="chHdr" class="ch-header" style="background:linear-gradient(135deg,#1e3a8a,#2563eb)">
-    <div class="ch-number-label" id="chNumLabel">Chapter 1</div>
-    <h2 id="chTitleEl">Patterns in Mathematics</h2>
-  </div>
-  <div class="sections-list" id="sectionsList"></div>
-  <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
+<!-- Home Screen -->
+<div id="homeScreen" class="screen active">
+    <div class="hero-card">
+        <div class="hero-title">Class 6 Maths</div>
+        <div class="tags">
+            <span class="tag">GSEB</span>
+            <span class="tag" style="background:#dcfce7; color:#15803d">Chapters 1 to 6 (Detailed)</span>
+        </div>
+    </div>
+    <div class="section-title">Course Modules</div>
+    <div class="chapters-grid" id="chapterList"></div>
 </div>
 
-<div class="screen" id="contentScreen">
-  <div class="content-body" id="contentBody"></div>
-  <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
+<!-- Chapter Detail Screen -->
+<div id="chapterScreen" class="screen">
+    <div class="content-body" id="contentArea"></div>
 </div>
 
 <script>
-// ── NAV ──
-var navHistory = ['home'];
-var curCh = null;
+// DETAILED DATA FOR CHAPTERS 1 TO 6
+const BOOK_DATA = [
+    {
+        id: 1, name: "Patterns in Mathematics", color: "#2563eb", icon: "🔢",
+        sections: [
+            { 
+                title: "1.1 Visualising Sequences", 
+                text: "Patterns are everywhere in nature and numbers. A sequence is a list of numbers arranged in a special order. For example, look at the even numbers: 2, 4, 6, 8, 10. Each number is found by adding 2 to the previous one. By finding the rule of a sequence, we can easily predict any number that comes next.", 
+                guj: "ભાત (Patterns) પ્રકૃતિ અને સંખ્યાઓમાં બધે જ જોવા મળે છે. શ્રેણી (Sequence) એટલે ચોક્કસ ક્રમમાં ગોઠવાયેલી સંખ્યાઓ. ઉદાહરણ તરીકે: બેકી સંખ્યાઓ 2, 4, 6, 8. આમાં દરેક સંખ્યામાં 2 ઉમેરવાથી આગળની સંખ્યા મળે છે.",
+                q: "What comes next in the sequence 5, 10, 15, 20...?", choices: ["22", "25", "30", "35"], ans: 1 
+            },
+            { 
+                title: "1.2 Triangular Numbers", 
+                text: "Some numbers can form the shape of a triangle using dots. These are called Triangular Numbers. The first is 1. The second is 3 (1 on top, 2 below). The third is 6. The sequence goes: 1, 3, 6, 10, 15, 21. Notice the pattern: we add 2, then add 3, then add 4, and so on.", 
+                guj: "જે સંખ્યાઓને ટપકાં (dots) નો ઉપયોગ કરીને ત્રિકોણના આકારમાં ગોઠવી શકાય, તેને ત્રિકોણીય સંખ્યાઓ (Triangular Numbers) કહે છે. જેમ કે: 1, 3, 6, 10, 15...",
+                q: "What is the 4th triangular number?", choices: ["6", "8", "10", "15"], ans: 2 
+            },
+            { 
+                title: "1.3 Square Numbers", 
+                text: "Square numbers are formed when we multiply a number by itself. They can be arranged in a perfect square grid using dots. For example: 1x1=1, 2x2=4, 3x3=9, 4x4=16. The sequence is 1, 4, 9, 16, 25, 36. Fun fact: If you add two consecutive triangular numbers, you get a square number! (e.g., 1 + 3 = 4).", 
+                guj: "જ્યારે આપણે કોઈ સંખ્યાનો તેની પોતાની સાથે જ ગુણાકાર કરીએ, ત્યારે વર્ગ સંખ્યા (Square Number) મળે છે. જેમ કે: 1, 4, 9, 16, 25...",
+                q: "Which of these is a square number?", choices: ["12", "20", "25", "30"], ans: 2 
+            }
+        ]
+    },
+    {
+        id: 2, name: "Lines and Angles", color: "#0d9488", icon: "📏",
+        sections: [
+            { 
+                title: "2.1 Points, Lines, and Rays", 
+                text: "A Point is a precise location with no size. A Line extends forever in both directions and has no end points. A Line Segment is the shortest path between two points and has exactly two end points. A Ray starts at one point and goes on forever in one direction (like sunlight).", 
+                guj: "બિંદુ (Point) એ એક ચોક્કસ સ્થાન છે. રેખા (Line) બંને દિશામાં અનંત સુધી જાય છે. રેખાખંડ (Line Segment) ને બે છેડા હોય છે. કિરણ (Ray) એક બિંદુથી શરુ થઈ એક જ દિશામાં આગળ વધે છે.",
+                q: "Which geometrical figure has only ONE end point?", choices: ["Line", "Line Segment", "Ray", "Point"], ans: 2 
+            },
+            { 
+                title: "2.2 Types of Angles", 
+                text: "An angle is formed when two rays meet at a common point called a vertex. 
+- Acute Angle: Less than 90° (Sharp).
+- Right Angle: Exactly 90° (Like a book corner).
+- Obtuse Angle: Greater than 90° but less than 180° (Blunt).
+- Straight Angle: Exactly 180° (A flat line).
+- Reflex Angle: Greater than 180°.", 
+                guj: "જ્યારે બે કિરણો એક સામાન્ય બિંદુ (શિરોબિંદુ) પર મળે ત્યારે ખૂણો (Angle) બને છે. 90° થી નાના ખૂણાને લઘુકોણ (Acute), 90° ના ખૂણાને કાટકોણ (Right) અને 90° થી 180° વચ્ચેના ખૂણાને ગુરુકોણ (Obtuse) કહે છે.",
+                q: "An angle of 135° is called a/an:", choices: ["Acute Angle", "Right Angle", "Obtuse Angle", "Reflex Angle"], ans: 2 
+            },
+            { 
+                title: "2.3 Measuring Angles", 
+                text: "We use a tool called a Protractor to measure angles. A protractor is semicircular and is divided into 180 equal parts called degrees (°). A full circle is 360°. When measuring, place the center of the protractor on the vertex of the angle and align one ray with the 0° line.", 
+                guj: "ખૂણા માપવા માટે આપણે કોણમાપક (Protractor) નો ઉપયોગ કરીએ છીએ. તેમાં 0° થી 180° સુધીના કાપા હોય છે. આખું વર્તુળ 360° નું હોય છે.",
+                q: "A full turn or a complete circle is equal to how many degrees?", choices: ["90°", "180°", "270°", "360°"], ans: 3 
+            }
+        ]
+    },
+    {
+        id: 3, name: "Number Play", color: "#f97316", icon: "🎲",
+        sections: [
+            { 
+                title: "3.1 Digit Sum and Palindromes", 
+                text: "The Digit Sum is found by adding all the digits of a number (e.g., 347 -> 3+4+7=14). A Palindrome is a number or word that reads the same forwards and backwards (e.g., 121, 5445). You can often create palindromes by taking a number, reversing its digits, and adding them together.", 
+                guj: "સંખ્યાના બધા અંકોના સરવાળાને 'ડિજીટ સમ' (Digit Sum) કહેવાય. પેલિન્ડ્રોમ (Palindrome) એટલે એવી સંખ્યા જેને સીધી કે ઉલટી વાંચો તો પણ સરખી જ રહે (દા.ત. 121).",
+                q: "What is the digit sum of the number 852?", choices: ["13", "15", "16", "14"], ans: 1 
+            },
+            { 
+                title: "3.2 The Kaprekar Constant", 
+                text: "D.R. Kaprekar was an Indian mathematician who discovered a magic number: 6174. If you take any 4-digit number (with at least two different digits), arrange the digits in descending order to make the largest number, then in ascending order to make the smallest number, and subtract them. If you repeat this process, you will ALWAYS reach 6174!", 
+                guj: "ડી. આર. કાપરેકર એક ભારતીય ગણિતશાસ્ત્રી હતા જેમણે 6174 નામનો જાદુઈ અચળાંક (Constant) શોધ્યો. કોઈપણ 4 અંકની સંખ્યાની મોટી સંખ્યામાંથી નાની સંખ્યા બાદ કરતા કરતા છેવટે 6174 જ મળે છે!",
+                q: "What is the 4-digit Kaprekar Constant?", choices: ["1234", "6174", "9999", "4321"], ans: 1 
+            },
+            { 
+                title: "3.3 Mental Math & Estimation", 
+                text: "Mental Math involves calculating in your head using smart tricks like breaking numbers apart. Estimation means making a reasonable guess when an exact answer isn't needed. For example, estimating a crowd of 4,890 people as 'about 5,000'.", 
+                guj: "મેન્ટલ મેથ્સ એટલે મનમાં ગણતરી કરવી. અંદાજ (Estimation) લગાવવો એટલે કોઈ ચોક્કસ આંકડાને બદલે આશરે ગણતરી કરવી, દા.ત. 98 ને 100 માની લેવા.",
+                q: "If you estimate 198 + 305 to the nearest hundred, the sum is about:", choices: ["400", "500", "600", "700"], ans: 1 
+            }
+        ]
+    },
+    {
+        id: 4, name: "Data Handling", color: "#7c3aed", icon: "📊",
+        sections: [
+            { 
+                title: "4.1 Organising Data with Tally Marks", 
+                text: "Data is a collection of facts, numbers, or observations. To organize data quickly, we use Tally Marks. We draw vertical lines for 1, 2, 3, and 4. For 5, we draw a diagonal line across the first four. This makes counting by fives very fast!", 
+                guj: "માહિતી (Data) ને સરળતાથી ગોઠવવા માટે 'ટેલી માર્કસ' (Tally Marks) વપરાય છે. તેમાં 4 ઊભી લીટી દોરીને પાંચમી લીટી ત્રાસી દોરવામાં આવે છે, જેથી 5-5 ની ગણતરી ઝડપી બને.",
+                q: "In tally marks, a completed group with a diagonal line represents the number:", choices: ["4", "5", "6", "10"], ans: 1 
+            },
+            { 
+                title: "4.2 Pictographs", 
+                text: "A Pictograph uses pictures or symbols to represent data. It's important to look at the 'Key' in a pictograph. The key tells you what one picture stands for. For example, one picture of an apple might represent 10 actual apples.", 
+                guj: "ચિત્રાલેખ (Pictograph) માં માહિતી દર્શાવવા માટે ચિત્રોનો ઉપયોગ થાય છે. તેમાં 'Key' (ચાવી) જોવી ખુબ જરૂરી છે, જે દર્શાવે છે કે એક ચિત્ર બરાબર કેટલી સંખ્યા થાય.",
+                q: "If the key says 1 smiley face = 5 students, how many students do 4 smiley faces represent?", choices: ["9", "15", "20", "4"], ans: 2 
+            },
+            { 
+                title: "4.3 Bar Graphs", 
+                text: "A Bar Graph is a visual way to display data using rectangular bars of equal width. The lengths or heights of the bars are proportional to the data they represent. Bar graphs have two axes: a horizontal axis (x-axis) and a vertical axis (y-axis).", 
+                guj: "લંબ આલેખ (Bar Graph) માં માહિતી બતાવવા માટે સમાન પહોળાઈના સ્તંભ (Bars) દોરવામાં આવે છે. સ્તંભની ઊંચાઈ તેની કિંમત (Value) દર્શાવે છે.",
+                q: "In a vertical bar graph, the height of the bar represents:", choices: ["The width of the data", "The frequency or value", "The name of the category", "Nothing"], ans: 1 
+            }
+        ]
+    },
+    {
+        id: 5, name: "Prime Time", color: "#ef4444", icon: "🌟",
+        sections: [
+            { 
+                title: "5.1 Factors and Multiples", 
+                text: "A Factor is a number that divides exactly into another number with no remainder. The factors of 6 are 1, 2, 3, and 6. A Multiple is the result of multiplying a number by an integer. The multiples of 5 are 5, 10, 15, 20...", 
+                guj: "અવયવ (Factor) એટલે એવી સંખ્યા જે આપેલ સંખ્યાને નિઃશેષ ભાગી શકે. અવયવી (Multiple) એટલે આપેલ સંખ્યાના ઘડિયામાં આવતી સંખ્યાઓ.",
+                q: "Which of the following is a factor of 15?", choices: ["2", "4", "5", "6"], ans: 2 
+            },
+            { 
+                title: "5.2 Prime and Composite Numbers", 
+                text: "A Prime Number has exactly TWO distinct factors: 1 and itself (e.g., 2, 3, 5, 7, 11). A Composite Number has more than two factors (e.g., 4, 6, 8, 9). The number 1 is unique—it is neither prime nor composite!", 
+                guj: "અવિભાજ્ય સંખ્યા (Prime Number) ને ફક્ત બે જ અવયવો હોય છે: 1 અને તે સંખ્યા પોતે. વિભાજ્ય સંખ્યા (Composite Number) ને 2 કરતા વધુ અવયવો હોય છે. 1 એ અવિભાજ્ય કે વિભાજ્ય નથી.",
+                q: "Which of these is a prime number?", choices: ["9", "15", "17", "21"], ans: 2 
+            },
+            { 
+                title: "5.3 Prime Factorisation", 
+                text: "Prime Factorisation is finding which prime numbers multiply together to make the original number. You can use a 'Factor Tree' to find it. For example, the prime factorisation of 12 is 2 × 2 × 3.", 
+                guj: "કોઈપણ સંખ્યાને અવિભાજ્ય સંખ્યાઓના ગુણાકાર તરીકે દર્શાવવાની રીતને 'અવિભાજ્ય અવયવીકરણ' (Prime Factorisation) કહે છે.",
+                q: "What is the prime factorisation of 20?", choices: ["4 × 5", "2 × 10", "2 × 2 × 5", "1 × 20"], ans: 2 
+            }
+        ]
+    },
+    {
+        id: 6, name: "Perimeter and Area", color: "#16a34a", icon: "⬜",
+        sections: [
+            { 
+                title: "6.1 Perimeter of Closed Figures", 
+                text: "Perimeter is the total distance around the outside of a 2D shape. You calculate it by adding the lengths of all the sides. For a Rectangle, the formula is: Perimeter = 2 × (Length + Breadth). For a Square, Perimeter = 4 × Side.", 
+                guj: "પરિમિતિ (Perimeter) એટલે કોઈપણ બંધ આકૃતિની બધી જ બાજુઓના માપનો સરવાળો. લંબચોરસની પરિમિતિ = 2 × (લંબાઈ + પહોળાઈ).",
+                q: "What is the perimeter of a rectangle with length 6m and breadth 4m?", choices: ["10m", "20m", "24m", "30m"], ans: 1 
+            },
+            { 
+                title: "6.2 Area of Rectangles and Squares", 
+                text: "Area is the amount of space inside the boundary of a 2D shape. It is measured in square units (like sq cm or sq m). To find the Area of a Rectangle, multiply Length × Breadth. The Area of a Square is Side × Side.", 
+                guj: "ક્ષેત્રફળ (Area) એટલે આકૃતિ દ્વારા રોકાયેલી જગ્યાનું માપ. લંબચોરસનું ક્ષેત્રફળ = લંબાઈ × પહોળાઈ. ચોરસનું ક્ષેત્રફળ = બાજુ × બાજુ.",
+                q: "What is the area of a square whose side is 5 cm?", choices: ["10 sq cm", "20 sq cm", "25 sq cm", "100 sq cm"], ans: 2 
+            },
+            { 
+                title: "6.3 Real-life Applications", 
+                text: "We use Perimeter when we want to put a fence around a garden or lace around a tablecloth. We use Area when we want to lay tiles on a floor, paint a wall, or buy a carpet for a room.", 
+                guj: "વ્યવહારમાં: ખેતરની ફરતે વાડ કરવી હોય તો પરિમિતિ શોધવી પડે. પણ જો રૂમમાં ટાઈલ્સ બેસાડવી હોય તો ક્ષેત્રફળ શોધવું પડે.",
+                q: "If you want to frame a picture, will you measure its area or perimeter?", choices: ["Area", "Perimeter", "Volume", "Mass"], ans: 1 
+            }
+        ]
+    }
+];
 
-var CHAPTERS = [{
-  id:1, title:"Patterns in Mathematics",
-  color:"#2563eb", bg:"linear-gradient(135deg,#1e3a8a,#2563eb)",
-  available:true,
-  sections:[
-    {id:"1.1", title:"What is Mathematics?",              type:"Concept + Indian Examples"},
-    {id:"1.2", title:"Patterns in Numbers",               type:"Concept + Visual + Practice"},
-    {id:"1.3", title:"Visualising Number Sequences",      type:"Visual + Activity"},
-    {id:"1.4", title:"Relations among Number Sequences",  type:"Pattern + Practice"},
-    {id:"1.5", title:"Patterns in Shapes",                type:"Visual + Activity"},
-    {id:"1.6", title:"Relation to Number Sequences",      type:"Concept + Practice"},
-  ]
-},{
-  id:2, title:"Lines and Angles",
-  color:"#0d9488", bg:"linear-gradient(135deg,#0f766e,#0d9488)",
-  available:true,
-  sections:[
-    {id:"2.1", title:"Point",                             type:"Concept + Visual + Practice"},
-    {id:"2.2", title:"Line Segment",                      type:"Concept + Visual + Practice"},
-    {id:"2.3", title:"Line",                              type:"Concept + Visual + Practice"},
-    {id:"2.4", title:"Ray",                               type:"Concept + Visual + Practice"},
-    {id:"2.5", title:"Angle",                             type:"Concept + Visual + Practice"},
-    {id:"2.6", title:"Comparing Angles",                  type:"Concept + Visual + Practice"},
-    {id:"2.7", title:"Making Angles",                     type:"Concept + Visual + Practice"},
-    {id:"2.8", title:"Special Types of Angles",           type:"Concept + Visual + Practice"},
-    {id:"2.9", title:"Measuring Angles",                  type:"Concept + Visual + Practice"},
-    {id:"2.10", title:"Using a Protractor",               type:"Concept + Steps + Practice"},
-    {id:"2.11", title:"Types of Angles and their Measures",type:"Concept + Visual + Practice"},
-  ]
-},{
-  id:3, title:"Number Play",
-  color:"#f97316", bg:"linear-gradient(135deg,#c2410c,#f97316)",
-  available:true,
-  sections:[
-    {id:"3.1",  title:"Numbers can Tell us Things",      type:"Concept + Puzzle + Practice"},
-    {id:"3.2",  title:"Supercells",                      type:"Concept + Table + Practice"},
-    {id:"3.3",  title:"Patterns on the Number Line",     type:"Concept + Visual + Practice"},
-    {id:"3.4",  title:"Playing with Digits",             type:"Concept + Activity + Practice"},
-    {id:"3.5",  title:"Pretty Palindromic Patterns",     type:"Concept + Pattern + Practice"},
-    {id:"3.6",  title:"The Magic Number of Kaprekar",    type:"Indian Maths + Activity + Practice"},
-    {id:"3.7",  title:"Clock and Calendar Numbers",      type:"Concept + Activity + Practice"},
-    {id:"3.8",  title:"Mental Math",                     type:"Concept + Activity + Practice"},
-    {id:"3.9",  title:"Playing with Number Patterns",    type:"Concept + Collatz + Practice"},
-    {id:"3.10", title:"Playing with Number Patterns 2",  type:"Concept + Pattern + Practice"},
-    {id:"3.11", title:"Simple Estimation",               type:"Concept + Indian Examples + Practice"},
-  ]
-}];
+// App Initialization
+function init() {
+    const list = document.getElementById('chapterList');
+    BOOK_DATA.forEach(ch => {
+        const btn = document.createElement('div');
+        btn.className = 'chapter-card';
+        btn.style.borderLeftColor = ch.color;
+        btn.onclick = () => openChapter(ch.id);
+        btn.innerHTML = `
+            <div class="ch-icon" style="background:${ch.color}">${ch.icon}</div>
+            <div class="ch-details">
+                <div class="ch-num">CHAPTER ${ch.id}</div>
+                <div class="ch-name">${ch.name}</div>
+            </div>
+            <div style="color:#cbd5e1; font-weight:bold; font-size:20px;">→</div>
+        `;
+        list.appendChild(btn);
+    });
 
-function goBack() {
-  window.speechSynthesis.cancel();
-  navHistory.pop();
-  var prev = navHistory[navHistory.length-1];
-  if (prev==='home') showHome();
-  else if (prev==='chapter') showChScreen();
+    setTimeout(() => {
+        document.getElementById('splash').classList.add('hide');
+    }, 2500);
 }
-function showHome() {
-  navHistory=['home']; switchTo('homeScreen');
-  document.getElementById('topbarTitle').textContent='Vidhya';
-  document.getElementById('topbarSub').textContent='Your Learning Mitra';
-  document.getElementById('backBtn').classList.remove('vis');
-}
-function showSubject(s, btn) {
-  document.querySelectorAll('.subj-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-}
+
+// Navigation
 function openChapter(id) {
-  var ch = CHAPTERS.find(function(c){return c.id===id;});
-  if (!ch||!ch.available) return;
-  curCh=ch; navHistory.push('chapter');
-  document.getElementById('chNumLabel').textContent='Chapter '+ch.id;
-  document.getElementById('chTitleEl').textContent=ch.title;
-  document.getElementById('chHdr').style.background=ch.bg;
-  document.getElementById('topbarTitle').textContent='Chapter '+ch.id;
-  document.getElementById('topbarSub').textContent=ch.title;
-  document.getElementById('backBtn').classList.add('vis');
-  var list=document.getElementById('sectionsList');
-  list.innerHTML='';
-  ch.sections.forEach(function(sec){
-    var d=document.createElement('div');
-    d.className='section-item';
-    d.style.color=ch.color;
-    d.innerHTML='<div class="sec-num" style="background:'+ch.color+'">'+sec.id+'</div>'
-      +'<div style="flex:1"><div class="sec-title">'+sec.title+'</div>'
-      +'<div class="sec-type">'+sec.type+'</div></div>'
-      +'<span style="color:#94a3b8;font-size:16px">&#x276F;</span>';
-    d.onclick=function(){openSection(sec.id);};
-    list.appendChild(d);
-  });
-  showChScreen();
-}
-function showChScreen(){
-  switchTo('chapterScreen');
-  document.getElementById('topbarTitle').textContent='Chapter '+curCh.id;
-}
-function openSection(secId){
-  navHistory.push('content');
-  document.getElementById('topbarTitle').textContent='Section '+secId;
-  document.getElementById('topbarSub').textContent=curCh.title;
-  
-  var rawHtml = buildContent(secId);
-  
-  // DYNAMIC AI & TTS INJECTION
-  if(!rawHtml.includes('Coming soon!')) {
-      var tempDiv = document.createElement('div');
-      tempDiv.innerHTML = rawHtml;
-      
-      // Inject Speaker Buttons into paragraphs
-      var paras = tempDiv.querySelectorAll('p');
-      paras.forEach(function(p, i) {
-          var pid = 'p_' + secId.replace('.','_') + '_' + i;
-          p.id = pid;
-          p.style.position = 'relative';
-          p.style.paddingRight = '30px';
-          var btn = document.createElement('button');
-          btn.className = 'speak-btn';
-          btn.innerHTML = '🔊';
-          btn.onclick = function() { speakText(pid); };
-          p.appendChild(btn);
-      });
-      
-      // Inject AI Chat Box at the bottom
-      var aiHtml = `
-        <div class="ai-box">
-          <h3>🤖 Ask Vidhya AI (ગુજરાતીમાં પૂછો)</h3>
-          <p style="font-size:12px; color:#64748b; margin-bottom:10px;">તમને આ વિષયમાં કંઈ ના સમજાયું હોય તો અહીં પૂછો!</p>
-          <input type="text" id="aiInput" class="ai-input" placeholder="તમારો પ્રશ્ન અહીં લખો...">
-          <div class="ai-btn-row">
-            <button class="ai-btn" id="aiBtn" onclick="askAI('${secId}')">પૂછો (Ask)</button>
-            <button class="ai-btn" style="background:#0d9488;" onclick="genQuiz('${secId}', this)">🎲 Generate AI Quiz</button>
-          </div>
-          <div id="aiResp" class="ai-response"></div>
-        </div>
-      `;
-      tempDiv.insertAdjacentHTML('beforeend', aiHtml);
-      rawHtml = tempDiv.innerHTML;
-  }
-  
-  document.getElementById('contentBody').innerHTML = rawHtml;
-  switchTo('contentScreen');
-}
-function switchTo(id){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
+    const ch = BOOK_DATA.find(c => c.id === id);
+    document.getElementById('homeScreen').classList.remove('active');
+    document.getElementById('chapterScreen').classList.add('active');
+    document.getElementById('backBtn').classList.add('vis');
+    
+    document.getElementById('topTitle').textContent = ch.name;
+    document.getElementById('topSub').textContent = `Chapter ${ch.id}`;
+    document.getElementById('appBar').style.background = ch.color;
+
+    const area = document.getElementById('contentArea');
+    area.innerHTML = '';
+
+    ch.sections.forEach((sec, idx) => {
+        const box = document.createElement('div');
+        box.className = 'concept-box';
+        const txtId = `txt-${id}-${idx}`;
+
+        let choicesHtml = sec.choices.map((c, i) => 
+            `<button class="choice-btn" onclick="checkAns(this, ${i === sec.ans})">${c}</button>`
+        ).join('');
+
+        box.innerHTML = `
+            <button class="speak-btn" onclick="speak('${txtId}')">🔊</button>
+            <div class="concept-title" style="color:${ch.color}">${sec.title}</div>
+            <div class="concept-text" id="${txtId}">
+                ${sec.text}
+                <div class="guj-text"><strong>ગુજરાતી સમજૂતી:</strong> ${sec.guj}</div>
+            </div>
+            
+            <div class="practice-q">
+                <div class="pq-text">📝 Quick Check: ${sec.q}</div>
+                <div class="choice-grid">${choicesHtml}</div>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="ai-container">
+                <div class="ai-title">🤖 Ask Vidhya AI (ગુજરાતીમાં પૂછો)</div>
+                <div class="ai-input-row">
+                    <input type="text" class="ai-input" placeholder="તમારો પ્રશ્ન અહીં લખો...">
+                </div>
+                <div class="ai-input-row" style="margin-top:8px; flex-direction:row;">
+                    <button class="ai-btn" onclick="askAI(this, '${sec.title}')">Ask Vidhya</button>
+                    <button class="ai-btn quiz" onclick="generateAIQuiz(this, '${sec.title}')">🎲 Generate New MCQ</button>
+                </div>
+                <div class="ai-response"></div>
+                <div class="ai-quiz-box" style="margin-top: 10px;"></div>
+            </div>
+        `;
+        area.appendChild(box);
+    });
+    window.scrollTo(0,0);
 }
 
-// ── AI AND TTS LOGIC ──
-function speakText(id){
-  var el = document.getElementById(id);
-  if(!el) return;
-  var clone = el.cloneNode(true);
-  var btn = clone.querySelector('.speak-btn');
-  if(btn) clone.removeChild(btn);
-  var text = clone.textContent.trim();
-  
-  if('speechSynthesis' in window){
-      window.speechSynthesis.cancel();
-      var utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'en-IN';
-      utter.rate = 0.9;
-      window.speechSynthesis.speak(utter);
-  }
+function goHome() {
+    window.speechSynthesis.cancel();
+    document.getElementById('chapterScreen').classList.remove('active');
+    document.getElementById('homeScreen').classList.add('active');
+    document.getElementById('backBtn').classList.remove('vis');
+    document.getElementById('topTitle').textContent = "Ganita Prakash";
+    document.getElementById('topSub').textContent = "Standard 6 Mathematics";
+    document.getElementById('appBar').style.background = "linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #0d9488 100%)";
 }
 
-async function askAI(secId){
-  if(typeof puter === 'undefined'){ alert('AI is offline.'); return; }
-  var inputEl = document.getElementById('aiInput');
-  var q = inputEl.value.trim();
-  if(!q) return;
-  
-  var btn = document.getElementById('aiBtn');
-  var resp = document.getElementById('aiResp');
-  btn.disabled = true; resp.style.display = 'block'; resp.innerHTML = '<i>વિદ્યા વિચારી રહી છે...</i>';
-  
-  try {
-      var context = curCh.title + " Section " + secId;
-      var prompt = "You are an Indian Math teacher. Topic: " + context + ". Student asks: '" + q + "'. Answer in simple Gujarati language (ગુજરાતીમાં સમજાવો). Use examples.";
-      var result = await puter.ai.chat(prompt);
-      resp.innerHTML = '<strong>Vidhya AI:</strong><br/>' + (result.message?.content || result);
-  } catch(e) {
-      resp.innerHTML = 'Error connecting to AI.';
-  }
-  btn.disabled = false; inputEl.value = '';
+// Logic Functions
+function speak(id) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        // Get text without the Gujarati part for TTS to sound natural in English
+        const fullNode = document.getElementById(id);
+        const clone = fullNode.cloneNode(true);
+        const gujNode = clone.querySelector('.guj-text');
+        if(gujNode) clone.removeChild(gujNode);
+        
+        const text = clone.innerText;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-IN';
+        utter.rate = 0.9;
+        window.speechSynthesis.speak(utter);
+    }
 }
 
-async function genQuiz(secId, btn){
-  if(typeof puter === 'undefined'){ alert('AI offline.'); return; }
-  btn.disabled = true; btn.textContent = '⏳ Generating...';
-  try {
-      var prompt = "Create 1 MCQ for 6th grade math on " + curCh.title + " section " + secId + ". Return ONLY JSON: {\"q\":\"Question?\",\"choices\":[\"A\",\"B\",\"C\",\"D\"],\"ans\":0}";
-      var result = await puter.ai.chat(prompt);
-      var content = result.message?.content || result;
-      var match = content.match(/\{[\s\S]*\}/);
-      if(match) content = match[0];
-      var q = JSON.parse(content);
-      
-      var html = '<div class="practice-q"><div class="pq-text">🤖 ' + q.q + '</div><div class="answer-choices">';
-      q.choices.forEach(function(c, i){
-          html += '<button class="choice-btn" ' + (i===q.ans?'data-correct="true"':'') + ' onclick="checkAnswer(this,' + (i===q.ans) + ')">' + c + '</button>';
-      });
-      html += '</div><div class="feedback"></div></div>';
-      btn.parentElement.parentElement.insertAdjacentHTML('beforebegin', html);
-      btn.textContent = '✓ Quiz Added!';
-  } catch(e) {
-      btn.textContent = '❌ Error';
-  }
-  setTimeout(function(){ btn.disabled = false; btn.textContent = '🎲 Generate AI Quiz'; }, 2000);
+function checkAns(btn, isCorrect) {
+    const parent = btn.parentElement.parentElement;
+    const btns = parent.querySelectorAll('.choice-btn');
+    const fb = parent.querySelector('.feedback');
+    
+    btns.forEach(b => b.style.pointerEvents = 'none');
+    if(isCorrect) {
+        btn.classList.add('correct');
+        fb.textContent = "✅ સાચો જવાબ! (Correct! Great job!)";
+        fb.style.color = "#10b981";
+    } else {
+        btn.classList.add('wrong');
+        fb.textContent = "❌ ખોટો જવાબ. (Not quite. Keep trying!)";
+        fb.style.color = "#ef4444";
+    }
 }
 
-function checkAnswer(btn,correct){
-  var parent=btn.closest('.practice-q');
-  var btns=parent.querySelectorAll('.choice-btn');
-  var fb=parent.querySelector('.feedback');
-  btns.forEach(function(b){b.onclick=null;b.style.cursor='default';});
-  if(correct){
-    btn.classList.add('correct');
-    fb.textContent='Correct! Well done!'; fb.className='feedback ok';
-  } else {
-    btn.classList.add('wrong');
-    fb.textContent='Not quite — try again next time!'; fb.className='feedback no';
-    parent.querySelectorAll('.choice-btn[data-correct="true"]').forEach(function(b){b.classList.add('correct');});
-  }
+async function askAI(btn, topic) {
+    // Find the input relative to the button's parent container
+    const container = btn.closest('.ai-container');
+    const inputField = container.querySelector('.ai-input');
+    const input = inputField.value.trim();
+    const respBox = container.querySelector('.ai-response');
+    
+    if(!input) return;
+
+    btn.disabled = true;
+    respBox.style.display = 'block';
+    respBox.textContent = "વિદ્યા વિચારી રહી છે... (Thinking...)";
+
+    if(typeof puter !== 'undefined') {
+        try {
+            const prompt = `You are a friendly Indian Math teacher teaching 6th-grade math. The topic is "${topic}". The student is asking: "${input}". Provide a short, encouraging answer strictly in Gujarati language. Do not use English.`;
+            const result = await puter.ai.chat(prompt, {model: 'gpt-4.1-nano'});
+            respBox.innerHTML = `<strong>Vidhya AI:</strong><br/>` + (result.message?.content || result);
+        } catch(e) {
+            respBox.textContent = "Error: AI needs internet access.";
+        }
+    } else {
+        respBox.textContent = "Error: Puter.js is not loaded.";
+    }
+    btn.disabled = false;
 }
 
-// ── SPLASH ──
-window.addEventListener('load', function(){
-  setTimeout(function(){
-    document.getElementById('splash').classList.add('hide');
-    setTimeout(function(){ document.getElementById('splash').style.display='none'; }, 600);
-  }, 2600);
-});
+async function generateAIQuiz(btn, topic) {
+    const container = btn.closest('.ai-container');
+    const quizBox = container.querySelector('.ai-quiz-box');
+    
+    btn.disabled = true;
+    btn.textContent = "⏳ Generating...";
 
-// ── CONTENT ──
-function buildContent(id){
-  var map={
-    '1.1':sec11,'1.2':sec12,'1.3':sec13,'1.4':sec14,'1.5':sec15,'1.6':sec16,
-    '2.1':sec21,'2.2':sec22,'2.3':sec23,'2.4':sec24,'2.5':sec25,
-    '2.6':sec26,'2.7':sec27,'2.8':sec28,'2.9':sec29,
-    '2.10':sec210,'2.11':sec211,
-    '3.1':sec31,'3.2':sec32,'3.3':sec33,'3.4':sec34,'3.5':sec35,
-    '3.6':sec36,'3.7':sec37,'3.8':sec38,'3.9':sec39,'3.10':sec310,'3.11':sec311
-  };
-  return map[id]?map[id]():'<p style="padding:40px;text-align:center;color:#94a3b8">Coming soon!</p>';
+    if(typeof puter !== 'undefined') {
+        try {
+            const prompt = `Create exactly 1 Multiple Choice Question for a 6th-grade math student based on the topic "${topic}". Return ONLY valid JSON in this exact format: {"q": "Question text?", "choices": ["Option 1", "Option 2", "Option 3", "Option 4"], "ans": 0} where 'ans' is the index of the correct option (0-3).`;
+            const result = await puter.ai.chat(prompt, {model: 'gpt-4.1-nano'});
+            
+            let content = result.message?.content || result;
+            let match = content.match(/\{[\s\S]*\}/);
+            if(match) content = match[0];
+            let qData = JSON.parse(content);
+            
+            let choicesHtml = qData.choices.map((c, i) => 
+                `<button class="choice-btn" onclick="checkAns(this, ${i === qData.ans})">${c}</button>`
+            ).join('');
+
+            quizBox.innerHTML = `
+                <div class="practice-q" style="border-color: #c4b5fd;">
+                    <div class="pq-text">✨ AI Generated Question: ${qData.q}</div>
+                    <div class="choice-grid">${choicesHtml}</div>
+                    <div class="feedback"></div>
+                </div>
+            `;
+        } catch(e) {
+            quizBox.textContent = "Failed to generate quiz. Check internet connection.";
+        }
+    }
+    
+    btn.textContent = "🎲 Generate New MCQ";
+    btn.disabled = false;
 }
 
-function sec11(){return `
-<div class="sec-heading" style="color:#2563eb">&#x1F4A1; 1.1 What is Mathematics?</div>
-<p>Mathematics is all about finding <strong>patterns</strong> — and understanding <em>why</em> those patterns exist.</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Look at a <strong>Rangoli</strong> on the floor — shapes repeat, colours follow a rule. Or think of a <strong>cricket match</strong>: 6 balls = 1 over, always! Maths helps us understand all these patterns!</p>
-</div>
-<p>Patterns are everywhere — in nature, in our homes, in the sky. Look around you!</p>
-<div class="visual-wrap">
-<svg viewBox="0 0 340 155" xmlns="http://www.w3.org/2000/svg">
-  <rect x="8" y="8" width="96" height="62" rx="10" fill="#dbeafe"/>
-  <text x="56" y="32" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#1d4ed8">&#x1F305;</text>
-  <text x="56" y="52" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#1e40af">Sun rises daily</text>
-  <text x="56" y="64" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#3b82f6">same pattern!</text>
-  <rect x="120" y="8" width="96" height="62" rx="10" fill="#dcfce7"/>
-  <text x="168" y="32" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#16a34a">&#x1F3CF;</text>
-  <text x="168" y="52" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#15803d">Cricket: 6 balls</text>
-  <text x="168" y="64" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#16a34a">= 1 over, always</text>
-  <rect x="232" y="8" width="100" height="62" rx="10" fill="#fce7f3"/>
-  <text x="282" y="32" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#db2777">&#x1F33C;</text>
-  <text x="282" y="52" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#be185d">Flower petals</text>
-  <text x="282" y="64" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#db2777">follow a rule!</text>
-  <rect x="8" y="82" width="96" height="62" rx="10" fill="#fffbeb"/>
-  <text x="56" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#d97706">&#x1F372;</text>
-  <text x="56" y="126" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#92400e">Recipe steps</text>
-  <text x="56" y="138" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#b45309">same order, always</text>
-  <rect x="120" y="82" width="96" height="62" rx="10" fill="#ede9fe"/>
-  <text x="168" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#7c3aed">&#x1F6A6;</text>
-  <text x="168" y="126" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#5b21b6">Traffic lights</text>
-  <text x="168" y="138" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#6d28d9">Red, Yellow, Green</text>
-  <rect x="232" y="82" width="100" height="62" rx="10" fill="#fff0f5"/>
-  <text x="282" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="20" fill="#e11d48">&#x1F4C5;</text>
-  <text x="282" y="126" text-anchor="middle" font-family="Nunito,sans-serif" font-size="11" font-weight="700" fill="#9f1239">Calendar</text>
-  <text x="282" y="138" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" fill="#be123c">7 days, repeating</text>
-</svg>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Remember this!</div>
-  <p>Maths does not just find patterns — it also explains <em>why</em> the pattern works. That is what makes maths so powerful!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: ગણિત એટલે આપણી આસપાસ રહેલી ભાત (પેટર્ન) શોધવી અને તે શા માટે છે તે સમજવું!</div>
-</div>
-<div class="fig-out">
-  <div class="fo-hdr">&#x2699; Figure it Out</div>
-  <ol>
-    <li>Can you think of 2 more patterns from your daily life? (Think: seasons, festivals, bus timings, school timetable...)</li>
-    <li>How has maths helped make things like mobile phones, trains, and bridges? Discuss with a friend.</li>
-  </ol>
-</div>
-<div class="math-talk">&#x1F4AC; <strong>Think &amp; Talk:</strong>&nbsp;Ask your friend — do they see any pattern in their school timetable?</div>`;}
-
-function sec12(){return `
-<div class="sec-heading" style="color:#2563eb">&#x1F522; 1.2 Patterns in Numbers</div>
-<p>The most basic patterns in maths are <strong>patterns made with numbers</strong>. Let us look at whole numbers:</p>
-<div style="text-align:center;font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#1e293b;margin:10px 0;letter-spacing:3px;">0, 1, 2, 3, 4, ...</div>
-<div class="concept-box">
-  <div class="cb-title">New Word: Number Theory &amp; Number Sequence</div>
-  <p>The part of maths that studies patterns in whole numbers is called <strong>number theory</strong>. A list of numbers that follow a rule is called a <strong>number sequence</strong>.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: અમુક ચોક્કસ નિયમ પ્રમાણે ગોઠવાયેલી સંખ્યાઓને 'સંખ્યા શ્રેણી' કહેવાય છે. દા.ત. ૨, ૪, ૬, ૮...</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p><strong>Diwali diyas:</strong> 1 diya, 2 diyas, 3 diyas, 4 diyas... each day you add one more — that is the counting numbers sequence! <strong>Cricket overs:</strong> 6, 12, 18, 24 balls — always adding 6. That is multiples of 6!</p>
-</div>
-<div class="num-table">
-  <div class="nt-title">Table 1: Important Number Sequences</div>
-  <div class="seq-row"><span class="seq-nums">1, 1, 1, 1, 1, ...</span><span class="seq-name">All 1s</span></div>
-  <div class="seq-row"><span class="seq-nums">1, 2, 3, 4, 5, 6, ...</span><span class="seq-name">Counting numbers</span></div>
-  <div class="seq-row"><span class="seq-nums">1, 3, 5, 7, 9, 11, ...</span><span class="seq-name">Odd numbers</span></div>
-  <div class="seq-row"><span class="seq-nums">2, 4, 6, 8, 10, 12, ...</span><span class="seq-name">Even numbers</span></div>
-  <div class="seq-row"><span class="seq-nums">1, 3, 6, 10, 15, 21, ...</span><span class="seq-name">Triangular numbers</span></div>
-  <div class="seq-row"><span class="seq-nums">1, 4, 9, 16, 25, 36, ...</span><span class="seq-name">Square numbers</span></div>
-  <div class="seq-row"><span class="seq-nums">1, 8, 27, 64, 125, ...</span><span class="seq-name">Cube numbers</span></div>
-</div>
-<div class="fig-out">
-  <div class="fo-hdr">&#x2699; Figure it Out</div>
-  <ol>
-    <li>Can you see the rule in each sequence? Write the next 3 numbers for each in your notebook.</li>
-    <li>Write the rule in your own words for: Odd numbers, Square numbers, Virahanka numbers.</li>
-  </ol>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Next number in 2, 4, 6, 8, ... is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">9</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">11</button><button class="choice-btn" onclick="checkAnswer(this,false)">12</button></div><div class="feedback"></div></div>
-  <div class="practice-q"><div class="pq-text">Q2. Which of these is a square number?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">15</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">25</button><button class="choice-btn" onclick="checkAnswer(this,false)">30</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec13(){return `
-<div class="sec-heading" style="color:#2563eb">&#x1F441; 1.3 Visualising Number Sequences</div>
-<p>We can <strong>draw pictures</strong> for number sequences. Pictures help us understand them much better!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>During <strong>Navratri</strong>, diyas are arranged in rows: 1, then 2, then 3 — making a triangle! Those are <strong>triangular numbers</strong>. In a <strong>rangoli</strong>, dots in a square grid are <strong>square numbers</strong>!</p>
-</div>
-<div class="visual-wrap">
-<svg viewBox="0 0 340 225" xmlns="http://www.w3.org/2000/svg">
-  <text x="170" y="18" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Counting Numbers: 1, 2, 3, 4, 5</text>
-  <circle cx="28" cy="40" r="7" fill="#2563eb"/>
-  <text x="28" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">1</text>
-  <circle cx="68" cy="35" r="7" fill="#2563eb"/><circle cx="83" cy="35" r="7" fill="#2563eb"/>
-  <text x="75" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">2</text>
-  <circle cx="120" cy="35" r="7" fill="#2563eb"/><circle cx="135" cy="35" r="7" fill="#2563eb"/><circle cx="150" cy="35" r="7" fill="#2563eb"/>
-  <text x="135" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">3</text>
-  <circle cx="183" cy="35" r="6" fill="#2563eb"/><circle cx="197" cy="35" r="6" fill="#2563eb"/><circle cx="211" cy="35" r="6" fill="#2563eb"/><circle cx="225" cy="35" r="6" fill="#2563eb"/>
-  <text x="204" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">4</text>
-  <circle cx="252" cy="35" r="5" fill="#2563eb"/><circle cx="264" cy="35" r="5" fill="#2563eb"/><circle cx="276" cy="35" r="5" fill="#2563eb"/><circle cx="288" cy="35" r="5" fill="#2563eb"/><circle cx="300" cy="35" r="5" fill="#2563eb"/>
-  <text x="276" y="60" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">5</text>
-  <line x1="8" y1="70" x2="332" y2="70" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="170" y="86" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Triangular Numbers (Navratri diya rows!): 1, 3, 6, 10</text>
-  <circle cx="28" cy="104" r="7" fill="#f97316"/>
-  <text x="28" y="124" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">1</text>
-  <circle cx="70" cy="97" r="7" fill="#f97316"/>
-  <circle cx="62" cy="111" r="7" fill="#f97316"/><circle cx="78" cy="111" r="7" fill="#f97316"/>
-  <text x="70" y="129" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">3</text>
-  <circle cx="128" cy="92" r="7" fill="#f97316"/>
-  <circle cx="120" cy="106" r="7" fill="#f97316"/><circle cx="136" cy="106" r="7" fill="#f97316"/>
-  <circle cx="112" cy="120" r="7" fill="#f97316"/><circle cx="128" cy="120" r="7" fill="#f97316"/><circle cx="144" cy="120" r="7" fill="#f97316"/>
-  <text x="128" y="138" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">6</text>
-  <circle cx="205" cy="86" r="6" fill="#f97316"/>
-  <circle cx="198" cy="98" r="6" fill="#f97316"/><circle cx="212" cy="98" r="6" fill="#f97316"/>
-  <circle cx="191" cy="110" r="6" fill="#f97316"/><circle cx="205" cy="110" r="6" fill="#f97316"/><circle cx="219" cy="110" r="6" fill="#f97316"/>
-  <circle cx="184" cy="122" r="6" fill="#f97316"/><circle cx="198" cy="122" r="6" fill="#f97316"/><circle cx="212" cy="122" r="6" fill="#f97316"/><circle cx="226" cy="122" r="6" fill="#f97316"/>
-  <text x="205" y="140" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">10</text>
-  <line x1="8" y1="150" x2="332" y2="150" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="170" y="166" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Square Numbers (Rangoli dot grid!): 1, 4, 9, 16</text>
-  <circle cx="28" cy="190" r="7" fill="#7c3aed"/><text x="28" y="210" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">1</text>
-  <circle cx="67" cy="183" r="6" fill="#7c3aed"/><circle cx="80" cy="183" r="6" fill="#7c3aed"/>
-  <circle cx="67" cy="196" r="6" fill="#7c3aed"/><circle cx="80" cy="196" r="6" fill="#7c3aed"/>
-  <text x="73" y="212" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">4</text>
-  <circle cx="118" cy="178" r="5" fill="#7c3aed"/><circle cx="130" cy="178" r="5" fill="#7c3aed"/><circle cx="142" cy="178" r="5" fill="#7c3aed"/>
-  <circle cx="118" cy="190" r="5" fill="#7c3aed"/><circle cx="130" cy="190" r="5" fill="#7c3aed"/><circle cx="142" cy="190" r="5" fill="#7c3aed"/>
-  <circle cx="118" cy="202" r="5" fill="#7c3aed"/><circle cx="130" cy="202" r="5" fill="#7c3aed"/><circle cx="142" cy="202" r="5" fill="#7c3aed"/>
-  <text x="130" y="216" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">9</text>
-  <circle cx="180" cy="176" r="4" fill="#7c3aed"/><circle cx="190" cy="176" r="4" fill="#7c3aed"/><circle cx="200" cy="176" r="4" fill="#7c3aed"/><circle cx="210" cy="176" r="4" fill="#7c3aed"/>
-  <circle cx="180" cy="186" r="4" fill="#7c3aed"/><circle cx="190" cy="186" r="4" fill="#7c3aed"/><circle cx="200" cy="186" r="4" fill="#7c3aed"/><circle cx="210" cy="186" r="4" fill="#7c3aed"/>
-  <circle cx="180" cy="196" r="4" fill="#7c3aed"/><circle cx="190" cy="196" r="4" fill="#7c3aed"/><circle cx="200" cy="196" r="4" fill="#7c3aed"/><circle cx="210" cy="196" r="4" fill="#7c3aed"/>
-  <circle cx="180" cy="206" r="4" fill="#7c3aed"/><circle cx="190" cy="206" r="4" fill="#7c3aed"/><circle cx="200" cy="206" r="4" fill="#7c3aed"/><circle cx="210" cy="206" r="4" fill="#7c3aed"/>
-  <text x="195" y="220" text-anchor="middle" font-size="10" font-family="Nunito,sans-serif" font-weight="700" fill="#1e293b">16</text>
-</svg>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Key Idea</div>
-  <p>We can turn numbers into pictures! Dots arranged in a triangle give us 'Triangular Numbers'.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: જ્યારે આપણે ટપકાંને ત્રિકોણમાં ગોઠવીએ, ત્યારે બનતી સંખ્યાઓને 'ત્રિકોણીય સંખ્યાઓ' કહે છે.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Next triangular number after 10 is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">12</button><button class="choice-btn" onclick="checkAnswer(this,false)">14</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">15</button><button class="choice-btn" onclick="checkAnswer(this,false)">16</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec14(){return `
-<div class="sec-heading" style="color:#2563eb">&#x1F517; 1.4 Relations among Number Sequences</div>
-<p>Sometimes, two different number sequences are <strong>secretly connected</strong>. Let us discover some beautiful connections!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>In <strong>Ludo</strong>, imagine scores: 1, 1+3=4, 1+3+5=9, 1+3+5+7=16... Each time we add the next odd number, we get a perfect <strong>square number</strong>!</p>
-</div>
-<p><strong>Pattern 1: Adding odd numbers always gives square numbers!</strong></p>
-<div class="pattern-box">
-  <div class="pline">1 = <span class="res">1</span></div>
-  <div class="pline">1 + 3 = <span class="res">4</span></div>
-  <div class="pline">1 + 3 + 5 = <span class="res">9</span></div>
-  <div class="pline">1 + 3 + 5 + 7 = <span class="res">16</span></div>
-  <div class="pline" style="font-size:16px">&#x22EE;</div>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Important Rule</div>
-  <p>The sum of first 'n' odd numbers is always equal to 'n' squared.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: તમે જેટલી એકી સંખ્યાઓનો સરવાળો કરશો, જવાબ હંમેશા એક વર્ગ (Square) સંખ્યા જ આવશે!</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. 1+3+5+7 = ? (Sum of first 4 odd numbers)</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">9</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">16</button><button class="choice-btn" onclick="checkAnswer(this,false)">18</button><button class="choice-btn" onclick="checkAnswer(this,false)">25</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec15(){return `
-<div class="sec-heading" style="color:#2563eb">&#x1F4D0; 1.5 Patterns in Shapes</div>
-<p>Just like numbers, <strong>shapes also form patterns</strong>! Shapes can be 1D (line), 2D (flat), or 3D (solid).</p>
-<div class="concept-box">
-  <div class="cb-title">New Word: Geometry</div>
-  <p>The part of maths that studies patterns in shapes is called <strong>geometry</strong>. A list of shapes that follow a rule is a <strong>shape sequence</strong>.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: આકારો અને તેની ડીઝાઈન ના અભ્યાસને ભૂમિતિ (Geometry) કહે છે.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>A <strong>honeycomb</strong> (madhumakhi ka chhatta) — all cells are hexagons! <strong>Kolam patterns</strong> in South India use regular polygon sequences!</p>
-</div>
-<div class="visual-wrap">
-<svg viewBox="0 0 340 175" xmlns="http://www.w3.org/2000/svg">
-  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">Regular Polygons — more sides each time!</text>
-  <polygon points="38,52 52,28 66,52" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
-  <text x="52" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#b91c1c">Triangle (3)</text>
-  <rect x="88" y="26" width="32" height="32" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
-  <text x="104" y="70" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#c2410c">Square (4)</text>
-  <polygon points="158,24 172,20 184,28 184,42 172,50 158,42 152,32" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
-  <text x="168" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#92400e">Hexagon (6)</text>
-  <polygon points="222,30 233,22 246,24 252,35 248,47 234,52 222,46 217,36" fill="#f3e8ff" stroke="#7c3aed" stroke-width="2"/>
-  <text x="234" y="68" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#5b21b6">Octagon (8)</text>
-</svg>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. A honeycomb cell has 6 sides. What is it called?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Pentagon</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Hexagon</button><button class="choice-btn" onclick="checkAnswer(this,false)">Heptagon</button><button class="choice-btn" onclick="checkAnswer(this,false)">Octagon</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec16(){return `
-<div class="sec-heading" style="color:#2563eb">&#x1F9E9; 1.6 Relation to Number Sequences</div>
-<p>Shape sequences and number sequences are often <strong>secretly connected</strong>! Studying one helps us understand the other.</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>In <strong>kabaddi</strong>, imagine players standing in a polygon: 3 players = triangle (3 sides), 4 players = square (4 sides), 5 players = pentagon (5 sides). The number of sides = counting numbers starting at 3!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Key Idea</div>
-  <p>"<strong>Regular</strong>" means ALL sides are equal AND all corners are equal.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: નિયમિત (Regular) આકાર એટલે જેની બધી જ બાજુઓ અને ખૂણાઓ એકદમ સરખા હોય.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. A regular polygon has 9 sides. How many corners?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">8</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">9</button><button class="choice-btn" onclick="checkAnswer(this,false)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">18</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec21(){return `
-<div class="sec-heading" style="color:#0d9488">&#x1F4CD; 2.1 Point</div>
-<p>Mark a tiny dot on paper with the sharp tip of a pencil. This tiny dot gives you an idea of a <strong>point</strong>.</p>
-<div class="concept-box">
-  <div class="cb-title">What is a Point?</div>
-  <p>A point is a <strong>precise location</strong>. It has no length, no breadth, no height — it is just a position! We name a point with a capital letter like A, B, or P.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: બિંદુ (Point) એ ફક્ત એક સ્થાન દર્શાવે છે. તેને લંબાઈ કે પહોળાઈ હોતી નથી.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Think of a <strong>bindi</strong> on the forehead — it marks one exact spot. Or the tip of a <strong>compass</strong> (divider) that we use in geometry. All these are models of a point!</p>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. We name a point using a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Small letter</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Capital letter</button><button class="choice-btn" onclick="checkAnswer(this,false)">Number</button><button class="choice-btn" onclick="checkAnswer(this,false)">Symbol</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec22(){return `
-<div class="sec-heading" style="color:#0d9488">&#x1F4CF; 2.2 Line Segment</div>
-<p>Fold a piece of paper and unfold it. Do you see a <strong>crease</strong>? That crease gives you the idea of a <strong>line segment</strong>!</p>
-<div class="concept-box">
-  <div class="cb-title">What is a Line Segment?</div>
-  <p>A line segment is the <strong>shortest path</strong> between two points A and B. It has two end points.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: બે બિંદુઓ વચ્ચેના સૌથી ટૂંકા રસ્તાને 'રેખાખંડ' (Line Segment) કહેવાય છે. તેને બે છેડા હોય છે.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>The edge of your <strong>geometry box ruler</strong> is a line segment. The crease line on a <strong>cricket pitch</strong> is a line segment!</p>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. A line segment has:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">No end points</button><button class="choice-btn" onclick="checkAnswer(this,false)">One end point</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Two end points</button><button class="choice-btn" onclick="checkAnswer(this,false)">Three end points</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec23(){return `
-<div class="sec-heading" style="color:#0d9488">&#x27A1; 2.3 Line</div>
-<p>Imagine taking a line segment AB and extending it <strong>beyond A</strong> in one direction AND <strong>beyond B</strong> in the other direction — going on forever! This gives you a <strong>line</strong>!</p>
-<div class="concept-box">
-  <div class="cb-title">What is a Line?</div>
-  <p>A line extends <strong>forever in both directions</strong>. It has no end points. We write it as <strong>AB</strong> (with arrows on both ends).</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: 'રેખા' (Line) બંને દિશામાં અનંત સુધી વિસ્તરેલી હોય છે, તેનો કોઈ અંત નથી.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Imagine a <strong>railway track</strong> that goes on forever in both directions — that is a model of a line!</p>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. How many end points does a line have?</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">0</button><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" onclick="checkAnswer(this,false)">2</button><button class="choice-btn" onclick="checkAnswer(this,false)">3</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec24(){return `
-<div class="sec-heading" style="color:#0d9488">&#x2192; 2.4 Ray</div>
-<p>A <strong>ray</strong> starts at one point and goes on forever in <strong>one direction only</strong>. It is like half a line!</p>
-<div class="concept-box">
-  <div class="cb-title">What is a Ray?</div>
-  <p>A ray has one <strong>starting point</strong> (called the initial point) and goes on endlessly in one direction.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: 'કિરણ' (Ray) એક બિંદુથી શરુ થાય છે અને ફક્ત એક જ દિશામાં આગળ વધે છે.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p><strong>Sunlight</strong> coming from the sun — it starts at the sun and goes on forever in one direction! A <strong>torch/flashlight</strong> beam is also a ray.</p>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Sunlight from the sun is a model of a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Line segment</button><button class="choice-btn" onclick="checkAnswer(this,false)">Line</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Ray</button><button class="choice-btn" onclick="checkAnswer(this,false)">Point</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec25(){return `
-<div class="sec-heading" style="color:#0d9488">&#x2220; 2.5 Angle</div>
-<p>When <strong>two rays start from the same point</strong>, they form an <strong>angle</strong>!</p>
-<div class="concept-box">
-  <div class="cb-title">What is an Angle?</div>
-  <p>An angle is formed by two rays having a <strong>common starting point</strong>. The common point is called the <strong>vertex</strong>. The two rays are called the <strong>arms</strong>.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: જ્યારે બે કિરણો એક જ જગ્યાએથી નીકળે ત્યારે 'ખૂણો' (Angle) બને છે. એ જગ્યાને શિરોબિંદુ કહેવાય.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>When you open a <strong>geometry box</strong> (compass/divider), the two arms form an angle. The hands of a <strong>clock</strong> form angles too!</p>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. The common starting point of an angle is called:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Arm</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Vertex</button><button class="choice-btn" onclick="checkAnswer(this,false)">Edge</button><button class="choice-btn" onclick="checkAnswer(this,false)">Line</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec26(){return `
-<div class="sec-heading" style="color:#0d9488">&#x2194; 2.6 Comparing Angles</div>
-<p>How do we know which angle is <strong>bigger</strong>? Just like we compare lengths, we can compare angles too!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Look at animals opening their mouths — a <strong>crocodile</strong> opens its mouth very wide (big angle!), a <strong>fish</strong> opens it a little (small angle!).</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Comparing Angles</div>
-  <p>Place one angle exactly over the other — match the vertices and one arm. The angle whose other arm sticks out more is the bigger angle!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: બે ખૂણાને એકબીજા પર મૂકો. જેનો બીજો હાથ વધુ બહાર રહે તે ખૂણો મોટો!</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. A crocodile opens its mouth wider than a fish. So the crocodile's jaw angle is:</div><div class="answer-choices"><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Bigger</button><button class="choice-btn" onclick="checkAnswer(this,false)">Smaller</button><button class="choice-btn" onclick="checkAnswer(this,false)">Equal</button><button class="choice-btn" onclick="checkAnswer(this,false)">Cannot say</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec27(){return `
-<div class="sec-heading" style="color:#0d9488">&#x270F; 2.7 Making Angles</div>
-<p>We can make angles and compare them using simple tools — even a <strong>piece of paper</strong>!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>When you fold a <strong>roti</strong> in half, the fold creates a straight angle (180°)! When you fold it again into quarters, you get a right angle (90°)!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Comparing using a circle</div>
-  <p>Place a transparent circle so its <strong>centre is at the vertex</strong>. The bigger the arc, the bigger the angle!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: ખૂણાના કેન્દ્ર પર વર્તુળ મુકવાથી, જે ખૂણામાં વર્તુળનો ભાગ (ચાપ) મોટો આવે તે ખૂણો મોટો.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Folding a roti in half gives a fold angle of:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">90°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">180°</button><button class="choice-btn" onclick="checkAnswer(this,false)">360°</button><button class="choice-btn" onclick="checkAnswer(this,false)">45°</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec28(){return `
-<div class="sec-heading" style="color:#0d9488">&#x26D4; 2.8 Special Types of Angles</div>
-<p>Some angles are so important and so common that we give them <strong>special names</strong>!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>The corner of your <strong>notebook</strong> is a right angle (90°)! A <strong>straight road</strong> going left and right is a straight angle (180°).</p>
-</div>
-<div class="visual-wrap">
-<svg viewBox="0 0 340 175" xmlns="http://www.w3.org/2000/svg">
-  <text x="170" y="16" text-anchor="middle" font-family="Baloo 2,cursive" font-size="12" font-weight="700" fill="#1e293b">4 Special Types of Angles</text>
-  <rect x="8" y="26" width="74" height="68" rx="8" fill="#dbeafe"/>
-  <line x1="45" y1="82" x2="75" y2="82" stroke="#2563eb" stroke-width="2.5"/>
-  <line x1="45" y1="82" x2="45" y2="50" stroke="#2563eb" stroke-width="2.5"/>
-  <circle cx="45" cy="82" r="3" fill="#2563eb"/>
-  <text x="45" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#2563eb">Right</text>
-  <text x="45" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#1d4ed8">= 90°</text>
-
-  <rect x="90" y="26" width="74" height="68" rx="8" fill="#dcfce7"/>
-  <line x1="127" y1="82" x2="157" y2="82" stroke="#16a34a" stroke-width="2.5"/>
-  <line x1="97" y1="82" x2="127" y2="82" stroke="#16a34a" stroke-width="2.5"/>
-  <circle cx="127" cy="82" r="3" fill="#16a34a"/>
-  <text x="127" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#16a34a">Straight</text>
-  <text x="127" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#15803d">= 180°</text>
-
-  <rect x="172" y="26" width="74" height="68" rx="8" fill="#fef3c7"/>
-  <line x1="209" y1="82" x2="239" y2="82" stroke="#d97706" stroke-width="2.5"/>
-  <line x1="209" y1="82" x2="230" y2="58" stroke="#d97706" stroke-width="2.5"/>
-  <circle cx="209" cy="82" r="3" fill="#d97706"/>
-  <text x="209" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#d97706">Acute</text>
-  <text x="209" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#92400e">&lt; 90°</text>
-
-  <rect x="254" y="26" width="78" height="68" rx="8" fill="#fee2e2"/>
-  <line x1="293" y1="82" x2="325" y2="82" stroke="#ef4444" stroke-width="2.5"/>
-  <line x1="293" y1="82" x2="302" y2="48" stroke="#ef4444" stroke-width="2.5"/>
-  <circle cx="293" cy="82" r="3" fill="#ef4444"/>
-  <text x="293" y="106" text-anchor="middle" font-family="Baloo 2,cursive" font-size="13" font-weight="800" fill="#ef4444">Obtuse</text>
-  <text x="293" y="118" text-anchor="middle" font-family="Nunito,sans-serif" font-size="10" font-weight="700" fill="#b91c1c">90° to 180°</text>
-</svg>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Types of Angles</div>
-  <p><strong>Acute:</strong> Sharp/small.<br/><strong>Obtuse:</strong> Blunt/wide.<br/><strong>Right:</strong> Exactly 90°.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: લઘુકોણ (Acute), કાટકોણ (Right) અને ગુરુકોણ (Obtuse).</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. The corner of a notebook is a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Acute angle</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Right angle (90°)</button><button class="choice-btn" onclick="checkAnswer(this,false)">Obtuse angle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Straight angle</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec29(){return `
-<div class="sec-heading" style="color:#0d9488">&#x1F4D0; 2.9 Measuring Angles</div>
-<p>We use <strong>degrees</strong> to measure angles!</p>
-<div class="concept-box">
-  <div class="cb-title">Degrees</div>
-  <p>A full circle (one full turn) is <strong>360 equal parts</strong>. Each part is <strong>1 degree (1°)</strong>.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: આખું ગોળ ફરવાથી 360° બને. તેને અંશ (Degree) માં મપાય છે.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>At 3 o'clock, the minute and hour hand make a <strong>90° angle</strong>. A full turn of a <strong>chakkar (merry-go-round)</strong> = 360°!</p>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. A full turn (chakkar) = how many degrees?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">90°</button><button class="choice-btn" onclick="checkAnswer(this,false)">180°</button><button class="choice-btn" onclick="checkAnswer(this,false)">270°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">360°</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec210(){return `
-<div class="sec-heading" style="color:#0d9488">&#x1F4D0; 2.10 Using a Protractor</div>
-<p>We measure angles using a tool called a <strong>protractor</strong>!</p>
-<div class="concept-box">
-  <div class="cb-title">What is a Protractor?</div>
-  <p>A protractor is a semicircular tool divided into <strong>180 equal parts</strong>.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: કોણમાપક (Protractor) નો ઉપયોગ ખૂણાને ચોક્કસ અંશમાં માપવા માટે થાય છે.</div>
-</div>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>The <strong>Ashoka Chakra</strong> on our national flag has 24 spokes. The angle between two spokes = 360° ÷ 24 = <strong>15°</strong>!</p>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. A protractor is shaped like a:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Full circle</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Semicircle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Triangle</button><button class="choice-btn" onclick="checkAnswer(this,false)">Square</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec211(){return `
-<div class="sec-heading" style="color:#0d9488">&#x2606; 2.11 Types of Angles and their Measures</div>
-<p>Let us bring together <strong>all types of angles</strong> with their exact degree ranges!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>When you open a <strong>door fully flat against a wall</strong> — that is a reflex angle (more than 180°)!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Summary</div>
-  <p>Acute: 0° to 90°<br/>Right: 90°<br/>Obtuse: 90° to 180°<br/>Straight: 180°<br/>Reflex: 180° to 360°</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: 180 થી મોટા અને 360 થી નાના ખૂણાને પ્રતિબિંબ કોણ (Reflex Angle) કહેવાય.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. A reflex angle is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Less than 90°</button><button class="choice-btn" onclick="checkAnswer(this,false)">Exactly 180°</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Between 180° and 360°</button><button class="choice-btn" onclick="checkAnswer(this,false)">Exactly 90°</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec31(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F4AC; 3.1 Numbers can Tell us Things</div>
-<p>Numbers are not just for counting — they <strong>tell us information</strong> about the world around us!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Think of a <strong>cricket scorecard</strong> — 10/2 means 10 runs, 2 wickets. A <strong>PIN code</strong> like 395001 tells us the area in Surat!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">The Rule</div>
-  <p>Numbers carry specific meanings based on where and how they are used.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: સંખ્યાઓ ફક્ત ગણતરી માટે નથી, તે ઘણી માહિતી (જેમ કે પિન કોડ કે સ્કોર) પણ દર્શાવે છે.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. In cricket, what does 10/2 on the scoreboard mean?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">10 players, 2 overs</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">10 runs, 2 wickets fallen</button><button class="choice-btn" onclick="checkAnswer(this,false)">10 overs, 2 runs</button><button class="choice-btn" onclick="checkAnswer(this,false)">10 balls, 2 fours</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec32(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F7E7; 3.2 Supercells</div>
-<p>In a row of numbers, a cell is a <strong>supercell</strong> if its number is <strong>greater than all its neighbours</strong>!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Think of cricket batting scores in a row: 45, <strong>78</strong>, 32, <strong>91</strong>. The bolded scores are "supercells"!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Supercell Rule</div>
-  <p>A number is a supercell if it is <strong>greater than all its adjacent (neighbouring) cells</strong>.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: સુપરસેલ એટલે એવી સંખ્યા જે પોતાની આજુબાજુ આવેલી બધી સંખ્યાઓ કરતા મોટી હોય.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. In the row 45, 78, 32, 91, 60 — which is a supercell?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">45</button><button class="choice-btn" onclick="checkAnswer(this,false)">78</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">91</button><button class="choice-btn" onclick="checkAnswer(this,false)">60</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec33(){return `
-<div class="sec-heading" style="color:#f97316">&#x2194; 3.3 Patterns on the Number Line</div>
-<p>A <strong>number line</strong> helps us see the order and position of numbers visually.</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Think of <strong>house numbers on a street</strong> in Surat — they go in order. Or <strong>km markers on a highway</strong>.</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Number Line</div>
-  <p>Every number has exactly one position on the number line!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: સંખ્યા રેખા (Number Line) આપણને સંખ્યાઓનો ક્રમ અને સ્થાન સમજવામાં મદદ કરે છે.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Highway km markers: 150, 151, 152... Which comes next?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">152</button><button class="choice-btn" onclick="checkAnswer(this,false)">153</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">154</button><button class="choice-btn" onclick="checkAnswer(this,false)">155</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec34(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F50D; 3.4 Playing with Digits</div>
-<p>Numbers are made up of <strong>digits (0–9)</strong>. Playing with digits reveals amazing patterns!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>The <strong>mobile number</strong> 98765-43210 uses all 10 digits once! In a <strong>railway ticket</strong>, PNR numbers have interesting digits.</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Digit Sum</div>
-  <p>Add up all the digits of a number to get its <strong>digit sum</strong>.<br/>Example: 176 → 1+7+6 = <strong>14</strong></p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: કોઈ પણ સંખ્યાના બધા અંકોનો સરવાળો એટલે ડિજીટ સમ (Digit Sum).</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. What is the digit sum of 347?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">13</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">14</button><button class="choice-btn" onclick="checkAnswer(this,false)">15</button><button class="choice-btn" onclick="checkAnswer(this,false)">12</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec35(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F500; 3.5 Pretty Palindromic Patterns</div>
-<p>A <strong>palindrome</strong> is a number that reads the same forwards and backwards!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>The date <strong>02/02/2020</strong> was a palindrome date. In Gujarati, the word "<strong>saras (સરસ)</strong>" is a palindrome!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Reverse-and-Add Method</div>
-  <p>Take any number. Add it to its reverse. Example: 34 + 43 = <strong>77</strong> (palindrome!)</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: પેલિન્ડ્રોમ (Palindrome) એટલે એવી સંખ્યા જેને સીધી કે ઉલટી વાંચો તો પણ સરખી જ રહે.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Which of these is a palindrome?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">123</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">12321</button><button class="choice-btn" onclick="checkAnswer(this,false)">4567</button><button class="choice-btn" onclick="checkAnswer(this,false)">1234</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec36(){return `
-<div class="sec-heading" style="color:#f97316">&#x2728; 3.6 The Magic Number of Kaprekar</div>
-<p>Meet <strong>D.R. Kaprekar</strong> — an Indian maths teacher from Maharashtra who discovered a magical number pattern in 1949!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Proud Indian Mathematician!</div>
-  <p>The number <strong>6174</strong> is called the <strong>Kaprekar Constant</strong>!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">The Kaprekar Magic</div>
-  <p>Step 1: Take any 4-digit number.<br/>Step 2: Make the largest and smallest numbers.<br/>Step 3: Subtract them. You will ALWAYS reach 6174!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: કાપરેકર નંબર એક જાદુઈ ગણતરી છે, જે છેલ્લે હંમેશા 6174 પર લાવીને મૂકી દે છે!</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. The Kaprekar constant for 4-digit numbers is:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">1234</button><button class="choice-btn" onclick="checkAnswer(this,false)">9999</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">6174</button><button class="choice-btn" onclick="checkAnswer(this,false)">4321</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec37(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F570; 3.7 Clock and Calendar Numbers</div>
-<p>Clocks and calendars are full of <strong>number patterns</strong>!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>The time <strong>4:44</strong> on a clock — all same digits! <strong>11:11</strong> is a palindrome time.</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Palindrome Times</div>
-  <p>Times like 1:01, 1:11, 2:02, 2:12 are palindromes.</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: ઘડિયાળ અને કેલેન્ડરમાં પણ પેલિન્ડ્રોમ (સીધા-ઉલટા સમાન) નંબર જોવા મળે છે.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Which clock time is a palindrome?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">3:45</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">3:03</button><button class="choice-btn" onclick="checkAnswer(this,false)">10:20</button><button class="choice-btn" onclick="checkAnswer(this,false)">12:34</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec38(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F9E0; 3.8 Mental Math</div>
-<p><strong>Mental math</strong> means calculating in your head — quickly, without pen and paper!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>At a <strong>sabzi mandi</strong> (vegetable market), vendors calculate quickly in their heads! <strong>Shopkeepers in Surat</strong> are famous for their quick mental calculations!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Key Mental Math Tricks</div>
-  <p><strong>Rounding:</strong> 98 × 5 ≈ 100 × 5 = 500 (then subtract 10) = 490</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: મનમાં ગણતરી કરવાથી (Mental Math) આપણો સમય અને શક્તિ બચી શકે છે.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. 99 + 99 = ? (Think: 100+100 then subtract)</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">196</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">198</button><button class="choice-btn" onclick="checkAnswer(this,false)">200</button><button class="choice-btn" onclick="checkAnswer(this,false)">202</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec39(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F300; 3.9 Playing with Number Patterns</div>
-<p>Some number patterns are beautiful — and some are <strong>unsolved mysteries</strong>!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>Indian mathematician <strong>Srinivasa Ramanujan</strong> loved playing with number patterns and discovered secrets that shocked the world!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">The Collatz Conjecture</div>
-  <p><strong>Rule:</strong> If even → divide by 2. If odd → multiply by 3 and add 1.<br/><strong>Claim:</strong> You will ALWAYS reach 1!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: કોલાટ્ઝ કન્જેક્ચર ગણિતનો એક એવો કોયડો છે જે હજુ સુધી કોઈ ઉકેલી શક્યું નથી!</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. The Collatz Conjecture says sequences always reach:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">0</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">1</button><button class="choice-btn" onclick="checkAnswer(this,false)">6174</button><button class="choice-btn" onclick="checkAnswer(this,false)">100</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec310(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F9EE; 3.10 Playing with Number Patterns 2</div>
-<p>More fun with number patterns — using <strong>grids and arrangements</strong>!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p><strong>Vedic maths</strong> is full of smart grid patterns for addition and multiplication!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">Number Arrangements</div>
-  <p>Look for repeating groups, rows, columns — then multiply instead of adding!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: વારંવાર આવતી સંખ્યાનો સરવાળો કરવા કરતા, તેનો ગુણાકાર કરવો વધુ સરળ છે.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. Sum of 40+50+40+50+40+50 (3 pairs) = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">240</button><button class="choice-btn" onclick="checkAnswer(this,false)">250</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">270</button><button class="choice-btn" onclick="checkAnswer(this,false)">280</button></div><div class="feedback"></div></div>
-</div>`;}
-
-function sec311(){return `
-<div class="sec-heading" style="color:#f97316">&#x1F4CA; 3.11 Simple Estimation</div>
-<p><strong>Estimation</strong> means making a smart, reasonable guess — without needing the exact answer!</p>
-<div class="india-example">
-  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
-  <p>At a <strong>mela (fair)</strong>, you estimate the crowd — "about 5000 people". When your mom says "add a little salt" — that is estimation!</p>
-</div>
-<div class="concept-box">
-  <div class="cb-title">When do we estimate?</div>
-  <p>When we do NOT need an exact answer, a good estimate is close enough to be useful!</p>
-  <div class="guj-text">ગુજરાતી સમજૂતી: અંદાજ (Estimation) લગાવવાથી આપણે ઝડપથી કોઈ પણ વસ્તુની આશરે ગણતરી કરી શકીએ છીએ.</div>
-</div>
-<div class="practice-section">
-  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
-  <div class="practice-q"><div class="pq-text">Q1. We estimate when:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Exact answer is needed</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Approximate answer is enough</button><button class="choice-btn" onclick="checkAnswer(this,false)">Numbers are small</button><button class="choice-btn" onclick="checkAnswer(this,false)">We have a calculator</button></div><div class="feedback"></div></div>
-</div>`;}
+window.onload = init;
 </script>
 </body>
 </html>
