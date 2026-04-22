@@ -161,7 +161,7 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
   transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
 }
 .subj-btn.active { color: #1e40af; border-bottom-color: #1e40af; }
-.subj-btn.locked { color: #cbd5e1; cursor: default; }
+.subj-btn. { color: #cbd5e1; cursor: default; }
 
 /* Chapter grid */
 .chapters-grid {
@@ -176,7 +176,7 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
 }
 .chapter-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
 .chapter-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.12); }
-.chapter-card.locked { opacity:0.5; cursor:default; }
+.chapter-card. { opacity:0.5; cursor:default; }
 .ch-num { font-family:'Baloo 2',cursive; font-size:24px; font-weight:800; line-height:1; }
 .ch-icon { font-size:22px; float:right; }
 .ch-name { font-size:11px; font-weight:700; margin-top:6px; line-height:1.3; }
@@ -391,7 +391,7 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
   <!-- Subject bar -->
   <div class="subject-bar">
     <button class="subj-btn active" onclick="showSubject('maths',this)">&#x1F4D0; Mathematics</button>
-    <button class="subj-btn locked">&#x1F52C; Science (Soon)</button>
+    <button class="subj-btn ">&#x1F52C; Science (Soon)</button>
   </div>
 
   <!-- Maths chapters -->
@@ -433,10 +433,10 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
         <div class="ch-name">Perimeter and Area</div>
         <span class="ch-badge">&#x2705; Available</span>
       </div>
-      <div class="chapter-card ch-7 locked"><span class="ch-icon">&#xBD;</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-8 locked"><span class="ch-icon">&#x1F4D0;</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-9 locked"><span class="ch-icon">&#x25C6;</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-10 locked"><span class="ch-icon">&#x2B07;</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-7"><span class="ch-icon">&#xBD;</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">&#x2705; Available</span></div>
+      <div class="chapter-card ch-8 "><span class="ch-icon">&#x1F4D0;</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">&#x2705; Available</span></div>
+      <div class="chapter-card ch-9 "><span class="ch-icon">&#x25C6;</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">&#x2705; Available</span></div>
+      <div class="chapter-card ch-10 "><span class="ch-icon">&#x2B07;</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">&#x2705; Available</span></div>
     </div>
     <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
   </div>
@@ -2912,6 +2912,114 @@ function sec16(){return `
   <div class="practice-q"><div class="pq-text">Q3. Polygon sides go 3, 4, 5, 6, 7, 8, 9, __. What comes next?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">9</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">10</button><button class="choice-btn" onclick="checkAnswer(this,false)">11</button><button class="choice-btn" onclick="checkAnswer(this,false)">12</button></div><div class="feedback"></div></div>
 </div>
 <div class="math-talk">&#x1F4A1; <strong>Chapter 1 Complete!</strong>&nbsp; You now know: what maths is, number sequences, how to picture them, patterns between sequences, shape sequences, and how shapes connect to numbers. Amazing work!</div>`;}
+
+function sec41(){return `
+<div class="sec-heading" style="color:#7c3aed">&#x1F4CA; 4.1 Organising Data</div>
+<p>Data is a collection of numbers gathered to give some information.</p>
+<div class="concept-box">
+  <div class="cb-title">Tally Marks</div>
+  <p>To count data quickly, we use tally marks. A group of 5 is shown by four vertical lines and one diagonal line crossing them.</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: માહિતી (Data) એટલે જાણકારી ભેગી કરવી. તેને ગણવા માટે 'ટેલી માર્કસ' વપરાય છે.</div>
+</div>`;}
+
+function sec51(){return `
+<div class="sec-heading" style="color:#ef4444">&#x1F31F; 5.1 Factors and Primes</div>
+<p>A factor of a number is an exact divisor of that number.</p>
+<div class="concept-box">
+  <div class="cb-title">Prime Numbers</div>
+  <p>Numbers like 2, 3, 5, 7 which have only two factors (1 and themselves) are called <strong>Prime Numbers</strong>.</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: અવયવ (Factor) એટલે એવી સંખ્યા જે બીજી સંખ્યાને પૂરેપૂરી ભાગી શકે. અવિભાજ્ય સંખ્યાને ફક્ત બે જ અવયવ હોય.</div>
+</div>`;}
+
+function sec61(){return `
+<div class="sec-heading" style="color:#16a34a">&#x25A1; 6.1 Perimeter</div>
+<p>The distance covered along the boundary of a closed figure is called its <strong>perimeter</strong>.</p>
+<div class="concept-box">
+  <div class="cb-title">Formula</div>
+  <p>Perimeter of Square = 4 x side. Perimeter of Rectangle = 2 x (length + breadth).</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: પરિમિતિ (Perimeter) એટલે આકૃતિની બધી બાજુઓનો સરવાળો.</div>
+</div>`;}
+
+// ── CHAPTER 7 ──
+function sec71(){return `
+<div class="sec-heading" style="color:#db2777">&#xBD; 7.1 What is a Fraction?</div>
+<p>When a whole thing is divided into equal parts, each part is called a <strong>fraction</strong>.</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Imagine a <strong>Paratha</strong> cut into 4 equal pieces. If you eat 1 piece, you have eaten one-fourth (1/4) of the paratha!</p>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Numerator and Denominator</div>
+  <p>In a fraction like 3/4, 3 is the <strong>Numerator</strong> (parts we have) and 4 is the <strong>Denominator</strong> (total equal parts).</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: અપૂર્ણાંક (Fraction) એટલે આખી વસ્તુના સમાન ભાગ. ઉપરની સંખ્યાને 'અંશ' અને નીચેની સંખ્યાને 'છેદ' કહેવાય.</div>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. In the fraction 5/8, what is the denominator?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">5</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">8</button><button class="choice-btn" onclick="checkAnswer(this,false)">3</button><button class="choice-btn" onclick="checkAnswer(this,false)">13</button></div><div class="feedback"></div></div>
+</div>`;}
+
+function sec72(){return `
+<div class="sec-heading" style="color:#db2777">&#x1F517; 7.2 Equivalent Fractions</div>
+<p>Fractions that look different but show the <strong>same amount</strong> are called equivalent fractions.</p>
+<div class="concept-box">
+  <div class="cb-title">Same Share</div>
+  <p>1/2 is the same as 2/4 or 4/8. If you eat half a pizza or two quarters, you eat the same amount!</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: સમઅપૂર્ણાંક એટલે એવા અપૂર્ણાંક જે દેખાવમાં અલગ હોય પણ તેની કિંમત સરખી હોય.</div>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. Which fraction is equivalent to 1/2?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">1/3</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">2/4</button><button class="choice-btn" onclick="checkAnswer(this,false)">2/3</button><button class="choice-btn" onclick="checkAnswer(this,false)">3/5</button></div><div class="feedback"></div></div>
+</div>`;}
+
+// ── CHAPTER 8 ──
+function sec81(){return `
+<div class="sec-heading" style="color:#0284c7">&#x1F4D0; 8.1 Using a Compass</div>
+<p>A <strong>compass</strong> is used to draw perfect circles and arcs.</p>
+<div class="concept-box">
+  <div class="cb-title">Parts of a Circle</div>
+  <p>The point where the sharp tip stays is the <strong>centre</strong>. The distance to the pencil is the <strong>radius</strong>.</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: પરિકર (Compass) ની મદદથી આપણે વર્તુળ દોરી શકીએ છીએ. અણી વાળો ભાગ એ કેન્દ્ર છે.</div>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. The distance from the centre to any point on the circle is called:</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">Diameter</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">Radius</button><button class="choice-btn" onclick="checkAnswer(this,false)">Chord</button><button class="choice-btn" onclick="checkAnswer(this,false)">Arc</button></div><div class="feedback"></div></div>
+</div>`;}
+
+// ── CHAPTER 9 ──
+function sec91(){return `
+<div class="sec-heading" style="color:#9333ea">&#x25C6; 9.1 Line of Symmetry</div>
+<p>If you can fold a shape so that the two halves <strong>match exactly</strong>, the shape has symmetry.</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Look at a <strong>Taj Mahal</strong> photo or a <strong>Butterfly</strong>. If you draw a line down the middle, both sides are identical mirrors of each other!</p>
+</div>
+<div class="concept-box">
+  <div class="cb-title">Symmetry Line</div>
+  <p>The fold line is called the <strong>line of symmetry</strong>. Some shapes have many lines of symmetry!</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: સંમિતિ (Symmetry) એટલે એવો આકાર જેને વચ્ચેથી વાળતા બંને ભાગ એકબીજા પર બરાબર બંધબેસતા આવે.</div>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. How many lines of symmetry does a square have?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" onclick="checkAnswer(this,false)">2</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">4</button><button class="choice-btn" onclick="checkAnswer(this,false)">Infinite</button></div><div class="feedback"></div></div>
+</div>`;}
+
+// ── CHAPTER 10 ──
+function sec101(){return `
+<div class="sec-heading" style="color:#0891b2">&#x2B07; 10.1 Negative Numbers</div>
+<p>Numbers less than zero are called <strong>negative numbers</strong>. We use a minus (-) sign for them.</p>
+<div class="india-example">
+  <div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div>
+  <p>Think of a <strong>Lift in a Mall</strong>. Level 0 is ground floor. Level 1, 2 are above. But <strong>basement parking</strong> is often shown as -1 or -2!</p>
+</div>
+<div class="concept-box">
+  <div class="cb-title">The Other Side</div>
+  <p>Negative numbers are like a mirror image of positive numbers on the other side of zero.</p>
+  <div class="guj-text">ગુજરાતી સમજૂતી: શૂન્યથી નાની સંખ્યાઓને ઋણ સંખ્યા (Negative Numbers) કહેવાય. જેમ કે લિફ્ટમાં બેઝમેન્ટ માટે -૧ વપરાય છે.</div>
+</div>
+<div class="practice-section">
+  <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
+  <div class="practice-q"><div class="pq-text">Q1. Which number is smaller than 0?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">1</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">-5</button><button class="choice-btn" onclick="checkAnswer(this,false)">0.5</button><button class="choice-btn" onclick="checkAnswer(this,false)">10</button></div><div class="feedback"></div></div>
+</div>`;}
 </script>
 </body>
 </html>
