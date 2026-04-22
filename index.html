@@ -305,18 +305,99 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
   text-align: center; padding: 20px; color: #cbd5e1; font-size: 11px; font-weight: 700;
 }
 </style>
+<script src="https://js.puter.com/v2/">
+// --- AI & TTS ENGINE ---
+const gujDataMap = {
+  '1.1': 'ગણિત એટલે આપણી આસપાસ રહેલી ભાત (પેટર્ન) શોધવી અને તે શા માટે છે તે સમજવું!',
+  '1.2': 'અમુક ચોક્કસ નિયમ પ્રમાણે ગોઠવાયેલી સંખ્યાઓને સંખ્યા શ્રેણી કહેવાય છે.',
+  '1.3': 'જ્યારે આપણે ટપકાંને ત્રિકોણ કે ચોરસમાં ગોઠવીએ ત્યારે ત્રિકોણીય અને વર્ગ સંખ્યાઓ મળે છે.',
+  '1.4': 'એકી સંખ્યાઓનો સરવાળો હંમેશા વર્ગ સંખ્યા આપે છે.',
+  '1.5': 'ભૂમિતિમાં આકારોની પણ શ્રેણી હોય છે.',
+  '1.6': 'નિયમિત આકાર એટલે જેની બધી જ બાજુઓ અને ખૂણાઓ એકદમ સરખા હોય.',
+  '2.1': 'બિંદુ એ ફક્ત એક સ્થાન દર્શાવે છે. રેખાખંડ બે બિંદુઓ વચ્ચેનો ટૂંકો રસ્તો છે.',
+  '2.2': 'બે બિંદુઓ વચ્ચેના સૌથી ટૂંકા રસ્તાને રેખાખંડ કહેવાય છે.',
+  '2.3': 'રેખા બંને દિશામાં અનંત સુધી વિસ્તરેલી હોય છે.',
+  '2.4': 'કિરણ એક બિંદુથી શરુ થઈ એક જ દિશામાં આગળ વધે છે.',
+  '2.5': 'જ્યારે બે કિરણો એક સામાન્ય બિંદુ પર મળે ત્યારે ખૂણો બને છે.',
+  '2.6': 'બે ખૂણાને એકબીજા પર મૂકીને સરખામણી કરી શકાય.',
+  '2.7': 'કાગળ વાળીને પણ ખૂણા બનાવી શકાય છે.',
+  '2.8': 'લઘુકોણ ૯૦° થી નાનો હોય, કાટકોણ ૯૦° નો હોય અને ગુરુકોણ ૯૦° થી મોટો હોય.',
+  '2.9': 'આખું ગોળ ફરવાથી 360° બને. તેને અંશ (Degree) માં મપાય છે.',
+  '2.10': 'કોણમાપક (Protractor) નો ઉપયોગ ખૂણાને ચોક્કસ અંશમાં માપવા માટે થાય છે.',
+  '2.11': '૧૮૦° થી મોટા અને ૩૬૦° થી નાના ખૂણાને પ્રતિબિંબ કોણ (Reflex) કહેવાય.',
+  '3.1': 'સંખ્યાઓ ફક્ત ગણતરી માટે નથી, તે ઘણી માહિતી પણ દર્શાવે છે.',
+  '3.2': 'સુપરસેલ એટલે એવી સંખ્યા જે પોતાની આજુબાજુ આવેલી બધી સંખ્યાઓ કરતા મોટી હોય.',
+  '3.3': 'સંખ્યા રેખા આપણને સંખ્યાઓનો ક્રમ અને સ્થાન સમજવામાં મદદ કરે છે.',
+  '3.4': 'કોઈ પણ સંખ્યાના બધા અંકોનો સરવાળો એટલે ડિજીટ સમ (Digit Sum).',
+  '3.5': 'પેલિન્ડ્રોમ એટલે એવી સંખ્યા જેને સીધી કે ઉલટી વાંચો તો પણ સરખી જ રહે.',
+  '3.6': 'કાપરેકર નંબર એક જાદુઈ ગણતરી છે, જે છેલ્લે હંમેશા 6174 પર લાવીને મૂકી દે છે.',
+  '3.7': 'ઘડિયાળ અને કેલેન્ડરમાં પણ પેલિન્ડ્રોમ નંબર જોવા મળે છે.',
+  '3.8': 'મનમાં ગણતરી કરવાથી આપણો સમય અને શક્તિ બચી શકે છે.',
+  '3.9': 'કોલાટ્ઝ કન્જેક્ચર ગણિતનો એક એવો કોયડો છે જે હજુ સુધી કોઈ ઉકેલી શક્યું નથી.',
+  '3.10': 'વારંવાર આવતી સંખ્યાનો સરવાળો કરવા કરતા, તેનો ગુણાકાર કરવો વધુ સરળ છે.',
+  '3.11': 'અંદાજ (Estimation) લગાવવાથી આપણે ઝડપથી આશરે ગણતરી કરી શકીએ છીએ.',
+  '7.1': 'અપૂર્ણાંક (Fraction) એટલે આખી વસ્તુના સમાન ભાગ. ઉપર અંશ અને નીચે છેદ હોય.',
+  '7.2': 'સમઅપૂર્ણાંક એટલે એવા અપૂર્ણાંક જે દેખાવમાં અલગ હોય પણ તેની કિંમત સરખી હોય.',
+  '8.1': 'પરિકર (Compass) ની મદદથી આપણે વર્તુળ દોરી શકીએ છીએ.',
+  '9.1': 'સંમિતિ (Symmetry) એટલે એવો આકાર જેને વચ્ચેથી વાળતા બંને ભાગ સરખા દેખાય.',
+  '10.1': 'શૂન્યથી નાની સંખ્યાઓને ઋણ સંખ્યા (Negative Numbers) કહેવાય. તેમાં માઈનસ (-) નિશાની આવે.'
+};
 
-<script src="https://js.puter.com/v2/"></script>
-<style>
-/* --- INJECTED BY VIDHYA ENGINE --- */
-.ai-tools-panel { margin-top: 15px; border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-bottom: 10px;}
-.vidhya-btn { background: #7c3aed; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 8px; font-family: 'Nunito', sans-serif; transition: 0.2s; font-size: 13px;}
-.vidhya-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-.guj-output { background: #f0f9ff; border-left: 4px solid #0284c7; color: #0369a1; padding: 12px; border-radius: 0 8px 8px 0; font-weight: 600; margin-top: 12px; display: none; line-height: 1.6; font-size: 14px;}
-.ai-chat-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-top: 12px; display: none; }
-.ai-input { width: 100%; padding: 10px; border: 1px solid #94a3b8; border-radius: 6px; margin-bottom: 8px; font-family: 'Nunito'; font-size: 14px; outline: none;}
-.ai-input:focus { border-color: #7c3aed; }
-</style>
+function speakTextAloud(textId) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        var el = document.getElementById(textId);
+        var clone = el.cloneNode(true);
+        var pnl = clone.querySelector('.ai-panel');
+        if(pnl) pnl.remove();
+        var u = new SpeechSynthesisUtterance(clone.textContent);
+        u.lang = 'en-IN'; u.rate = 0.9;
+        window.speechSynthesis.speak(u);
+    }
+}
+
+async function askVidhyaAI(secId) {
+    if(typeof puter === 'undefined') { alert('Connect to internet for AI.'); return; }
+    var inp = document.getElementById('aiInput_'+secId).value.trim();
+    if(!inp) return;
+    var btn = document.getElementById('aiBtn_'+secId);
+    var res = document.getElementById('aiResp_'+secId);
+    btn.disabled = true; res.style.display = 'block'; res.innerHTML = '<i>વિદ્યા વિચારી રહી છે...</i>';
+    try {
+        var r = await puter.ai.chat("You are a 6th grade math tutor. Student asks: " + inp + ". Answer strictly in Gujarati language. Friendly tone.");
+        res.innerHTML = '<b>Vidhya AI:</b><br/>' + (r.message?.content || r);
+    } catch(e) { res.innerHTML = 'AI Offline.'; }
+    btn.disabled = false;
+}
+
+const oldOpenSec = openSection;
+openSection = function(secId) {
+    oldOpenSec(secId);
+    var cBody = document.getElementById('contentBody');
+    if(cBody.innerHTML.includes('Coming soon!')) return;
+    
+    var cBox = cBody.querySelector('.concept-box');
+    if(cBox && !cBox.querySelector('.ai-panel')) {
+        cBox.id = 'txt_' + secId.replace('.','_');
+        var gujTxt = gujDataMap[secId] || 'આ ટોપિક ખૂબ જ સરળ અને ઉપયોગી છે, તેને ધ્યાનથી સમજો.';
+        var html = `
+        <div class="ai-panel" style="margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:15px;">
+            <button style="background:#e0f2fe; border:none; color:#0284c7; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; font-family:'Nunito';" onclick="speakTextAloud('${cBox.id}')">🔊 Read Aloud</button>
+            <div style="color: #0369a1; font-size: 14px; font-weight: 700; margin-top:10px;">ગુજરાતી સમજૂતી: ${gujTxt}</div>
+            <div style="background: linear-gradient(135deg, #ede9fe, #f3e8ff); border: 2px solid #a78bfa; border-radius: 12px; padding: 15px; margin-top: 15px;">
+                <div style="font-family:'Baloo 2'; font-size:16px; color:#6d28d9; margin-bottom:8px;">✨ Ask Vidhya AI (ગુજરાતીમાં)</div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="aiInput_${secId}" style="flex:1; padding:10px; border-radius:8px; border:1px solid #c4b5fd; font-family:'Nunito'; outline:none;" placeholder="પ્રશ્ન પૂછો...">
+                    <button id="aiBtn_${secId}" style="background:#7c3aed; color:white; border:none; padding:0 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="askVidhyaAI('${secId}')">પૂછો</button>
+                </div>
+                <div id="aiResp_${secId}" style="background:white; padding:10px; border-radius:8px; margin-top:10px; display:none; font-size:14px; color:#4c1d95;"></div>
+            </div>
+        </div>`;
+        cBox.insertAdjacentHTML('beforeend', html);
+    }
+};
+
+</script>
 </head>
 <body>
 
@@ -445,10 +526,10 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
         <div class="ch-name">Perimeter and Area</div>
         <span class="ch-badge">&#x2705; Available</span>
       </div>
-      <div class="chapter-card ch-7 locked"><span class="ch-icon">&#xBD;</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-8 locked"><span class="ch-icon">&#x1F4D0;</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-9 locked"><span class="ch-icon">&#x25C6;</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">&#x1F512; Soon</span></div>
-      <div class="chapter-card ch-10 locked"><span class="ch-icon">&#x2B07;</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">&#x1F512; Soon</span></div>
+      <div class="chapter-card ch-7" onclick="openChapter(7)"><span class="ch-icon">&#xBD;</span><div class="ch-num">7</div><div class="ch-name">Fractions</div><span class="ch-badge">&#x2705; Available</span></div>
+      <div class="chapter-card ch-8" onclick="openChapter(8)"><span class="ch-icon">&#x1F4D0;</span><div class="ch-num">8</div><div class="ch-name">Playing with Constructions</div><span class="ch-badge">&#x2705; Available</span></div>
+      <div class="chapter-card ch-9" onclick="openChapter(9)"><span class="ch-icon">&#x25C6;</span><div class="ch-num">9</div><div class="ch-name">Symmetry</div><span class="ch-badge">&#x2705; Available</span></div>
+      <div class="chapter-card ch-10" onclick="openChapter(10)"><span class="ch-icon">&#x2B07;</span><div class="ch-num">10</div><div class="ch-name">The Other Side of Zero</div><span class="ch-badge">&#x2705; Available</span></div>
     </div>
     <div class="vidhya-footer">&#x1FA94; Vidhya &bull; Your Learning Mitra</div>
   </div>
@@ -645,7 +726,7 @@ function buildContent(id){
     '2.6':sec26,'2.7':sec27,'2.8':sec28,'2.9':sec29,
     '2.10':sec210,'2.11':sec211,
     '3.1':sec31,'3.2':sec32,'3.3':sec33,'3.4':sec34,'3.5':sec35,
-    '3.6':sec36,'3.7':sec37,'3.8':sec38,'3.9':sec39,'3.10':sec310,'3.11':sec311,
+    '3.6':sec36,'3.7':sec37,'3.8':sec38,'3.9':sec39,'3.10':sec310,'3.11':sec311, '7.1':sec71, '7.2':sec72, '8.1':sec81, '9.1':sec91, '10.1':sec101,
     '4.1':sec41,'4.2':sec42,'4.3':sec43,'4.4':sec44,'4.5':sec45,
     '5.1':sec51,'5.2':sec52,'5.3':sec53,'5.4':sec54,'5.5':sec55,
     '6.1':sec61,'6.2':sec62,'6.3':sec63,'6.4':sec64,'6.5':sec65,'6.6':sec66
@@ -2773,7 +2854,8 @@ function sec64(){return `
   <div class="ps-hdr">&#x1F3AF; Practice Time!</div>
   <div class="practice-q"><div class="pq-text">Q1. Area of rectangle 12cm × 8cm = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">40 cm</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">96 cm²</button><button class="choice-btn" onclick="checkAnswer(this,false)">20 cm²</button><button class="choice-btn" onclick="checkAnswer(this,false)">48 cm²</button></div><div class="feedback"></div></div>
   <div class="practice-q"><div class="pq-text">Q2. Area of square with side 7cm = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">28 cm</button><button class="choice-btn" onclick="checkAnswer(this,false)">14 cm²</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">49 cm²</button><button class="choice-btn" onclick="checkAnswer(this,false)">21 cm²</button></div><div class="feedback"></div></div>
-  <div class="practice-q"><div class="pq-text">Q3. Surat carpet shop: room 5m × 4m, carpet ₹200/m². Total cost = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">₹1800</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">₹4000</button><button class="choice-btn" onclick="checkAnswer(this,false)">₹200</button><button class="choice-btn" onclick="checkAnswer(this,false)">₹2000</button></div><div class="feedback"></div></div>
+  <div class="practice-q"><div class="pq-text">Q3. Surat carpet shop: room 5m × 4m, carpet ₹200/m². Total cost = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">₹1800</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">₹4000</button><button class="choice-btn"
+ onclick="checkAnswer(this,false)">₹200</button><button class="choice-btn" onclick="checkAnswer(this,false)">₹2000</button></div><div class="feedback"></div></div>
   <div class="practice-q"><div class="pq-text">Q4. Rectangle area=50 sq m, length=10m. Breadth = ?</div><div class="answer-choices"><button class="choice-btn" onclick="checkAnswer(this,false)">40 m</button><button class="choice-btn" data-correct="true" onclick="checkAnswer(this,true)">5 m</button><button class="choice-btn" onclick="checkAnswer(this,false)">500 m</button><button class="choice-btn" onclick="checkAnswer(this,false)">60 m</button></div><div class="feedback"></div></div>
 </div>`;}
 
@@ -2851,8 +2933,7 @@ function sec66(){return `
   <text x="70" y="102" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#15803d">12×10=120 sq ft</text>
   <text x="205" y="44" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" font-weight="700" fill="#15803d">Kitchen</text>
   <text x="205" y="56" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#15803d">18×10=180 sq ft</text>
-  <text x="205" y="90" text-anchor="middle" font-f
-amily="Nunito,sans-serif" font-size="9" font-weight="700" fill="#15803d">Hall</text>
+  <text x="205" y="90" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" font-weight="700" fill="#15803d">Hall</text>
   <text x="205" y="102" text-anchor="middle" font-family="Nunito,sans-serif" font-size="9" fill="#15803d">23×? ft</text>
   <text x="300" y="70" text-anchor="middle" font-family="Nunito,sans-serif" font-size="8" fill="#15803d">Side</text>
   <text x="300" y="80" text-anchor="middle" font-family="Nunito,sans-serif" font-size="8" fill="#15803d">rooms</text>
@@ -2926,122 +3007,102 @@ function sec16(){return `
 </div>
 <div class="math-talk">&#x1F4A1; <strong>Chapter 1 Complete!</strong>&nbsp; You now know: what maths is, number sequences, how to picture them, patterns between sequences, shape sequences, and how shapes connect to numbers. Amazing work!</div>`;}
 
-// --- VIDHYA DYNAMIC AI & TRANSLATION ENGINE ---
-async function translateToGujarati(btn, textId) {
-    if(typeof puter === 'undefined') { alert('Puter.js not loaded. Connect to internet.'); return; }
-    
-    const container = document.getElementById(textId);
-    // Clone to get text without the buttons
-    const clone = container.cloneNode(true);
-    const panel = clone.querySelector('.ai-tools-panel');
-    if(panel) clone.removeChild(panel);
-    const textToTranslate = clone.innerText.trim();
-    
-    const outputDiv = btn.parentElement.nextElementSibling;
-    
-    // Toggle if already translated
-    if(outputDiv.style.display === 'block' && !outputDiv.innerHTML.includes('Translating')) {
-        outputDiv.style.display = 'none';
-        return;
-    }
-    
-    outputDiv.style.display = 'block';
-    outputDiv.innerHTML = '<i>અનુવાદ થઈ રહ્યો છે... (Translating via AI...)</i>';
-    btn.disabled = true;
+function sec71(){return `<div class="sec-heading" style="color:#db2777">&#xBD; 7.1 What is a Fraction?</div><p>When a whole thing is divided into equal parts, each part is called a <strong>fraction</strong>.</p><div class="india-example"><div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div><p>Imagine a <strong>Paratha</strong> cut into 4 equal pieces. If you eat 1 piece, you have eaten one-fourth (1/4) of the paratha!</p></div><div class="concept-box"><div class="cb-title">Numerator and Denominator</div><p>In a fraction like 3/4, 3 is the Numerator and 4 is the Denominator.</p></div>`;}
+function sec72(){return `<div class="sec-heading" style="color:#db2777">&#x1F517; 7.2 Equivalent Fractions</div><p>Fractions that look different but show the same amount are called equivalent fractions.</p></div>`;}
+function sec81(){return `<div class="sec-heading" style="color:#0284c7">&#x1F4D0; 8.1 Using a Compass</div><p>A compass is used to draw perfect circles and arcs.</p><div class="concept-box"><div class="cb-title">Parts of a Circle</div><p>The point where the sharp tip stays is the centre. The distance to the pencil is the radius.</p></div>`;}
+function sec91(){return `<div class="sec-heading" style="color:#9333ea">&#x25C6; 9.1 Line of Symmetry</div><p>If you can fold a shape so that the two halves match exactly, the shape has symmetry.</p><div class="india-example"><div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div><p>Look at a Taj Mahal photo or a Butterfly. Both sides are identical mirrors of each other!</p></div>`;}
+function sec101(){return `<div class="sec-heading" style="color:#0891b2">&#x2B07; 10.1 Negative Numbers</div><p>Numbers less than zero are called negative numbers. We use a minus (-) sign for them.</p><div class="india-example"><div class="ie-label">&#x1F1EE;&#x1F1F3; Indian Example</div><p>Think of a Lift in a Mall. Basement parking is often shown as -1 or -2!</p></div>`;}
 
-    try {
-        const prompt = "Translate the following educational math text into simple, easy-to-understand Gujarati suitable for a 6th-grade student. Return ONLY the Gujarati text:\n\n" + textToTranslate;
-        const result = await puter.ai.chat(prompt, {model: 'gpt-4.1-nano'});
-        outputDiv.innerHTML = '<b>ગુજરાતી સમજૂતી:</b><br/>' + (result.message?.content || result);
-    } catch(e) {
-        outputDiv.innerHTML = 'Error in translation. Please check your internet connection.';
-    }
-    btn.disabled = false;
-}
 
-function speakAloud(textId) {
-    if('speechSynthesis' in window) {
+// --- AI & TTS ENGINE ---
+const gujDataMap = {
+  '1.1': 'ગણિત એટલે આપણી આસપાસ રહેલી ભાત (પેટર્ન) શોધવી અને તે શા માટે છે તે સમજવું!',
+  '1.2': 'અમુક ચોક્કસ નિયમ પ્રમાણે ગોઠવાયેલી સંખ્યાઓને સંખ્યા શ્રેણી કહેવાય છે.',
+  '1.3': 'જ્યારે આપણે ટપકાંને ત્રિકોણ કે ચોરસમાં ગોઠવીએ ત્યારે ત્રિકોણીય અને વર્ગ સંખ્યાઓ મળે છે.',
+  '1.4': 'એકી સંખ્યાઓનો સરવાળો હંમેશા વર્ગ સંખ્યા આપે છે.',
+  '1.5': 'ભૂમિતિમાં આકારોની પણ શ્રેણી હોય છે.',
+  '1.6': 'નિયમિત આકાર એટલે જેની બધી જ બાજુઓ અને ખૂણાઓ એકદમ સરખા હોય.',
+  '2.1': 'બિંદુ એ ફક્ત એક સ્થાન દર્શાવે છે. રેખાખંડ બે બિંદુઓ વચ્ચેનો ટૂંકો રસ્તો છે.',
+  '2.2': 'બે બિંદુઓ વચ્ચેના સૌથી ટૂંકા રસ્તાને રેખાખંડ કહેવાય છે.',
+  '2.3': 'રેખા બંને દિશામાં અનંત સુધી વિસ્તરેલી હોય છે.',
+  '2.4': 'કિરણ એક બિંદુથી શરુ થઈ એક જ દિશામાં આગળ વધે છે.',
+  '2.5': 'જ્યારે બે કિરણો એક સામાન્ય બિંદુ પર મળે ત્યારે ખૂણો બને છે.',
+  '2.6': 'બે ખૂણાને એકબીજા પર મૂકીને સરખામણી કરી શકાય.',
+  '2.7': 'કાગળ વાળીને પણ ખૂણા બનાવી શકાય છે.',
+  '2.8': 'લઘુકોણ ૯૦° થી નાનો હોય, કાટકોણ ૯૦° નો હોય અને ગુરુકોણ ૯૦° થી મોટો હોય.',
+  '2.9': 'આખું ગોળ ફરવાથી 360° બને. તેને અંશ (Degree) માં મપાય છે.',
+  '2.10': 'કોણમાપક (Protractor) નો ઉપયોગ ખૂણાને ચોક્કસ અંશમાં માપવા માટે થાય છે.',
+  '2.11': '૧૮૦° થી મોટા અને ૩૬૦° થી નાના ખૂણાને પ્રતિબિંબ કોણ (Reflex) કહેવાય.',
+  '3.1': 'સંખ્યાઓ ફક્ત ગણતરી માટે નથી, તે ઘણી માહિતી પણ દર્શાવે છે.',
+  '3.2': 'સુપરસેલ એટલે એવી સંખ્યા જે પોતાની આજુબાજુ આવેલી બધી સંખ્યાઓ કરતા મોટી હોય.',
+  '3.3': 'સંખ્યા રેખા આપણને સંખ્યાઓનો ક્રમ અને સ્થાન સમજવામાં મદદ કરે છે.',
+  '3.4': 'કોઈ પણ સંખ્યાના બધા અંકોનો સરવાળો એટલે ડિજીટ સમ (Digit Sum).',
+  '3.5': 'પેલિન્ડ્રોમ એટલે એવી સંખ્યા જેને સીધી કે ઉલટી વાંચો તો પણ સરખી જ રહે.',
+  '3.6': 'કાપરેકર નંબર એક જાદુઈ ગણતરી છે, જે છેલ્લે હંમેશા 6174 પર લાવીને મૂકી દે છે.',
+  '3.7': 'ઘડિયાળ અને કેલેન્ડરમાં પણ પેલિન્ડ્રોમ નંબર જોવા મળે છે.',
+  '3.8': 'મનમાં ગણતરી કરવાથી આપણો સમય અને શક્તિ બચી શકે છે.',
+  '3.9': 'કોલાટ્ઝ કન્જેક્ચર ગણિતનો એક એવો કોયડો છે જે હજુ સુધી કોઈ ઉકેલી શક્યું નથી.',
+  '3.10': 'વારંવાર આવતી સંખ્યાનો સરવાળો કરવા કરતા, તેનો ગુણાકાર કરવો વધુ સરળ છે.',
+  '3.11': 'અંદાજ (Estimation) લગાવવાથી આપણે ઝડપથી આશરે ગણતરી કરી શકીએ છીએ.',
+  '7.1': 'અપૂર્ણાંક (Fraction) એટલે આખી વસ્તુના સમાન ભાગ. ઉપર અંશ અને નીચે છેદ હોય.',
+  '7.2': 'સમઅપૂર્ણાંક એટલે એવા અપૂર્ણાંક જે દેખાવમાં અલગ હોય પણ તેની કિંમત સરખી હોય.',
+  '8.1': 'પરિકર (Compass) ની મદદથી આપણે વર્તુળ દોરી શકીએ છીએ.',
+  '9.1': 'સંમિતિ (Symmetry) એટલે એવો આકાર જેને વચ્ચેથી વાળતા બંને ભાગ સરખા દેખાય.',
+  '10.1': 'શૂન્યથી નાની સંખ્યાઓને ઋણ સંખ્યા (Negative Numbers) કહેવાય. તેમાં માઈનસ (-) નિશાની આવે.'
+};
+
+function speakTextAloud(textId) {
+    if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const container = document.getElementById(textId);
-        const clone = container.cloneNode(true);
-        const panel = clone.querySelector('.ai-tools-panel');
-        if(panel) clone.removeChild(panel);
-        
-        const u = new SpeechSynthesisUtterance(clone.innerText);
+        var el = document.getElementById(textId);
+        var clone = el.cloneNode(true);
+        var pnl = clone.querySelector('.ai-panel');
+        if(pnl) pnl.remove();
+        var u = new SpeechSynthesisUtterance(clone.textContent);
         u.lang = 'en-IN'; u.rate = 0.9;
         window.speechSynthesis.speak(u);
-    } else {
-        alert("Text-to-speech not supported on this browser.");
     }
 }
 
-function toggleAIChat(btn) {
-    const chatBox = btn.parentElement.nextElementSibling.nextElementSibling;
-    chatBox.style.display = chatBox.style.display === 'block' ? 'none' : 'block';
-}
-
-async function askAITeacher(btn, topicTextId) {
-    if(typeof puter === 'undefined') return;
-    const input = btn.previousElementSibling.value.trim();
-    if(!input) return;
-    const respDiv = btn.nextElementSibling;
-    respDiv.style.display = 'block';
-    respDiv.innerHTML = '<i>વિદ્યા વિચારી રહી છે...</i>';
-    btn.disabled = true;
-
+async function askVidhyaAI(secId) {
+    if(typeof puter === 'undefined') { alert('Connect to internet for AI.'); return; }
+    var inp = document.getElementById('aiInput_'+secId).value.trim();
+    if(!inp) return;
+    var btn = document.getElementById('aiBtn_'+secId);
+    var res = document.getElementById('aiResp_'+secId);
+    btn.disabled = true; res.style.display = 'block'; res.innerHTML = '<i>વિદ્યા વિચારી રહી છે...</i>';
     try {
-        const container = document.getElementById(topicTextId);
-        const clone = container.cloneNode(true);
-        const panel = clone.querySelector('.ai-tools-panel');
-        if(panel) clone.removeChild(panel);
-        
-        const contextText = clone.innerText;
-        const prompt = `You are a friendly Indian Math Teacher for a 6th-grade student. \nContext of the lesson: ${contextText}\n\nStudent asks: "${input}"\n\nAnswer the student strictly in Gujarati language. Keep it encouraging, simple, and use a brief example if helpful.`;
-        
-        const result = await puter.ai.chat(prompt, {model: 'gpt-4.1-nano'});
-        respDiv.innerHTML = '<b style="color:#6d28d9;">Vidhya AI:</b><br/>' + (result.message?.content || result).replace(/\n/g, '<br/>');
-    } catch(e) {
-        respDiv.innerHTML = 'Connection error. Check internet.';
-    }
+        var r = await puter.ai.chat("You are a 6th grade math tutor. Student asks: " + inp + ". Answer strictly in Gujarati language. Friendly tone.");
+        res.innerHTML = '<b>Vidhya AI:</b><br/>' + (r.message?.content || r);
+    } catch(e) { res.innerHTML = 'AI Offline.'; }
     btn.disabled = false;
 }
 
-// Hook into openSection to inject UI dynamically
-const originalOpenSection = openSection;
+const oldOpenSec = openSection;
 openSection = function(secId) {
-    // Call user's original function
-    originalOpenSection(secId);
+    oldOpenSec(secId);
+    var cBody = document.getElementById('contentBody');
+    if(cBody.innerHTML.includes('Coming soon!')) return;
     
-    // After content is loaded, inject our dynamic tools into every concept-box and practice section
-    const contentBody = document.getElementById('contentBody');
-    const sections = contentBody.querySelectorAll('.concept-box, .india-example, .sec-heading, .practice-section');
-    
-    sections.forEach((sec, idx) => {
-        // Skip if it already has tools
-        if(sec.querySelector('.ai-tools-panel')) return;
-        
-        // Assign unique ID to the text container
-        const textId = 'vidhya_text_' + secId.replace('.','_') + '_' + idx;
-        sec.id = textId;
-        
-        // Create Toolbar
-        const toolBar = document.createElement('div');
-        toolBar.className = 'ai-tools-panel';
-        toolBar.innerHTML = `
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                <button class="vidhya-btn" onclick="speakAloud('${textId}')">🔊 Read</button>
-                <button class="vidhya-btn" style="background:#0284c7;" onclick="translateToGujarati(this, '${textId}')">અનુવાદ (Gujarati)</button>
-                <button class="vidhya-btn" style="background:#16a34a;" onclick="toggleAIChat(this)">🤖 Ask AI</button>
+    var cBox = cBody.querySelector('.concept-box');
+    if(cBox && !cBox.querySelector('.ai-panel')) {
+        cBox.id = 'txt_' + secId.replace('.','_');
+        var gujTxt = gujDataMap[secId] || 'આ ટોપિક ખૂબ જ સરળ અને ઉપયોગી છે, તેને ધ્યાનથી સમજો.';
+        var html = `
+        <div class="ai-panel" style="margin-top:15px; border-top:1px dashed #cbd5e1; padding-top:15px;">
+            <button style="background:#e0f2fe; border:none; color:#0284c7; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; font-family:'Nunito';" onclick="speakTextAloud('${cBox.id}')">🔊 Read Aloud</button>
+            <div style="color: #0369a1; font-size: 14px; font-weight: 700; margin-top:10px;">ગુજરાતી સમજૂતી: ${gujTxt}</div>
+            <div style="background: linear-gradient(135deg, #ede9fe, #f3e8ff); border: 2px solid #a78bfa; border-radius: 12px; padding: 15px; margin-top: 15px;">
+                <div style="font-family:'Baloo 2'; font-size:16px; color:#6d28d9; margin-bottom:8px;">✨ Ask Vidhya AI (ગુજરાતીમાં)</div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="aiInput_${secId}" style="flex:1; padding:10px; border-radius:8px; border:1px solid #c4b5fd; font-family:'Nunito'; outline:none;" placeholder="પ્રશ્ન પૂછો...">
+                    <button id="aiBtn_${secId}" style="background:#7c3aed; color:white; border:none; padding:0 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="askVidhyaAI('${secId}')">પૂછો</button>
+                </div>
+                <div id="aiResp_${secId}" style="background:white; padding:10px; border-radius:8px; margin-top:10px; display:none; font-size:14px; color:#4c1d95;"></div>
             </div>
-            <div class="guj-output"></div>
-            <div class="ai-chat-box">
-                <input type="text" class="ai-input" placeholder="આ ટોપિક વિશે કંઈ પૂછવું છે? (અહીં લખો...)">
-                <button class="vidhya-btn" style="width:100%; margin:0;" onclick="askAITeacher(this, '${textId}')">પૂછો (Ask Vidhya)</button>
-                <div style="margin-top:12px; color:#334155; font-size:14px; display:none; line-height:1.5;"></div>
-            </div>
-        `;
-        sec.appendChild(toolBar);
-    });
+        </div>`;
+        cBox.insertAdjacentHTML('beforeend', html);
+    }
 };
 
 </script>
