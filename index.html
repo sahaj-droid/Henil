@@ -3,97 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Vidhya Ultimate – Your Learning Mitra</title>
+<title>Vidhya Ultimate – Full Feature</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://js.puter.com/v2/"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; min-height: 100vh; transition: background 0.3s, color 0.3s; }
-  body.dark { background: #0f172a; color: #e2e8f0; }
-  /* Splash */
-  #splash { position: fixed; inset: 0; background: #1e3a8a; z-index: 1000; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s; color: white; }
-  #splash.hide { opacity: 0; pointer-events: none; }
-  .splash-card { text-align: center; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 48px; padding: 32px; }
-  .splash-card h1 { font-size: 48px; color: #facc15; }
-  .loader { width: 200px; height: 4px; background: #334155; margin: 20px auto; border-radius: 4px; overflow: hidden; }
-  .loader-fill { width: 0%; height: 100%; background: #facc15; animation: loadFill 2s forwards; }
-  @keyframes loadFill { to { width: 100%; } }
-  /* Topbar */
-  .topbar { background: linear-gradient(135deg, #1e3a8a, #0d9488); padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; color: white; }
-  .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; }
-  .back-btn.visible { display: flex; }
-  .logo { background: #facc15; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1e3a8a; }
-  .title-area { flex: 1; }
-  .title-main { font-weight: 800; font-size: 18px; font-family: 'Baloo 2', cursive; }
-  .title-sub { font-size: 10px; opacity: 0.8; }
-  .topbar-buttons { display: flex; gap: 8px; }
-  .icon-btn { background: rgba(255,255,255,0.2); border: none; border-radius: 30px; color: white; padding: 6px 10px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-  /* Screens */
-  .screen { display: none; padding-bottom: 20px; }
-  .screen.active { display: block; animation: fadeIn 0.2s; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  /* Home */
-  .hero { background: linear-gradient(160deg, #1e3a8a, #0d9488); padding: 24px 16px; text-align: center; color: white; }
-  .hero h1 { font-size: 38px; font-family: 'EB Garamond', serif; }
-  .subject-bar { display: flex; background: white; border-bottom: 2px solid #e2e8f0; padding: 8px 16px; gap: 12px; }
-  body.dark .subject-bar { background: #1e293b; border-bottom-color: #334155; }
-  .subj-btn { flex: 1; padding: 8px; border: none; background: #f1f5f9; border-radius: 40px; font-weight: 700; cursor: pointer; }
-  body.dark .subj-btn { background: #334155; color: #e2e8f0; }
-  .subj-btn.active { background: #1e40af; color: white; }
-  .chapters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 16px; }
-  .chapter-card { background: white; border-radius: 20px; padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; border-left: 6px solid #facc15; transition: 0.2s; }
-  body.dark .chapter-card { background: #1e293b; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-  .chapter-card.locked { opacity: 0.5; cursor: default; filter: grayscale(0.1); }
-  .progress-bar { height: 6px; background: #e2e8f0; border-radius: 6px; margin: 8px 0; overflow: hidden; }
-  .progress-fill { height: 100%; width: 0%; background: #16a34a; border-radius: 6px; }
-  /* Chapter screen */
-  .ch-header { padding: 20px 16px; color: white; background: linear-gradient(135deg, #1e3a8a, #0d9488); }
-  .sections-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-  .section-item { background: white; border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 2px solid transparent; transition: 0.1s; }
-  body.dark .section-item { background: #1e293b; }
-  .section-item.completed { border-left: 6px solid #16a34a; background: #f0fdf4; }
-  body.dark .section-item.completed { background: #14532d; }
-  /* Content screen */
-  .content-body { padding: 20px 16px; max-width: 700px; margin: 0 auto; }
-  .nav-buttons { display: flex; justify-content: space-between; margin: 20px 0; gap: 12px; }
-  .nav-btn { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: bold; cursor: pointer; flex: 1; text-align: center; }
-  .india-example { background: #fff7ed; border-left: 5px solid #f97316; padding: 12px; margin: 16px 0; border-radius: 12px; }
-  body.dark .india-example { background: #2d1f0c; border-left-color: #f97316; color: #fde68a; }
-  .concept-box { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 12px; padding: 12px; margin: 16px 0; }
-  body.dark .concept-box { background: #1e2a3a; border-color: #3b82f6; }
-  .practice-section { background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 12px; margin: 16px 0; }
-  .choice-btn { background: #eef2ff; border: none; padding: 8px 12px; border-radius: 30px; margin: 4px; cursor: pointer; }
-  .choice-btn.correct { background: #16a34a; color: white; }
-  .choice-btn.wrong { background: #dc2626; color: white; }
-  .search-box { margin: 12px 16px; display: flex; gap: 8px; }
-  .search-box input { flex: 1; padding: 8px; border-radius: 30px; border: 1px solid #cbd5e1; background: white; }
-  body.dark .search-box input { background: #1e293b; border-color: #475569; color: white; }
-  .search-results { background: white; border-radius: 16px; margin: 12px; padding: 12px; display: none; }
-  body.dark .search-results { background: #1e293b; }
-  .reminder-toast { position: fixed; bottom: 20px; left: 20px; right: 20px; background: #facc15; color: #1e293b; padding: 12px; border-radius: 30px; text-align: center; z-index: 200; display: none; animation: slideUp 0.3s; }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .credit { text-align: center; font-size: 11px; color: #94a3b8; padding: 20px; border-top: 1px solid #e2e8f0; margin-top: 20px; }
-  body.dark .credit { color: #64748b; border-top-color: #334155; }
-  @media (max-width: 480px) { .chapters-grid { grid-template-columns: 1fr 1fr; } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+body.dark { background: #0f172a; color: #e2e8f0; }
+#splash { position: fixed; inset: 0; background: #1e3a8a; z-index: 1000; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s; }
+#splash.hide { opacity: 0; pointer-events: none; }
+.splash-card { text-align: center; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 48px; padding: 32px; color: white; }
+.splash-card h1 { font-size: 48px; color: #facc15; }
+.loader { width: 200px; height: 4px; background: #334155; margin: 20px auto; border-radius: 4px; overflow: hidden; }
+.loader-fill { width: 0%; height: 100%; background: #facc15; animation: loadFill 2s forwards; }
+@keyframes loadFill { to { width: 100%; } }
+.topbar { background: linear-gradient(135deg, #1e3a8a, #0d9488); padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; color: white; }
+.back-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+.back-btn.visible { display: flex; }
+.logo { background: #facc15; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1e3a8a; }
+.title-area { flex: 1; }
+.title-main { font-weight: 800; font-size: 18px; font-family: 'Baloo 2', cursive; }
+.title-sub { font-size: 10px; opacity: 0.8; }
+.topbar-buttons { display: flex; gap: 8px; }
+.icon-btn { background: rgba(255,255,255,0.2); border: none; border-radius: 30px; color: white; padding: 6px 10px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.screen { display: none; padding-bottom: 20px; }
+.screen.active { display: block; animation: fadeIn 0.2s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.hero { background: linear-gradient(160deg, #1e3a8a, #0d9488); padding: 24px 16px; text-align: center; color: white; }
+.hero h1 { font-size: 38px; font-family: 'EB Garamond', serif; }
+.subject-bar { display: flex; background: white; border-bottom: 2px solid #e2e8f0; padding: 8px 16px; gap: 12px; }
+body.dark .subject-bar { background: #1e293b; border-bottom-color: #334155; }
+.subj-btn { flex: 1; padding: 8px; border: none; background: #f1f5f9; border-radius: 40px; font-weight: 700; cursor: pointer; }
+body.dark .subj-btn { background: #334155; color: #e2e8f0; }
+.subj-btn.active { background: #1e40af; color: white; }
+.chapters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 16px; }
+.chapter-card { background: white; border-radius: 20px; padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; border-left: 6px solid #facc15; transition: 0.2s; }
+body.dark .chapter-card { background: #1e293b; }
+.chapter-card.locked { opacity: 0.5; cursor: default; }
+.progress-bar { height: 6px; background: #e2e8f0; border-radius: 6px; margin: 8px 0; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; background: #16a34a; border-radius: 6px; }
+.ch-header { padding: 20px 16px; color: white; background: linear-gradient(135deg, #1e3a8a, #0d9488); }
+.sections-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.section-item { background: white; border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 2px solid transparent; }
+body.dark .section-item { background: #1e293b; }
+.section-item.completed { border-left: 6px solid #16a34a; background: #f0fdf4; }
+body.dark .section-item.completed { background: #14532d; }
+.content-body { padding: 20px 16px; max-width: 700px; margin: 0 auto; }
+.nav-buttons { display: flex; justify-content: space-between; margin: 20px 0; gap: 12px; }
+.nav-btn { background: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: bold; cursor: pointer; flex: 1; text-align: center; }
+.india-example { background: #fff7ed; border-left: 5px solid #f97316; padding: 12px; margin: 16px 0; border-radius: 12px; }
+body.dark .india-example { background: #2d1f0c; border-left-color: #f97316; color: #fde68a; }
+.concept-box { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 12px; padding: 12px; margin: 16px 0; }
+body.dark .concept-box { background: #1e2a3a; border-color: #3b82f6; }
+.practice-section { background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 12px; margin: 16px 0; }
+.choice-btn { background: #eef2ff; border: none; padding: 8px 12px; border-radius: 30px; margin: 4px; cursor: pointer; }
+.choice-btn.correct { background: #16a34a; color: white; }
+.choice-btn.wrong { background: #dc2626; color: white; }
+.ai-tools-panel { margin-top: 15px; border-top: 2px dashed #cbd5e1; padding-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.vidhya-btn { background: #7c3aed; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+.guj-output { background: #f0f9ff; border-left: 4px solid #0284c7; padding: 8px; margin-top: 8px; display: none; font-size: 13px; }
+.ai-chat-box { background: #fdf4ff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 12px; margin-top: 8px; display: none; }
+.ai-input { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #c4b5fd; margin-bottom: 8px; }
+.search-box { margin: 12px 16px; display: flex; gap: 8px; }
+.search-box input { flex: 1; padding: 8px; border-radius: 30px; border: 1px solid #cbd5e1; background: white; }
+.search-results { background: white; border-radius: 16px; margin: 12px; padding: 12px; display: none; }
+.reminder-toast { position: fixed; bottom: 20px; left: 20px; right: 20px; background: #facc15; color: #1e293b; padding: 12px; border-radius: 30px; text-align: center; z-index: 200; display: none; }
+.credit { text-align: center; font-size: 11px; color: #94a3b8; padding: 20px; border-top: 1px solid #e2e8f0; margin-top: 20px; }
+@media (max-width: 480px) { .chapters-grid { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
 
-<div id="splash">
-  <div class="splash-card">
-    <h1>विद्या Ultimate</h1>
-    <p>Your Intelligent Learning Mitra</p>
-    <div class="loader"><div class="loader-fill"></div></div>
-    <p style="margin-top:16px;">DS & Assistant • Modular Edition</p>
-  </div>
-</div>
+<div id="splash"><div class="splash-card"><h1>विद्या Ultimate</h1><p>Full Feature Learning Mitra</p><div class="loader"><div class="loader-fill"></div></div><p>DS & Assistant</p></div></div>
 
 <div class="topbar">
   <button class="back-btn" id="backBtn">←</button>
   <div class="logo">V</div>
-  <div class="title-area">
-    <div class="title-main" id="topTitle">Vidhya Ultimate</div>
-    <div class="title-sub" id="topSub">Learn with joy</div>
-  </div>
+  <div class="title-area"><div class="title-main" id="topTitle">Vidhya Ultimate</div><div class="title-sub" id="topSub">Learn with joy</div></div>
   <div class="topbar-buttons">
     <button class="icon-btn" id="darkModeToggle">🌓</button>
     <button class="icon-btn" id="voiceSearchBtn">🎤</button>
@@ -101,301 +87,344 @@
   </div>
 </div>
 
-<!-- HOME SCREEN -->
 <div class="screen active" id="homeScreen">
   <div class="hero"><h1 id="heroHeading">Vidhya Ultimate</h1><p id="heroTag">Your Intelligent Learning Mitra</p></div>
   <div class="subject-bar"><button class="subj-btn active" data-subj="maths">📐 Mathematics</button><button class="subj-btn locked" disabled>🔬 Science (Soon)</button></div>
-  <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Search topics..."><button id="searchBtn">Go</button></div>
+  <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Search..."><button id="searchBtn">Go</button></div>
   <div class="search-results" id="searchResults"></div>
   <div id="chaptersContainer" class="chapters-grid"></div>
   <button id="certificateBtn" style="display:block; margin:20px auto; background:#facc15; border:none; padding:12px 24px; border-radius:40px; font-weight:bold; cursor:pointer;">🏆 Download Certificate</button>
-  <div class="credit">✨ Designed by DS & Assistant – Std 6 GSEB ✨</div>
+  <div class="credit">✨ DS & Assistant – Std 6 GSEB ✨</div>
 </div>
 
-<!-- CHAPTER SCREEN -->
 <div class="screen" id="chapterScreen">
   <div class="ch-header" id="chHeader"><h2 id="chTitle">Chapter</h2></div>
   <div id="sectionsList" class="sections-list"></div>
-  <div class="credit">📖 Tap any section to start learning</div>
+  <div class="credit">📖 Tap section to start learning</div>
 </div>
 
-<!-- CONTENT SCREEN -->
 <div class="screen" id="contentScreen">
   <div id="contentBody" class="content-body"></div>
-  <div class="credit">🎙️ Voice search • Dark mode • Spaced repetition</div>
+  <div class="credit">🔊 Read Aloud • AI Chat • Gujarati Translation</div>
 </div>
 
-<div id="reminderToast" class="reminder-toast">📚 Time to revise old topics! <button onclick="closeToast()">OK</button></div>
+<div id="reminderToast" class="reminder-toast">📚 Time to revise! <button onclick="closeToast()">OK</button></div>
 
 <script>
-  // ========== GLOBAL STORAGE ==========
-  window.chapters = {}; // Will be populated by chapterX.js files
-  let completedSections = JSON.parse(localStorage.getItem('vidhya_progress') || '{}');
-  let currentChapter = 1, currentSectionIdx = 0, navStack = ['home'];
-  let currentLang = 'en';
-  let darkMode = localStorage.getItem('darkMode') === 'true';
-  let lastVisit = localStorage.getItem('lastVisit') || Date.now();
-  let speechRecog = null;
+// ========== GLOBALS ==========
+window.chapters = {};
+let completedSections = JSON.parse(localStorage.getItem('vidhya_progress') || '{}');
+let currentChapter = 1, currentSectionIdx = 0, navStack = ['home'];
+let currentLang = 'en';
+let darkMode = localStorage.getItem('darkMode') === 'true';
+let lastVisit = localStorage.getItem('lastVisit') || Date.now();
+let speechRecog = null;
 
-  // ========== PROGRESS & HELPERS ==========
-  function saveProgress() { localStorage.setItem('vidhya_progress', JSON.stringify(completedSections)); }
-  function isCompleted(ch, secIdx) { return !!completedSections[`${ch}_${secIdx}`]; }
-  function markCompleted(ch, secIdx) {
-    if(!completedSections[`${ch}_${secIdx}`]) {
-      completedSections[`${ch}_${secIdx}`] = true;
-      saveProgress();
-      updateHomeChapters();
-      updateSectionsList();
-      checkSpacedRepetition();
-    }
-  }
-  function updateHomeChapters() {
-    const container = document.getElementById('chaptersContainer');
-    if(!container) return;
-    for(let i=1; i<=10; i++) {
-      let ch = window.chapters[i];
-      if(!ch) continue;
-      let total = ch.sections.length;
-      let done = 0;
-      for(let s=0; s<total; s++) if(isCompleted(i,s)) done++;
-      let percent = total ? (done/total)*100 : 0;
-      let card = document.querySelector(`.chapter-card[data-ch='${i}']`);
-      if(card) {
-        card.querySelector('.progress-fill').style.width = percent+'%';
-        card.querySelector('.done-count').innerText = `${done}/${total}`;
-      }
-    }
-  }
-  function updateSectionsList() {
-    let ch = window.chapters[currentChapter];
-    if(!ch) return;
-    let listDiv = document.getElementById('sectionsList');
-    if(!listDiv) return;
-    let items = listDiv.querySelectorAll('.section-item');
-    items.forEach((item, idx) => {
-      if(isCompleted(currentChapter, idx)) item.classList.add('completed');
-      else item.classList.remove('completed');
-    });
-  }
-
-  // ========== NAVIGATION ==========
-  function switchScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0,0);
-  }
-  function showHome() {
-    navStack = ['home'];
-    switchScreen('homeScreen');
-    document.getElementById('backBtn').classList.remove('visible');
-    document.getElementById('topTitle').innerText = currentLang==='en'?'Vidhya Ultimate':'વિદ્યા અલ્ટિમેટ';
-    document.getElementById('topSub').innerText = currentLang==='en'?'Learn with joy':'આનંદથી શીખો';
-    renderHomeGrid();
-  }
-  function openChapter(ch) {
-    if(!window.chapters[ch]) { alert('Chapter data not loaded yet. Check chapter scripts.'); return; }
-    currentChapter = ch;
-    currentSectionIdx = 0;
-    navStack.push('chapter');
-    switchScreen('chapterScreen');
-    document.getElementById('topTitle').innerText = `Chapter ${ch}`;
-    document.getElementById('topSub').innerText = window.chapters[ch].title;
-    document.getElementById('backBtn').classList.add('visible');
-    document.getElementById('chHeader').style.background = `linear-gradient(135deg, ${window.chapters[ch].color}, #1e293b)`;
-    document.getElementById('chTitle').innerHTML = `${ch}. ${window.chapters[ch].title}`;
-    let listDiv = document.getElementById('sectionsList');
-    listDiv.innerHTML = '';
-    window.chapters[ch].sections.forEach((sec, idx) => {
-      let done = isCompleted(ch, idx);
-      listDiv.innerHTML += `<div class="section-item ${done?'completed':''}" data-sec="${idx}"><span style="font-weight:800;">${idx+1}</span><div style="flex:1"><strong>${sec}</strong></div><span>${done?'✅':'📘'}</span></div>`;
-    });
-    document.querySelectorAll('.section-item').forEach(el => {
-      el.addEventListener('click', (e) => openSection(parseInt(el.dataset.sec)));
-    });
-  }
-  function openSection(secIdx) {
-    let chData = window.chapters[currentChapter];
-    if(!chData || !chData.content) { alert('Content functions not loaded'); return; }
-    let secId = chData.sections[secIdx].split(' ')[0]; // e.g., "1.1"
-    let contentFunc = chData.content[secId];
-    if(!contentFunc) { alert('Content not ready'); return; }
-    currentSectionIdx = secIdx;
-    navStack.push('content');
-    switchScreen('contentScreen');
-    document.getElementById('topTitle').innerText = chData.sections[secIdx];
-    document.getElementById('topSub').innerText = chData.title;
-    document.getElementById('contentBody').innerHTML = contentFunc();
-    // attach practice listeners, prev/next, etc.
-    attachContentListeners();
-  }
-  function attachContentListeners() {
-    document.querySelectorAll('.choice-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        let correct = btn.dataset.correct === 'true';
-        let fb = btn.closest('.practice-q')?.querySelector('.feedback');
-        if(correct) {
-          btn.classList.add('correct');
-          fb.innerText = '✅ Correct!';
-          markCompleted(currentChapter, currentSectionIdx);
-        } else {
-          btn.classList.add('wrong');
-          fb.innerText = '❌ Try again!';
-        }
-        btn.closest('.practice-q')?.querySelectorAll('.choice-btn').forEach(b => b.style.pointerEvents = 'none');
-      };
-    });
-    let prevBtn = document.getElementById('prevSectionBtn');
-    let nextBtn = document.getElementById('nextSectionBtn');
-    if(prevBtn) prevBtn.onclick = () => navigateSection(-1);
-    if(nextBtn) nextBtn.onclick = () => navigateSection(1);
-  }
-  function navigateSection(delta) {
-    let sections = window.chapters[currentChapter].sections;
-    let newIdx = currentSectionIdx + delta;
-    if(newIdx >= 0 && newIdx < sections.length) {
-      openSection(newIdx);
-    } else if(newIdx >= sections.length) {
-      alert('🎉 You completed all sections!');
-    }
-  }
-  function goBack() {
-    if(navStack.length <= 1) return;
-    navStack.pop();
-    let prev = navStack[navStack.length-1];
-    if(prev === 'home') showHome();
-    else if(prev === 'chapter') {
-      switchScreen('chapterScreen');
-      document.getElementById('topTitle').innerText = `Chapter ${currentChapter}`;
-      document.getElementById('topSub').innerText = window.chapters[currentChapter].title;
-      document.getElementById('backBtn').classList.add('visible');
-      updateSectionsList();
-    }
-  }
-
-  // ========== RENDER HOME GRID ==========
-  function renderHomeGrid() {
-    const container = document.getElementById('chaptersContainer');
-    container.innerHTML = '';
-    for(let i=1; i<=10; i++) {
-      let ch = window.chapters[i];
-      if(!ch) {
-        container.innerHTML += `<div class="chapter-card locked" data-ch="${i}"><h3>${i}</h3><div>Loading...</div><div class="progress-bar"><div class="progress-fill"></div></div><div>0/0</div></div>`;
-        continue;
-      }
-      let total = ch.sections.length;
-      let done = 0;
-      for(let s=0; s<total; s++) if(isCompleted(i,s)) done++;
-      let percent = total ? (done/total)*100 : 0;
-      container.innerHTML += `<div class="chapter-card" data-ch="${i}"><h3>${i}</h3><div>${ch.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div><div class="done-count">${done}/${total}</div></div>`;
-    }
-    document.querySelectorAll('.chapter-card:not(.locked)').forEach(card => {
-      card.addEventListener('click', () => openChapter(parseInt(card.dataset.ch)));
-    });
-  }
-
-  // ========== FEATURE: DARK MODE ==========
-  function applyDarkMode() {
-    if(darkMode) document.body.classList.add('dark');
-    else document.body.classList.remove('dark');
-    localStorage.setItem('darkMode', darkMode);
-  }
-  document.getElementById('darkModeToggle').onclick = () => { darkMode = !darkMode; applyDarkMode(); };
-
-  // ========== FEATURE: SEARCH ==========
-  function searchTopics() {
-    let term = document.getElementById('searchInput').value.toLowerCase();
-    let resultsDiv = document.getElementById('searchResults');
-    if(!term.trim()) { resultsDiv.style.display = 'none'; return; }
-    let matches = [];
-    for(let ch=1; ch<=10; ch++) {
-      let chData = window.chapters[ch];
-      if(!chData) continue;
-      chData.sections.forEach((sec, idx) => {
-        if(sec.toLowerCase().includes(term)) {
-          matches.push({ch, title: sec, idx});
-        }
-      });
-    }
-    if(matches.length === 0) { resultsDiv.innerHTML = 'No results'; resultsDiv.style.display = 'block'; return; }
-    resultsDiv.innerHTML = matches.map(m => `<div style="padding:8px; border-bottom:1px solid #ccc; cursor:pointer;" onclick="openChapter(${m.ch}); setTimeout(()=>openSection(${m.idx}),100);">Chapter ${m.ch}: ${m.title}</div>`).join('');
-    resultsDiv.style.display = 'block';
-  }
-  document.getElementById('searchBtn').onclick = searchTopics;
-  document.getElementById('searchInput').addEventListener('keypress', (e) => { if(e.key==='Enter') searchTopics(); });
-
-  // ========== FEATURE: VOICE INPUT ==========
-  function startVoiceSearch() {
-    if(!('webkitSpeechRecognition' in window)) { alert('Voice search not supported in this browser'); return; }
-    if(speechRecog) speechRecog.abort();
-    speechRecog = new webkitSpeechRecognition();
-    speechRecog.lang = currentLang === 'en' ? 'en-IN' : 'gu-IN';
-    speechRecog.interimResults = false;
-    speechRecog.onresult = (event) => {
-      let transcript = event.results[0][0].transcript;
-      document.getElementById('searchInput').value = transcript;
-      searchTopics();
-    };
-    speechRecog.start();
-  }
-  document.getElementById('voiceSearchBtn').onclick = startVoiceSearch;
-
-  // ========== FEATURE: SPACED REPETITION REMINDER ==========
-  function checkSpacedRepetition() {
-    let now = Date.now();
-    let last = parseInt(localStorage.getItem('lastVisit') || now);
-    let daysDiff = (now - last) / (1000*60*60*24);
-    if(daysDiff >= 1) {
-      document.getElementById('reminderToast').style.display = 'block';
-      setTimeout(() => { document.getElementById('reminderToast').style.display = 'none'; }, 5000);
-    }
-    localStorage.setItem('lastVisit', now);
-  }
-  window.closeToast = function() { document.getElementById('reminderToast').style.display = 'none'; };
-
-  // ========== FEATURE: LANGUAGE TOGGLE (UI only) ==========
-  const uiText = {
-    en: { topTitle: 'Vidhya Ultimate', topSub: 'Learn with joy', heroHeading: 'Vidhya Ultimate', heroTag: 'Your Intelligent Learning Mitra', certBtn: '🏆 Download Certificate', footer: '✨ Designed by DS & Assistant – Std 6 GSEB ✨' },
-    gu: { topTitle: 'વિદ્યા અલ્ટિમેટ', topSub: 'આનંદથી શીખો', heroHeading: 'વિદ્યા અલ્ટિમેટ', heroTag: 'તમારું બુદ્ધિશાળી લર્નિંગ મિત્ર', certBtn: '🏆 પ્રમાણપત્ર ડાઉનલોડ કરો', footer: '✨ ડીએસ અને અસિસ્ટન્ટ દ્વારા – ધોરણ 6 GSEB ✨' }
-  };
-  function applyLanguage() {
-    let t = uiText[currentLang];
-    document.getElementById('topTitle').innerText = t.topTitle;
-    document.getElementById('topSub').innerText = t.topSub;
-    document.getElementById('heroHeading').innerText = t.heroHeading;
-    document.getElementById('heroTag').innerText = t.heroTag;
-    document.getElementById('certificateBtn').innerText = t.certBtn;
-    document.querySelectorAll('.credit').forEach(c => c.innerText = t.footer);
-    document.getElementById('langToggleBtn').innerText = currentLang === 'en' ? '🌐 ગુજરાતી' : '🌐 English';
-  }
-  document.getElementById('langToggleBtn').onclick = () => {
-    currentLang = currentLang === 'en' ? 'gu' : 'en';
-    applyLanguage();
-  };
-
-  // ========== CERTIFICATE ==========
-  document.getElementById('certificateBtn').onclick = () => {
-    let name = prompt('Enter your name for certificate:', 'Student');
-    if(!name) name = 'Student';
-    let totalDone = 0;
-    for(let ch=1; ch<=10; ch++) {
-      let chData = window.chapters[ch];
-      if(!chData) continue;
-      for(let s=0; s<chData.sections.length; s++) if(isCompleted(ch,s)) totalDone++;
-    }
-    alert(`🎓 Certificate for ${name}!\nYou completed ${totalDone} sections. Keep learning!`);
-  };
-  
-  // ========== INIT ==========
-  window.addEventListener('load', () => {
-    setTimeout(() => { document.getElementById('splash').classList.add('hide'); setTimeout(()=>document.getElementById('splash').style.display='none',500); }, 2000);
-    applyDarkMode();
-    applyLanguage();
-    renderHomeGrid();
-    document.getElementById('backBtn').addEventListener('click', goBack);
+// ========== PROGRESS ==========
+function saveProgress() { localStorage.setItem('vidhya_progress', JSON.stringify(completedSections)); }
+function isCompleted(ch, secIdx) { return !!completedSections[`${ch}_${secIdx}`]; }
+function markCompleted(ch, secIdx) {
+  if(!completedSections[`${ch}_${secIdx}`]) {
+    completedSections[`${ch}_${secIdx}`] = true;
+    saveProgress();
+    updateHomeChapters();
+    updateSectionsList();
     checkSpacedRepetition();
+  }
+}
+function updateHomeChapters() {
+  for(let i=1; i<=10; i++) {
+    let ch = window.chapters[i];
+    if(!ch) continue;
+    let total = ch.sections.length;
+    let done = 0;
+    for(let s=0; s<total; s++) if(isCompleted(i,s)) done++;
+    let percent = total ? (done/total)*100 : 0;
+    let card = document.querySelector(`.chapter-card[data-ch='${i}']`);
+    if(card) {
+      card.querySelector('.progress-fill').style.width = percent+'%';
+      card.querySelector('.done-count').innerText = `${done}/${total}`;
+    }
+  }
+}
+function updateSectionsList() {
+  let listDiv = document.getElementById('sectionsList');
+  if(!listDiv) return;
+  let items = listDiv.querySelectorAll('.section-item');
+  items.forEach((item, idx) => {
+    if(isCompleted(currentChapter, idx)) item.classList.add('completed');
+    else item.classList.remove('completed');
   });
+}
+
+// ========== NAVIGATION ==========
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function renderHomeGrid() {
+  const container = document.getElementById('chaptersContainer');
+  container.innerHTML = '';
+  for(let i=1; i<=10; i++) {
+    let ch = window.chapters[i];
+    if(!ch) {
+      container.innerHTML += `<div class="chapter-card locked" data-ch="${i}"><h3>${i}</h3><div>Loading...</div><div class="progress-bar"><div class="progress-fill"></div></div><div class="done-count">0/0</div></div>`;
+      continue;
+    }
+    let total = ch.sections.length;
+    let done = 0;
+    for(let s=0; s<total; s++) if(isCompleted(i,s)) done++;
+    let percent = total ? (done/total)*100 : 0;
+    container.innerHTML += `<div class="chapter-card" data-ch="${i}"><h3>${i}</h3><div>${ch.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div><div class="done-count">${done}/${total}</div></div>`;
+  }
+  document.querySelectorAll('.chapter-card:not(.locked)').forEach(card => {
+    card.addEventListener('click', () => openChapter(parseInt(card.dataset.ch)));
+  });
+}
+function showHome() {
+  navStack = ['home'];
+  switchScreen('homeScreen');
+  document.getElementById('backBtn').classList.remove('visible');
+  applyLanguage();
+  renderHomeGrid();
+}
+function openChapter(ch) {
+  if(!window.chapters[ch]) { alert('Chapter data not loaded'); return; }
+  currentChapter = ch;
+  currentSectionIdx = 0;
+  navStack.push('chapter');
+  switchScreen('chapterScreen');
+  document.getElementById('topTitle').innerText = `Chapter ${ch}`;
+  document.getElementById('topSub').innerText = window.chapters[ch].title;
+  document.getElementById('backBtn').classList.add('visible');
+  document.getElementById('chHeader').style.background = `linear-gradient(135deg, ${window.chapters[ch].color}, #1e293b)`;
+  document.getElementById('chTitle').innerHTML = `${ch}. ${window.chapters[ch].title}`;
+  let listDiv = document.getElementById('sectionsList');
+  listDiv.innerHTML = '';
+  window.chapters[ch].sections.forEach((sec, idx) => {
+    let done = isCompleted(ch, idx);
+    listDiv.innerHTML += `<div class="section-item ${done?'completed':''}" data-sec="${idx}"><span style="font-weight:800;">${idx+1}</span><div style="flex:1"><strong>${sec}</strong></div><span>${done?'✅':'📘'}</span></div>`;
+  });
+  document.querySelectorAll('.section-item').forEach(el => {
+    el.addEventListener('click', () => openSection(parseInt(el.dataset.sec)));
+  });
+}
+function openSection(secIdx) {
+  let chData = window.chapters[currentChapter];
+  if(!chData || !chData.content) { alert('Content not loaded'); return; }
+  let secId = chData.sections[secIdx].split(' ')[0];
+  let contentFunc = chData.content[secId];
+  if(!contentFunc) { alert('Content missing for ' + secId); return; }
+  currentSectionIdx = secIdx;
+  navStack.push('content');
+  switchScreen('contentScreen');
+  document.getElementById('topTitle').innerText = chData.sections[secIdx];
+  document.getElementById('topSub').innerText = chData.title;
+  document.getElementById('contentBody').innerHTML = contentFunc();
+  attachContentListenersAndAI();
+}
+function attachContentListenersAndAI() {
+  // Previous/Next buttons
+  let prevBtn = document.getElementById('prevSectionBtn');
+  let nextBtn = document.getElementById('nextSectionBtn');
+  if(prevBtn) prevBtn.onclick = () => navigateSection(-1);
+  if(nextBtn) nextBtn.onclick = () => navigateSection(1);
+  // Practice buttons
+  document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.onclick = (e) => {
+      let correct = btn.dataset.correct === 'true';
+      let fb = btn.closest('.practice-q')?.querySelector('.feedback');
+      if(correct) {
+        btn.classList.add('correct');
+        fb.innerText = '✅ Correct! Well done.';
+        markCompleted(currentChapter, currentSectionIdx);
+      } else {
+        btn.classList.add('wrong');
+        fb.innerText = '❌ Not quite. Try again.';
+      }
+      btn.closest('.practice-q')?.querySelectorAll('.choice-btn').forEach(b => b.style.pointerEvents = 'none');
+    };
+  });
+  // Inject AI tools into each concept-box, india-example, practice-section, fig-out
+  let blocks = document.querySelectorAll('.concept-box, .india-example, .practice-section, .fig-out');
+  blocks.forEach((block, idx) => {
+    if(block.querySelector('.ai-tools-panel')) return;
+    let blockId = 'block_' + Date.now() + '_' + idx;
+    block.id = blockId;
+    let panel = document.createElement('div');
+    panel.className = 'ai-tools-panel';
+    panel.innerHTML = `
+      <button class="vidhya-btn" onclick="speakBlock('${blockId}')">🔊 Read</button>
+      <button class="vidhya-btn" onclick="translateBlock('${blockId}')">🇮🇳 Gujarati</button>
+      <button class="vidhya-btn" onclick="toggleAIChat(this)">✨ Ask AI</button>
+      <div class="guj-output"></div>
+      <div class="ai-chat-box" style="display:none;">
+        <input type="text" class="ai-input" placeholder="ગુજરાતીમાં પ્રશ્ન પૂછો...">
+        <button class="vidhya-btn" onclick="askAI(this, '${blockId}')">પૂછો</button>
+        <div class="ai-response"></div>
+      </div>
+    `;
+    block.appendChild(panel);
+  });
+}
+function navigateSection(delta) {
+  let sections = window.chapters[currentChapter].sections;
+  let newIdx = currentSectionIdx + delta;
+  if(newIdx >= 0 && newIdx < sections.length) {
+    openSection(newIdx);
+  } else if(newIdx >= sections.length) {
+    alert('🎉 You completed all sections!');
+  }
+}
+function goBack() {
+  if(navStack.length <= 1) return;
+  navStack.pop();
+  let prev = navStack[navStack.length-1];
+  if(prev === 'home') showHome();
+  else if(prev === 'chapter') {
+    switchScreen('chapterScreen');
+    document.getElementById('topTitle').innerText = `Chapter ${currentChapter}`;
+    document.getElementById('topSub').innerText = window.chapters[currentChapter].title;
+    document.getElementById('backBtn').classList.add('visible');
+    updateSectionsList();
+  }
+}
+
+// ========== AI FEATURES ==========
+async function speakBlock(blockId) {
+  if('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    let el = document.getElementById(blockId);
+    let text = el.innerText;
+    let utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-IN';
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+  } else alert('Speech not supported');
+}
+async function translateBlock(blockId) {
+  if(typeof puter === 'undefined') { alert('Puter AI not loaded. Check internet.'); return; }
+  let el = document.getElementById(blockId);
+  let text = el.innerText;
+  let outputDiv = el.querySelector('.guj-output');
+  if(outputDiv.style.display === 'block') { outputDiv.style.display = 'none'; return; }
+  outputDiv.style.display = 'block';
+  outputDiv.innerHTML = '<i>Translating...</i>';
+  try {
+    let result = await puter.ai.chat(`Translate the following English educational text into simple Gujarati (ગુજરાતી) for a 6th grade student. Keep maths terms like 'triangle', 'fraction' as is but add Gujarati meaning in brackets. Return only translation:\n\n${text}`);
+    outputDiv.innerHTML = '<b>ગુજરાતી અનુવાદ:</b><br/>' + (result.message?.content || result);
+  } catch(e) { outputDiv.innerHTML = 'Translation error. Check internet.'; }
+}
+function toggleAIChat(btn) {
+  let chatBox = btn.closest('.ai-tools-panel').querySelector('.ai-chat-box');
+  chatBox.style.display = chatBox.style.display === 'block' ? 'none' : 'block';
+}
+async function askAI(btn, blockId) {
+  if(typeof puter === 'undefined') { alert('Puter AI offline'); return; }
+  let panel = btn.closest('.ai-tools-panel');
+  let input = panel.querySelector('.ai-input').value;
+  if(!input.trim()) return;
+  let responseDiv = panel.querySelector('.ai-response');
+  responseDiv.style.display = 'block';
+  responseDiv.innerHTML = '<i>Vidhya is thinking...</i>';
+  let blockText = document.getElementById(blockId).innerText;
+  try {
+    let result = await puter.ai.chat(`You are Vidhya, a friendly 6th grade math tutor. Context: ${blockText}\nStudent asks (in Gujarati): ${input}\nAnswer in Gujarati, simply and encouragingly.`);
+    responseDiv.innerHTML = '<b>✨ Vidhya AI:</b><br/>' + (result.message?.content || result);
+  } catch(e) { responseDiv.innerHTML = 'Error. Try again.'; }
+}
+
+// ========== DARK MODE, VOICE SEARCH, CERTIFICATE, ETC ==========
+function applyDarkMode() {
+  if(darkMode) document.body.classList.add('dark');
+  else document.body.classList.remove('dark');
+  localStorage.setItem('darkMode', darkMode);
+}
+document.getElementById('darkModeToggle').onclick = () => { darkMode = !darkMode; applyDarkMode(); };
+function startVoiceSearch() {
+  if(!('webkitSpeechRecognition' in window)) { alert('Voice not supported'); return; }
+  if(speechRecog) speechRecog.abort();
+  speechRecog = new webkitSpeechRecognition();
+  speechRecog.lang = 'en-IN';
+  speechRecog.onresult = (e) => {
+    document.getElementById('searchInput').value = e.results[0][0].transcript;
+    searchTopics();
+  };
+  speechRecog.start();
+}
+document.getElementById('voiceSearchBtn').onclick = startVoiceSearch;
+function searchTopics() {
+  let term = document.getElementById('searchInput').value.toLowerCase();
+  let resultsDiv = document.getElementById('searchResults');
+  if(!term.trim()) { resultsDiv.style.display = 'none'; return; }
+  let matches = [];
+  for(let ch=1; ch<=10; ch++) {
+    let chData = window.chapters[ch];
+    if(!chData) continue;
+    chData.sections.forEach((sec, idx) => {
+      if(sec.toLowerCase().includes(term)) matches.push({ch, title: sec, idx});
+    });
+  }
+  if(matches.length === 0) resultsDiv.innerHTML = 'No results';
+  else resultsDiv.innerHTML = matches.map(m => `<div style="padding:8px; cursor:pointer; border-bottom:1px solid #ccc;" onclick="openChapter(${m.ch}); setTimeout(()=>openSection(${m.idx}),100);">Chapter ${m.ch}: ${m.title}</div>`).join('');
+  resultsDiv.style.display = 'block';
+}
+document.getElementById('searchBtn').onclick = searchTopics;
+function checkSpacedRepetition() {
+  let now = Date.now();
+  let last = parseInt(localStorage.getItem('lastVisit') || now);
+  if((now - last) > 24*60*60*1000) {
+    document.getElementById('reminderToast').style.display = 'block';
+    setTimeout(() => document.getElementById('reminderToast').style.display = 'none', 5000);
+  }
+  localStorage.setItem('lastVisit', now);
+}
+window.closeToast = function() { document.getElementById('reminderToast').style.display = 'none'; };
+document.getElementById('certificateBtn').onclick = () => {
+  let name = prompt('Enter your name:', 'Student');
+  if(!name) name = 'Student';
+  let total = 0;
+  for(let ch=1; ch<=10; ch++) {
+    let chData = window.chapters[ch];
+    if(!chData) continue;
+    for(let s=0; s<chData.sections.length; s++) if(isCompleted(ch,s)) total++;
+  }
+  alert(`🎓 Certificate for ${name}!\nYou completed ${total} sections. Keep learning!`);
+};
+
+// ========== LANGUAGE TOGGLE (UI only) ==========
+const uiText = {
+  en: { topTitle: 'Vidhya Ultimate', topSub: 'Learn with joy', heroHeading: 'Vidhya Ultimate', heroTag: 'Your Intelligent Learning Mitra', footer: '✨ DS & Assistant – Std 6 GSEB ✨' },
+  gu: { topTitle: 'વિદ્યા અલ્ટિમેટ', topSub: 'આનંદથી શીખો', heroHeading: 'વિદ્યા અલ્ટિમેટ', heroTag: 'તમારું બુદ્ધિશાળી લર્નિંગ મિત્ર', footer: '✨ ડીએસ અને અસિસ્ટન્ટ – ધોરણ 6 GSEB ✨' }
+};
+function applyLanguage() {
+  let t = uiText[currentLang];
+  document.getElementById('topTitle').innerText = t.topTitle;
+  document.getElementById('topSub').innerText = t.topSub;
+  document.getElementById('heroHeading').innerText = t.heroHeading;
+  document.getElementById('heroTag').innerText = t.heroTag;
+  document.querySelectorAll('.credit').forEach(c => c.innerText = t.footer);
+  document.getElementById('langToggleBtn').innerText = currentLang === 'en' ? '🌐 ગુજરાતી' : '🌐 English';
+}
+document.getElementById('langToggleBtn').onclick = () => {
+  currentLang = currentLang === 'en' ? 'gu' : 'en';
+  applyLanguage();
+};
+
+// ========== INIT ==========
+window.addEventListener('load', () => {
+  setTimeout(() => { document.getElementById('splash').classList.add('hide'); setTimeout(()=>document.getElementById('splash').style.display='none',500); }, 2000);
+  applyDarkMode();
+  applyLanguage();
+  renderHomeGrid();
+  document.getElementById('backBtn').addEventListener('click', goBack);
+  checkSpacedRepetition();
+});
 </script>
+
 <script src="chapter1.js"></script>
 <script src="chapter2.js"></script>
+<!-- Add remaining chapter3.js ... chapter10.js later -->
 </body>
 </html>
