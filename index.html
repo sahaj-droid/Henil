@@ -570,20 +570,24 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
     <div style="background:linear-gradient(135deg,#1e3a8a,#0d9488);padding:18px 16px;text-align:center;">
       <div style="font-size:32px;">✨</div>
       <div style="font-family:'Baloo 2',cursive;font-weight:800;color:white;font-size:17px;margin-top:6px;">Vidhya AI Setup</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:4px;">Enter Gemini key once!</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:4px;">update Settings </div>
     </div>
     <div style="padding:20px;">
+      
       <div style="font-size:13px;color:#475569;margin-bottom:6px;font-weight:600;">Gemini API Key:</div>
-      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." style="width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;font-family:'Nunito',sans-serif;"/>
-      <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Enter your Gemini Key </div>
-      <div style="display:flex;gap:8px;margin-top:14px;">
-        <button onclick="saveGeminiKey()" style="flex:1;background:linear-gradient(135deg,#1e3a8a,#0d9488);border:none;color:white;padding:11px;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:800;font-size:14px;cursor:pointer;">✅ Save &amp; Start</button>
-        <button onclick="document.getElementById('apiKeyModal').style.display='none'" style="background:#f1f5f9;border:none;color:#64748b;padding:11px 14px;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:700;font-size:13px;cursor:pointer;">Baad ma</button>
+      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." style="width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;font-family:'Nunito',sans-serif;margin-bottom:12px;"/>
+      
+      <div style="font-size:13px;color:#475569;margin-bottom:6px;font-weight:600;">Gemini Model Name:</div>
+      <input id="modelInput" type="text" placeholder="e.g. gemini-1.5-flash or gemini-pro" style="width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;font-family:'Nunito',sans-serif;"/>
+      
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button onclick="saveGeminiKey()" style="flex:1;background:linear-gradient(135deg,#1e3a8a,#0d9488);border:none;color:white;padding:11px;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:800;font-size:14px;cursor:pointer;">✅ Save</button>
+        <button onclick="document.getElementById('apiKeyModal').style.display='none'" style="background:#f1f5f9;border:none;color:#64748b;padding:11px 14px;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:700;font-size:13px;cursor:pointer;">Cancel</button>
       </div>
-      <div id="apiKeyError" style="color:#dc2626;font-size:12px;margin-top:8px;display:none;">⚠️ enter your Key !</div>
+      <div id="apiKeyError" style="color:#dc2626;font-size:12px;margin-top:8px;display:none;">⚠️ Enter Gemini model & Key!</div>
     </div>
     <div style="background:#f8fafc;padding:12px 16px;border-top:1px solid #e2e8f0;">
-      <div style="font-size:11px;color:#94a3b8;text-align:center;">🔒 Key will be saved in your phone </div>
+      <div style="font-size:11px;color:#94a3b8;text-align:center;">🔒 Data saved locally on your device</div>
     </div>
   </div>
 </div>
@@ -942,37 +946,43 @@ function openSciSection(secId){
 }
 
 // ── SETTINGS OPEN KARVANU FUNCTION ──
+// ── SETTINGS OPEN KARVANU FUNCTION ──
 function openSettings() {
   document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+  document.getElementById('modelInput').value = localStorage.getItem('gemini_model') || ''; 
   document.getElementById('apiKeyModal').style.display = 'flex';
 }
 
-// ── KEY CHECK KARVANU UPDATE ──
+// ── KEY ANE MODEL CHECK KARVANU FUNCTION ──
 function checkGeminiKey() {
   var key = localStorage.getItem('gemini_api_key');
-  if (!key) {
-    // Alert ni jagya e direct settings nu box kholi nakhshe
+  var mod = localStorage.getItem('gemini_model');
+  
+  // Jo key ke model banne mathi kai pan na hoy, to settings box khulshe
+  if (!key || !mod) {
     openSettings();
     return false;
   }
   return true;
 }
 
-// ── GEMINI KEY SAVE ──
+// ── KEY ANE MODEL SAVE KARVANU FUNCTION ──
 function saveGeminiKey() {
   var k = document.getElementById('apiKeyInput').value.trim();
-  if (!k) { 
+  var m = document.getElementById('modelInput').value.trim();
+  
+  // Banne input check kare che
+  if (!k || !m) { 
     document.getElementById('apiKeyError').style.display = 'block'; 
     return; 
   }
   
+  // User na inputs sidha local storage ma save (No Hardcoding)
   localStorage.setItem('gemini_api_key', k);
-  localStorage.setItem('gemini_model', 'gemini-3.1-flash-lite-preview'); // Default Fast Model
+  localStorage.setItem('gemini_model', m);
   
   document.getElementById('apiKeyModal').style.display = 'none';
   document.getElementById('apiKeyError').style.display = 'none';
-  
-  alert("✨ Your Vidhya AI is ready to use!");
 }
 
 // ── AI MODAL ──
@@ -990,8 +1000,8 @@ async function sendAI() {
   if(!q) return;
   
   // Settings (Local Storage) માંથી API Key લેવા
-  var apiKey = localStorage.getItem('gemini_api_key');
-  var selectedModel = localStorage.getItem('gemini_model') || 'gemini-3.1-flash-lite-preview ';
+    var apiKey = localStorage.getItem('gemini_api_key');
+    var selectedModel = localStorage.getItem('gemini_model');
 
   if (!apiKey) {
     alert("મહેરબાની કરીને પહેલા Settings માં જઈને Gemini API Key સેવ કરો!");
@@ -1140,9 +1150,10 @@ async function translateToGuj(){
 
   try {
     // ── GEMINI API CALL ──
+    // ફંક્શન ની અંદર હવે આ રીતે કોલ થશે:
     var apiKey = localStorage.getItem('gemini_api_key');
-    var selectedModel = localStorage.getItem('gemini_model') || 'gemini-3.1-flash-lite-preview ';
-    var apiUrl = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${apiKey}`;
+    var selectedModel = localStorage.getItem('gemini_model'); // હાર્ડકોડિંગ કાઢી નાખ્યું 
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${apiKey}`;
 
     var combinedPrompt = systemPrompt + "\n\n" + userPrompt;
 
