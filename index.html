@@ -394,6 +394,9 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
     <div class="topbar-name" id="topbarTitle">Vidhya</div>
     <div class="topbar-sub" id="topbarSub">Your Learning Mitra</div>
   </div>
+  <button onclick="openSettings()" style="background:none; border:none; font-size:24px; cursor:pointer; padding: 0 5px;">
+    ⚙️
+  </button>
 </div>
 
 <!-- ══════════ HOME ══════════ -->
@@ -567,20 +570,20 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
     <div style="background:linear-gradient(135deg,#1e3a8a,#0d9488);padding:18px 16px;text-align:center;">
       <div style="font-size:32px;">✨</div>
       <div style="font-family:'Baloo 2',cursive;font-weight:800;color:white;font-size:17px;margin-top:6px;">Vidhya AI Setup</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:4px;">Ek vaart key enter karo — hamesha mate save thase!</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:4px;">Enter Gemini key once!</div>
     </div>
     <div style="padding:20px;">
-      <div style="font-size:13px;color:#475569;margin-bottom:6px;font-weight:600;">Groq API Key:</div>
-      <input id="apiKeyInput" type="password" placeholder="gsk_..." style="width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;font-family:'Nunito',sans-serif;"/>
-      <div style="font-size:11px;color:#94a3b8;margin-top:6px;">groq.com → API Keys → Create → Copy karo</div>
+      <div style="font-size:13px;color:#475569;margin-bottom:6px;font-weight:600;">Gemini API Key:</div>
+      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." style="width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;font-family:'Nunito',sans-serif;"/>
+      <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Enter your Gemini Key </div>
       <div style="display:flex;gap:8px;margin-top:14px;">
-        <button onclick="saveApiKey()" style="flex:1;background:linear-gradient(135deg,#1e3a8a,#0d9488);border:none;color:white;padding:11px;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:800;font-size:14px;cursor:pointer;">✅ Save &amp; Start</button>
+        <button onclick="saveGeminiKey()" style="flex:1;background:linear-gradient(135deg,#1e3a8a,#0d9488);border:none;color:white;padding:11px;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:800;font-size:14px;cursor:pointer;">✅ Save &amp; Start</button>
         <button onclick="document.getElementById('apiKeyModal').style.display='none'" style="background:#f1f5f9;border:none;color:#64748b;padding:11px 14px;border-radius:10px;font-family:'Baloo 2',cursive;font-weight:700;font-size:13px;cursor:pointer;">Baad ma</button>
       </div>
-      <div id="apiKeyError" style="color:#dc2626;font-size:12px;margin-top:8px;display:none;">⚠️ Key enter karo pehla!</div>
+      <div id="apiKeyError" style="color:#dc2626;font-size:12px;margin-top:8px;display:none;">⚠️ enter your Key !</div>
     </div>
     <div style="background:#f8fafc;padding:12px 16px;border-top:1px solid #e2e8f0;">
-      <div style="font-size:11px;color:#94a3b8;text-align:center;">🔒 Key tamara phone ma j save thase — koi server par nahi jay</div>
+      <div style="font-size:11px;color:#94a3b8;text-align:center;">🔒 Key will be saved in your phone </div>
     </div>
   </div>
 </div>
@@ -595,7 +598,7 @@ body { font-family: 'Nunito', sans-serif; background: #f0f9ff; color: #1e293b; m
       <button onclick="closeAI()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;">&#x2715;</button>
     </div>
     <div id="aiMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;">
-      <div class="ai-msg ai-bot">Namaste! &#x1F44B; Tamara koi pan science sawalo pucho — Gujarati ma pan chalse! Translate button thi koi pan section Gujarati ma joi shako cho.</div>
+      <div class="ai-msg ai-bot">Namaste! &#x1F44B; Koi pan science ke maths no sawal pucho — Gujarati ma pan chalse! Translate button thi koi pan section Gujarati ma joi shako cho.</div>
     </div>
     <div style="padding:12px;border-top:2px solid #e2e8f0;display:flex;gap:8px;">
       <input id="aiInput" placeholder="Sawalo pucho... (English or Gujarati)" style="flex:1;border:2px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')sendAI()"/>
@@ -938,84 +941,123 @@ function openSciSection(secId){
   switchTo('contentScreen');
 }
 
-// ── GROQ API KEY MANAGEMENT ──
-function getApiKey(){ return localStorage.getItem('vidhya_groq_key')||''; }
-function saveApiKey(){
-  var k=document.getElementById('apiKeyInput').value.trim();
-  if(!k){ document.getElementById('apiKeyError').style.display='block'; return; }
-  localStorage.setItem('vidhya_groq_key',k);
-  document.getElementById('apiKeyModal').style.display='none';
-  document.getElementById('apiKeyError').style.display='none';
+// ── SETTINGS OPEN KARVANU FUNCTION ──
+function openSettings() {
+  document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+  document.getElementById('apiKeyModal').style.display = 'flex';
 }
-function checkApiKey(){
-  if(!getApiKey()){
-    document.getElementById('apiKeyInput').value='';
-    document.getElementById('apiKeyModal').style.display='flex';
+
+// ── KEY CHECK KARVANU UPDATE ──
+function checkGeminiKey() {
+  var key = localStorage.getItem('gemini_api_key');
+  if (!key) {
+    // Alert ni jagya e direct settings nu box kholi nakhshe
+    openSettings();
     return false;
   }
   return true;
 }
-function openApiKeySettings(){
-  document.getElementById('apiKeyInput').value=getApiKey();
-  document.getElementById('apiKeyModal').style.display='flex';
-}
 
-// ── GROQ CALL HELPER ──
-async function groqCall(systemPrompt, userMsg, maxTokens){
-  var key=getApiKey();
-  var resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({
-      model:'llama-3.1-8b-instant',
-      max_tokens: maxTokens||1000,
-      messages:[
-        {role:'system', content: systemPrompt},
-        {role:'user', content: userMsg}
-      ]
-    })
-  });
-  var d=await resp.json();
-  if(d.error) throw new Error(d.error.message);
-  return d.choices&&d.choices[0]?d.choices[0].message.content:'Jawab malyo nahi!';
+// ── GEMINI KEY SAVE ──
+function saveGeminiKey() {
+  var k = document.getElementById('apiKeyInput').value.trim();
+  if (!k) { 
+    document.getElementById('apiKeyError').style.display = 'block'; 
+    return; 
+  }
+  
+  localStorage.setItem('gemini_api_key', k);
+  localStorage.setItem('gemini_model', 'gemini-1.5-flash'); // Default Fast Model
+  
+  document.getElementById('apiKeyModal').style.display = 'none';
+  document.getElementById('apiKeyError').style.display = 'none';
+  
+  alert("✨ Your Vidhya AI is ready to use!");
 }
 
 // ── AI MODAL ──
 var aiContext = '';
 function openAI(){
-  if(!checkApiKey()) return;
+  if(!checkGeminiKey()) return; // અહિયાં checkGeminiKey() કરવાનું છે
   aiContext = curSciCh ? 'Science Class 6, Chapter: '+curSciCh.title : 'Class 6 Science';
   document.getElementById('aiSubjectLabel').textContent = curSciCh ? curSciCh.title+' — Science' : 'Science Mitra';
   document.getElementById('aiModal').style.display='flex';
 }
 function closeAI(){ document.getElementById('aiModal').style.display='none'; }
-async function sendAI(){
-  var inp=document.getElementById('aiInput');
-  var q=inp.value.trim(); if(!q) return;
-  if(!checkApiKey()) return;
-  inp.value='';
-  var msgs=document.getElementById('aiMessages');
-  var ud=document.createElement('div'); ud.className='ai-msg ai-user'; ud.textContent=q; msgs.appendChild(ud);
-  var ld=document.createElement('div'); ld.className='ai-msg ai-loading'; ld.textContent='Vidhya sochi rahi che... ✨'; msgs.appendChild(ld);
-  msgs.scrollTop=msgs.scrollHeight;
-  try {
-    var answer=await groqCall(
-      'You are Vidhya, a friendly science tutor for Class 6 students in Gujarat, India. Context: '+aiContext+'. Answer clearly and simply. Use Indian examples (Gujarat, India). If asked in Gujarati, answer in Gujarati. Keep answers short and encouraging. Use emojis for kids.',
-      q, 800
-    );
-    ld.className='ai-msg ai-bot';
-    ld.textContent=answer;
-  } catch(e){
-    ld.className='ai-msg ai-bot';
-    if(e.message&&e.message.includes('401')){
-      ld.textContent='⚠️ API Key incorrect che! Settings icon thi key check karo.';
-    } else {
-      ld.textContent='⚠️ Error: '+e.message;
-    }
-  }
-  msgs.scrollTop=msgs.scrollHeight;
-}
+async function sendAI() {
+  var inp = document.getElementById('aiInput');
+  var q = inp.value.trim(); 
+  if(!q) return;
+  
+  // Settings (Local Storage) માંથી API Key લેવા
+  var apiKey = localStorage.getItem('gemini_api_key');
+  var selectedModel = localStorage.getItem('gemini_model') || 'gemini-1.5-flash';
 
+  if (!apiKey) {
+    alert("મહેરબાની કરીને પહેલા Settings માં જઈને Gemini API Key સેવ કરો!");
+    return;
+  }
+
+  inp.value = '';
+  var msgs = document.getElementById('aiMessages');
+  
+  // 1. યુઝરનો મેસેજ
+  var ud = document.createElement('div'); 
+  ud.className = 'ai-msg ai-user'; 
+  ud.textContent = q; 
+  msgs.appendChild(ud);
+  
+  // 2. લોડિંગ મેસેજ
+  var ld = document.createElement('div'); 
+  ld.className = 'ai-msg ai-loading'; 
+  ld.textContent = 'Vidhya વિચારી રહી છે... ✨'; 
+  msgs.appendChild(ld);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Gemini API URL
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+  // 3. Gemini Prompt (જેમાં તમારું aiContext પણ છે)
+  const promptData = {
+    contents: [{
+      parts: [{
+        text: `You are Vidhya, a friendly science and math tutor for Class 6 students in Gujarat, India. 
+        Context of the chapter the student is reading: ${typeof aiContext !== 'undefined' ? aiContext : 'General'}. 
+        Answer clearly and simply in natural Gujarati without literal word-to-word translation (e.g. use 'કમ્પ્યુટર' not 'puter'). Use Indian/Gujarati examples. Keep answers short, encouraging, and use emojis.
+        
+        Question: ${q}`
+      }]
+    }]
+  };
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(promptData)
+    });
+
+    const data = await response.json();
+
+    // 4. જવાબ આવે એટલે ચેક કરો
+    if (response.ok && data.candidates && data.candidates[0].content.parts[0].text) {
+      ld.className = 'ai-msg ai-bot';
+      // લાઈન બ્રેકને HTML <br> માં કન્વર્ટ કરવા
+      ld.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+    } 
+    // જો Key ખોટી હોય તો
+    else if (response.status === 400 || response.status === 403) {
+      ld.className = 'ai-msg ai-bot';
+      ld.textContent = '⚠️ API Key ખોટી છે અથવા લિમિટ પૂરી થઈ ગઈ છે! Settings ચેક કરો.';
+    } else {
+      throw new Error(data.error ? data.error.message : "Unknown error");
+    }
+  } catch(e) {
+    ld.className = 'ai-msg ai-bot';
+    ld.textContent = '⚠️ અરે! મને કંઈક સમજવામાં ભૂલ પડી. ' + e.message;
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
 // ── GUJARATI TRANSLATE ──
 async function translateToGuj(){
   // gujOverlay dynamically create thay che — null hoy to create karo
@@ -1028,7 +1070,9 @@ async function translateToGuj(){
     cb.insertBefore(ov, cb.firstChild);
   }
   if(ov.style.display==='block'){ ov.style.display='none'; document.getElementById('gujBtn').textContent='🇮🇳 Gujarati ma Juo'; return; }
-  if(!checkApiKey()) return;
+  
+  if(!checkGeminiKey()) return;
+  
   document.getElementById('gujBtn').textContent='⏳ Translating...';
   var secId=window._currentSecId;
   if(!secId){ document.getElementById('gujBtn').textContent='🇮🇳 Gujarati ma Juo'; alert('Pehla koi section kholo!'); return; }
@@ -1081,12 +1125,13 @@ async function translateToGuj(){
   var structuredText=lines.join('\n');
   if(!structuredText){ document.getElementById('gujBtn').textContent='🇮🇳 Gujarati ma Juo'; return; }
 
-  var systemPrompt='You are an expert Gujarati translator for Class 6 Science students in Gujarat, India. '
+  // ── સિસ્ટમ પ્રોમ્પ્ટ અપડેટ (માત્ર લખાણ બદલવા અને સિમ્બોલ જાળવવા માટે) ──
+  var systemPrompt='You are an expert Gujarati translator for Class 6 Science and Math students in Gujarat, India. '
     +'Translate each line of the given content to Gujarati (Gujarati script). '
     +'Rules: '
     +'1. Translate EVERY line separately — output same number of lines as input. '
     +'2. Keep scientific/English terms in English, add Gujarati meaning in brackets. Example: Photosynthesis (પ્રકાશ સંશ્લેષણ). '
-    +'3. Keep emojis exactly as they are. '
+    +'3. CRITICAL: Keep all emojis, images, symbols (like +, -, =), numbers, and punctuation exactly as they are. Do NOT translate or remove them. ONLY translate the text. '
     +'4. Use simple Gujarati that a 6th standard student understands. '
     +'5. Do NOT add any extra lines, headings, or explanations — only translated lines. '
     +'6. Output must be in Gujarati script only.';
@@ -1094,7 +1139,25 @@ async function translateToGuj(){
   var userPrompt='Translate each line to Gujarati (keep same line count):\n\n'+structuredText;
 
   try {
-    var translation=await groqCall(systemPrompt, userPrompt, 1500);
+    // ── GEMINI API CALL ──
+    var apiKey = localStorage.getItem('gemini_api_key');
+    var selectedModel = localStorage.getItem('gemini_model') || 'gemini-1.5-flash';
+    var apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+    var combinedPrompt = systemPrompt + "\n\n" + userPrompt;
+
+    var resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: combinedPrompt }] }]
+      })
+    });
+
+    var data = await resp.json();
+    if (!resp.ok) throw new Error(data.error ? data.error.message : "API Error");
+    
+    var translation = data.candidates[0].content.parts[0].text;
 
     // Output ne structured HTML ma render karo
     var gc=document.getElementById('gujContent');
@@ -1120,11 +1183,7 @@ async function translateToGuj(){
     document.getElementById('gujBtn').textContent='🇮🇳 Gujarati Band Karo';
   } catch(e){
     document.getElementById('gujBtn').textContent='🇮🇳 Gujarati ma Juo';
-    if(e.message&&e.message.includes('401')){
-      alert('⚠️ API Key incorrect che! Settings icon thi key check karo.');
-    } else {
-      alert('Error: '+e.message);
-    }
+    alert('Error: '+e.message);
   }
 }
 function goBack() {
