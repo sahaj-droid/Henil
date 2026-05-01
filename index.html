@@ -946,7 +946,6 @@ function openSciSection(secId){
 }
 
 // ── SETTINGS OPEN KARVANU FUNCTION ──
-// ── SETTINGS OPEN KARVANU FUNCTION ──
 function openSettings() {
   document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
   document.getElementById('modelInput').value = localStorage.getItem('gemini_model') || ''; 
@@ -965,7 +964,57 @@ function checkGeminiKey() {
   }
   return true;
 }
+// ── GEMINI CALL HELPER ──
+async function geminiCall(systemPrompt, userText) {
+  var apiKey = localStorage.getItem('gemini_api_key');
+  var selectedModel = localStorage.getItem('gemini_model');
 
+  if (!apiKey || !selectedModel) {
+    throw new Error("Settings માં Key અને Model Name નાખો!");
+  }
+
+  // API URL (v1beta)
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+  // પ્રોમ્પ્ટ ભેગા કરવા
+  const combinedText = systemPrompt ? (systemPrompt + "\n\n" + userText) : userText;
+
+  const body = {
+    contents: [{ role: 'user', parts: [{ text: combinedText }] }],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2048
+    }
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+
+    // જો બધું બરાબર હોય તો જવાબ આપો
+    if (response.ok && data.candidates && data.candidates[0]?.content) {
+      return data.candidates[0].content.parts[0].text;
+    }
+
+    // એરર હેન્ડલિંગ (તમે આપેલા કોડ મુજબ)
+    if (response.status === 429) {
+      throw new Error("Rate limit આવી ગઈ છે. થોડી વાર પછી ટ્રાય કરો.");
+    }
+    if (response.status === 400 || response.status === 404) {
+      throw new Error("મોડેલનું નામ ખોટું છે. Settings માં જઈને સાચું નામ નાખો.");
+    }
+
+    throw new Error(data.error?.message || "Unknown Gemini Error");
+  } catch (err) {
+    console.error('Gemini call error:', err);
+    throw err;
+  }
+}
 // ── KEY ANE MODEL SAVE KARVANU FUNCTION ──
 function saveGeminiKey() {
   var k = document.getElementById('apiKeyInput').value.trim();
@@ -987,26 +1036,24 @@ function saveGeminiKey() {
 
 // ── AI MODAL ──
 var aiContext = '';
+
 function openAI(){
-  if(!checkGeminiKey()) return; // અહિયાં checkGeminiKey() કરવાનું છે
+  if(!checkGeminiKey()) return;
   aiContext = curSciCh ? 'Science Class 6, Chapter: '+curSciCh.title : 'Class 6 Science';
   document.getElementById('aiSubjectLabel').textContent = curSciCh ? curSciCh.title+' — Science' : 'Science Mitra';
   document.getElementById('aiModal').style.display='flex';
 }
-function closeAI(){ document.getElementById('aiModal').style.display='none'; }
+
+function closeAI(){ 
+  document.getElementById('aiModal').style.display='none'; 
+}
+
 async function sendAI() {
   var inp = document.getElementById('aiInput');
   var q = inp.value.trim(); 
   if(!q) return;
   
-  // Settings (Local Storage) માંથી API Key લેવા
-    var apiKey = localStorage.getItem('gemini_api_key');
-    var selectedModel = localStorage.getItem('gemini_model');
-
-  if (!apiKey) {
-    alert("મહેરબાની કરીને પહેલા Settings માં જઈને Gemini API Key સેવ કરો!");
-    return;
-  }
+  if (!checkGeminiKey()) return;
 
   inp.value = '';
   var msgs = document.getElementById('aiMessages');
@@ -1024,53 +1071,26 @@ async function sendAI() {
   msgs.appendChild(ld);
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Gemini API URL
-  const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${apiKey}`;
-
-  // 3. Gemini Prompt (જેમાં તમારું aiContext પણ છે)
-  const promptData = {
-    contents: [{
-      parts: [{
-        text: `You are Vidhya, a friendly science and math tutor for Class 6 students in Gujarat, India. 
-        Context of the chapter the student is reading: ${typeof aiContext !== 'undefined' ? aiContext : 'General'}. 
-        Answer clearly and simply in natural Gujarati without literal word-to-word translation (e.g. use 'કમ્પ્યુટર' not 'puter'). Use Indian/Gujarati examples. Keep answers short, encouraging, and use emojis.
-        
-        Question: ${q}`
-      }]
-    }]
-  };
+  const sysPrompt = `You are Vidhya, a friendly science and math tutor for Class 6 students in Gujarat, India. 
+  Context of the chapter the student is reading: ${typeof aiContext !== 'undefined' ? aiContext : 'General'}. 
+  Answer clearly and simply in natural Gujarati without literal word-to-word translation (e.g. use 'કમ્પ્યુટર' not 'puter'). Use Indian/Gujarati examples. Keep answers short, encouraging, and use emojis.`;
 
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(promptData)
-    });
-
-    const data = await response.json();
-
-    // 4. જવાબ આવે એટલે ચેક કરો
-    if (response.ok && data.candidates && data.candidates[0].content.parts[0].text) {
-      ld.className = 'ai-msg ai-bot';
-      // લાઈન બ્રેકને HTML <br> માં કન્વર્ટ કરવા
-      ld.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
-    } 
-    // જો Key ખોટી હોય તો
-    else if (response.status === 400 || response.status === 403) {
-      ld.className = 'ai-msg ai-bot';
-      ld.textContent = '⚠️ API Key ખોટી છે અથવા લિમિટ પૂરી થઈ ગઈ છે! Settings ચેક કરો.';
-    } else {
-      throw new Error(data.error ? data.error.message : "Unknown error");
-    }
+    // 3. સીધો geminiCall નો ઉપયોગ (હવે કોઈ fetch કે apiUrl ની જરૂર નથી)
+    var answer = await geminiCall(sysPrompt, `Question: ${q}`);
+    
+    ld.className = 'ai-msg ai-bot';
+    ld.innerHTML = answer.replace(/\n/g, '<br>');
   } catch(e) {
     ld.className = 'ai-msg ai-bot';
-    ld.textContent = '⚠️ અરે! મને કંઈક સમજવામાં ભૂલ પડી. ' + e.message;
+    ld.textContent = '⚠️ અરે! ' + e.message;
   }
+  
   msgs.scrollTop = msgs.scrollHeight;
 }
+
 // ── GUJARATI TRANSLATE ──
 async function translateToGuj(){
-  // gujOverlay dynamically create thay che — null hoy to create karo
   var ov=document.getElementById('gujOverlay');
   if(!ov){
     var cb=document.getElementById('contentBody');
@@ -1087,36 +1107,23 @@ async function translateToGuj(){
   var secId=window._currentSecId;
   if(!secId){ document.getElementById('gujBtn').textContent='🇮🇳 Gujarati ma Juo'; alert('Pehla koi section kholo!'); return; }
 
-  // ── Maths ke Science — correct builder use karo ──
   var isMaths = secId.startsWith('maths_');
   var actualId = isMaths ? secId.replace('maths_','') : secId;
   var rawHtml = isMaths ? buildContent(actualId) : buildSciContent(actualId);
   var tmp=document.createElement('div'); tmp.innerHTML=rawHtml;
 
-  // Practice section (MCQ) completely remove karo
   var practiceEls=tmp.querySelectorAll('.practice-section,.practice-q,.answer-choices,.feedback,.math-talk');
   practiceEls.forEach(function(el){ el.remove(); });
 
-  // Hu structured lines banavu — darak element alag line
   var lines=[];
   var selectors=[
-    '.sec-heading',
-    'p',
-    '.sci-box .sb-title',
-    '.sci-box p',
-    '.india-example .ie-label',
-    '.india-example p',
-    '.did-you-know .dyk-hdr',
-    '.did-you-know p',
-    '.sci-green .sg-title',
-    '.sci-green p',
-    '.sci-activity .sa-hdr',
-    '.sci-activity p',
-    '.concept-box .cb-title',
-    '.concept-box p',
-    '.num-table .nt-title',
+    '.sec-heading', 'p', '.sci-box .sb-title', '.sci-box p',
+    '.india-example .ie-label', '.india-example p', '.did-you-know .dyk-hdr',
+    '.did-you-know p', '.sci-green .sg-title', '.sci-green p',
+    '.sci-activity .sa-hdr', '.sci-activity p', '.concept-box .cb-title',
+    '.concept-box p', '.num-table .nt-title',
   ];
-  // Unique elements collect karo — duplicate avoid
+  
   var seen=new Set();
   tmp.querySelectorAll(selectors.join(',')).forEach(function(el){
     var t=el.textContent.trim();
@@ -1126,7 +1133,6 @@ async function translateToGuj(){
     }
   });
 
-  // seq-row labels pan add karo
   tmp.querySelectorAll('.seq-row').forEach(function(el){
     var t=el.textContent.trim().replace(/\s+/g,' ');
     if(t && !seen.has(t)){ seen.add(t); lines.push(t); }
@@ -1135,7 +1141,6 @@ async function translateToGuj(){
   var structuredText=lines.join('\n');
   if(!structuredText){ document.getElementById('gujBtn').textContent='🇮🇳 Gujarati ma Juo'; return; }
 
-  // ── સિસ્ટમ પ્રોમ્પ્ટ અપડેટ (માત્ર લખાણ બદલવા અને સિમ્બોલ જાળવવા માટે) ──
   var systemPrompt='You are an expert Gujarati translator for Class 6 Science and Math students in Gujarat, India. '
     +'Translate each line of the given content to Gujarati (Gujarati script). '
     +'Rules: '
@@ -1149,28 +1154,9 @@ async function translateToGuj(){
   var userPrompt='Translate each line to Gujarati (keep same line count):\n\n'+structuredText;
 
   try {
-    // ── GEMINI API CALL ──
-    // ફંક્શન ની અંદર હવે આ રીતે કોલ થશે:
-    var apiKey = localStorage.getItem('gemini_api_key');
-    var selectedModel = localStorage.getItem('gemini_model'); // હાર્ડકોડિંગ કાઢી નાખ્યું 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${apiKey}`;
+    // ── અહિયાં સીધો geminiCall વાપર્યો ──
+    var translation = await geminiCall(systemPrompt, userPrompt);
 
-    var combinedPrompt = systemPrompt + "\n\n" + userPrompt;
-
-    var resp = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: combinedPrompt }] }]
-      })
-    });
-
-    var data = await resp.json();
-    if (!resp.ok) throw new Error(data.error ? data.error.message : "API Error");
-    
-    var translation = data.candidates[0].content.parts[0].text;
-
-    // Output ne structured HTML ma render karo
     var gc=document.getElementById('gujContent');
     if(gc){
       var translatedLines=translation.split('\n').filter(function(l){ return l.trim(); });
@@ -1178,7 +1164,6 @@ async function translateToGuj(){
       var html='';
       translatedLines.forEach(function(line, i){
         var orig=originalLines[i]||'';
-        // Heading detect karo
         if(orig && (orig.includes('🔬')||orig.includes('🌍')||orig.includes('💡')||
            orig.includes('⭐')||orig.match(/^[\d]+\.[\d]+/)||orig.length<60)){
           html+='<div style="font-weight:800;color:#92400e;margin:10px 0 4px;font-size:14px;">'+line+'</div>';
@@ -1194,7 +1179,7 @@ async function translateToGuj(){
     document.getElementById('gujBtn').textContent='🇮🇳 Gujarati Band Karo';
   } catch(e){
     document.getElementById('gujBtn').textContent='🇮🇳 Gujarati ma Juo';
-    alert('Error: '+e.message);
+    alert('Error: ' + e.message);
   }
 }
 function goBack() {
