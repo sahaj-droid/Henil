@@ -1015,7 +1015,7 @@ async function sendAI() {
   msgs.scrollTop = msgs.scrollHeight;
 
   // Gemini API URL
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${apiKey}`;
 
   // 3. Gemini Prompt (જેમાં તમારું aiContext પણ છે)
   const promptData = {
@@ -1142,7 +1142,7 @@ async function translateToGuj(){
     // ── GEMINI API CALL ──
     var apiKey = localStorage.getItem('gemini_api_key');
     var selectedModel = localStorage.getItem('gemini_model') || 'gemini-3.1-flash-lite-preview ';
-    var apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+    var apiUrl = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${apiKey}`;
 
     var combinedPrompt = systemPrompt + "\n\n" + userPrompt;
 
