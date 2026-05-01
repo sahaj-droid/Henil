@@ -948,35 +948,59 @@ function openSciSection(secId){
 // ── SETTINGS OPEN KARVANU FUNCTION ──
 function openSettings() {
   document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
-  document.getElementById('modelInput').value = localStorage.getItem('gemini_model') || ''; 
+  document.getElementById('modelInput').value = localStorage.getItem('gemini_model') || 'gemini-1.5-flash'; 
+  // URL માટે ડિફોલ્ટ વેલ્યુ આપી દીધી છે, જેથી યુઝરને ટાઈપ ના કરવું પડે
+  document.getElementById('urlInput').value = localStorage.getItem('gemini_base_url') || 'https://generativelanguage.googleapis.com/v1beta'; 
   document.getElementById('apiKeyModal').style.display = 'flex';
 }
 
-// ── KEY ANE MODEL CHECK KARVANU FUNCTION ──
+// ── KEY, MODEL ANE URL CHECK KARVANU FUNCTION ──
 function checkGeminiKey() {
   var key = localStorage.getItem('gemini_api_key');
   var mod = localStorage.getItem('gemini_model');
+  var url = localStorage.getItem('gemini_base_url');
   
-  // Jo key ke model banne mathi kai pan na hoy, to settings box khulshe
-  if (!key || !mod) {
+  if (!key || !mod || !url) {
     openSettings();
     return false;
   }
   return true;
 }
+
+// ── SAVE KARVANU FUNCTION ──
+function saveGeminiKey() {
+  var k = document.getElementById('apiKeyInput').value.trim();
+  var m = document.getElementById('modelInput').value.trim();
+  var u = document.getElementById('urlInput').value.trim();
+  
+  if (!k || !m || !u) { 
+    document.getElementById('apiKeyError').style.display = 'block'; 
+    return; 
+  }
+  
+  // છેલ્લે ભૂલથી કોઈ સ્લેશ (/) રહી ગયો હોય તો કાઢી નાખવા
+  u = u.replace(/\/$/, "");
+
+  localStorage.setItem('gemini_api_key', k);
+  localStorage.setItem('gemini_model', m);
+  localStorage.setItem('gemini_base_url', u);
+  
+  document.getElementById('apiKeyModal').style.display = 'none';
+  document.getElementById('apiKeyError').style.display = 'none';
+}
 // ── GEMINI CALL HELPER ──
 async function geminiCall(systemPrompt, userText) {
   var apiKey = localStorage.getItem('gemini_api_key');
   var selectedModel = localStorage.getItem('gemini_model');
+  var baseUrl = localStorage.getItem('gemini_base_url');
 
-  if (!apiKey || !selectedModel) {
-    throw new Error("Settings માં Key અને Model Name નાખો!");
+  if (!apiKey || !selectedModel || !baseUrl) {
+    throw new Error("Settings માંથી બધી વિગતો ભરો!");
   }
 
-  // API URL (v1beta)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+  // 🔴 URL હવે સંપૂર્ણ ડાયનેમિક છે 🔴
+  const url = `${baseUrl}/models/${selectedModel}:generateContent?key=${apiKey}`;
 
-  // પ્રોમ્પ્ટ ભેગા કરવા
   const combinedText = systemPrompt ? (systemPrompt + "\n\n" + userText) : userText;
 
   const body = {
@@ -996,12 +1020,10 @@ async function geminiCall(systemPrompt, userText) {
 
     const data = await response.json();
 
-    // જો બધું બરાબર હોય તો જવાબ આપો
     if (response.ok && data.candidates && data.candidates[0]?.content) {
       return data.candidates[0].content.parts[0].text;
     }
 
-    // એરર હેન્ડલિંગ (તમે આપેલા કોડ મુજબ)
     if (response.status === 429) {
       throw new Error("Rate limit આવી ગઈ છે. થોડી વાર પછી ટ્રાય કરો.");
     }
@@ -1015,25 +1037,6 @@ async function geminiCall(systemPrompt, userText) {
     throw err;
   }
 }
-// ── KEY ANE MODEL SAVE KARVANU FUNCTION ──
-function saveGeminiKey() {
-  var k = document.getElementById('apiKeyInput').value.trim();
-  var m = document.getElementById('modelInput').value.trim();
-  
-  // Banne input check kare che
-  if (!k || !m) { 
-    document.getElementById('apiKeyError').style.display = 'block'; 
-    return; 
-  }
-  
-  // User na inputs sidha local storage ma save (No Hardcoding)
-  localStorage.setItem('gemini_api_key', k);
-  localStorage.setItem('gemini_model', m);
-  
-  document.getElementById('apiKeyModal').style.display = 'none';
-  document.getElementById('apiKeyError').style.display = 'none';
-}
-
 // ── AI MODAL ──
 var aiContext = '';
 
