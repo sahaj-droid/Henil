@@ -941,7 +941,31 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
     const fileNames = files.map(f => f.name).join(', ');
     
     if (!text && files.length === 0) return;
+    // ----- IMAGE GENERATION (Creative Workspace) -----
+    if (text.toLowerCase().startsWith('/image ')) {
+      const imagePrompt = text.substring(7).trim();
+      appendMsg('user', text);
+      if(window.AppState) {
+        AppState._tabChatHistory.push({ role:'user', text: text });
+      }
+      inp.value = ''; inp.style.height = 'auto';
 
+      const resId = 'nivi-' + Date.now();
+      // સીધું જ હાઈ-ક્વોલિટી ઈમેજ URL જનરેટ કરશે
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1024&height=1024&nologo=true`;
+      
+      const imgHtml = `🎨 <b>Cover Art Generated:</b><br><img src="${imageUrl}" style="max-width:100%; border-radius:12px; margin-top:10px; border: 1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop = 99999;">`;
+      
+      appendMsg('nivi', imgHtml, resId);
+      
+      if(window.AppState) {
+        AppState._tabChatHistory.push({ role:'nivi', text: imgHtml });
+        localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+      }
+      if (typeof saveUserData === 'function') saveUserData('history');
+      renderSidebarData();
+      return; // અહીંથી જ અટકી જશે, LLM API ને કોલ નહીં કરે
+    }
     const userText = files.length > 0 ? `📎 ${fileNames}\n${text}` : text;
     appendMsg('user', userText);
     
