@@ -1,435 +1,120 @@
-// ========================================
-// GEMINI MODULE — Multi-Provider with Fallback
-// Primary: Gemini 3.1 Flash-Lite
-// Fallback 1: Groq (llama-3.1-8b-instant)
-// Fallback 2: OpenRouter (user-configured models)
-// ========================================
-
-// ========================================
-// 🔑 KEY HELPERS
-// ========================================
-
-window.getGeminiKeys = function () {
-    const val = localStorage.getItem('geminiApiKey');
-    if (!val || !val.trim()) return [];
-    return val.includes(',') ? val.split(',').map(k => k.trim()).filter(Boolean) : [val.trim()];
+window.getModelChain = function() {
+    return JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
 };
 
-window.getGroqKey = function () {
-    return (localStorage.getItem('groqApiKey') || '').trim();
-};
-
-window.getOpenRouterKey = function () {
-    return (localStorage.getItem('openRouterApiKey') || '').trim();
-};
-
-window.getOpenRouterModels = function () {
-    const val = localStorage.getItem('openRouterModels');
-    if (!val || !val.trim()) return ['meta-llama/llama-3.1-8b-instruct:free'];
-    return val.split(',').map(m => m.trim()).filter(Boolean);
-};
-
-// ========================================
-// 🔍 GROQ CALL (Single Turn)
-// ========================================
-async function _groqCall(messages) {
-    const key = getGroqKey();
-    if (!key) return { ok: false };
-
-    try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${key}`
-            },
-            body: JSON.stringify({
-                model: 'llama-3.1-8b-instant',
-                messages: messages,
-                max_tokens: 2048,
-                temperature: 0.7
-            })
-        });
-
-        const data = await response.json();
-        if (response.ok && data.choices && data.choices[0]) {
-            return { ok: true, answer: data.choices[0].message.content };
-        }
-        console.warn('Groq error:', data.error?.message || response.status);
-        return { ok: false };
-    } catch (err) {
-        console.error('Groq call failed:', err.message);
-        return { ok: false };
-    }
-}
-
-// ========================================
-// 🌐 OPENROUTER CALL (Single Turn)
-// ========================================
-async function _openRouterCall(messages) {
-    const key = getOpenRouterKey();
-    if (!key) return { ok: false };
-
-    const models = getOpenRouterModels();
-
-    for (const model of models) {
-        try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${key}`,
-                    'HTTP-Referer': window.location.origin,
-                    'X-Title': 'RealTradePro - Nivi'
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: messages,
-                    max_tokens: 2048,
-                    temperature: 0.7
-                })
-            });
-
-            const data = await response.json();
-            if (response.ok && data.choices && data.choices[0]) {
-                console.log(`✅ OpenRouter success with model: ${model}`);
-                return { ok: true, answer: data.choices[0].message.content };
-            }
-            console.warn(`OpenRouter model ${model} failed:`, data.error?.message || response.status);
-        } catch (err) {
-            console.error(`OpenRouter model ${model} error:`, err.message);
-        }
-    }
-    return { ok: false };
-}
-
-// ========================================
-// 🚀 GEMINI CALL — Single Turn (with Search Grounding)
-// ========================================
-async function directGeminiCall(prompt, useSearch = false) {
-    const modelName = 'gemini-3.1-flash-lite-preview';
-    const keys = getGeminiKeys();
-
-    // --- Try Gemini ---
-    if (keys.length > 0) {
-        for (const k of keys) {
-            try {
-                await new Promise(r => setTimeout(r, 500));
-
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${k}`;
-
-                const body = {
-                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 2048
-                    }
-                };
-
-                // Google Search Grounding (real-time web search)
-                if (useSearch) {
-                    body.tools = [{ googleSearch: {} }];
-                }
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                const data = await response.json();
-                if (response.ok && data.candidates && data.candidates[0]?.content) {
-                    return { ok: true, answer: data.candidates[0].content.parts[0].text };
-                }
-
-                if (response.status === 429) {
-                    console.warn('Gemini key rate limited, trying next...');
-                    continue;
-                }
-                console.warn('Gemini error:', data.error?.message);
-            } catch (err) {
-                console.error('Gemini call error:', err.message);
-            }
-        }
-    }
-
-    // --- Fallback 1: Groq ---
-    console.log('🔄 Gemini failed → Trying Groq...');
-    const groqResult = await _groqCall([{ role: 'user', content: prompt }]);
-    if (groqResult.ok) return groqResult;
-
-    // --- Fallback 2: OpenRouter ---
-    console.log('🔄 Groq failed → Trying OpenRouter...');
-    const orResult = await _openRouterCall([{ role: 'user', content: prompt }]);
-    if (orResult.ok) return orResult;
-
-    return { ok: false };
-}
-
-// ========================================
-// 💬 GEMINI MULTI-TURN CHAT (3.1 -> 2.0 -> Groq Fallback)
-// ========================================
-async function directGeminiCallMultiTurn(priorHistory, currentPrompt) {
-    const models = ['gemini-3.1-flash-lite-preview', 'gemini-2.0-flash'];
-    const keys = getGeminiKeys();
-
-    if (keys.length > 0) {
-        for (const k of keys) {
-            // બંને મોડલ માટે લૂપ
-            for (const modelName of models) {
-                try {
-                    const contents = [...priorHistory, { role: 'user', parts: [{ text: currentPrompt }] }];
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${k}`;
-
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents,
-                            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok && data.candidates && data.candidates[0]?.content) {
-                        return { ok: true, answer: data.candidates[0].content.parts[0].text };
-                    }
-                    if (response.status === 429) { continue; } // રેટ લિમિટ આવે તો આગળ વધો
-                    console.warn(`Gemini MultiTurn error with ${modelName}:`, data.error?.message);
-                } catch (e) {
-                    console.error(`Gemini MultiTurn error with ${modelName}:`, e.message);
-                }
-            }
-        }
-    }
-
-    // --- Convert history for OpenAI-style APIs ---
-    const openAiMessages = priorHistory.map(m => ({
-        role: m.role === 'model' ? 'assistant' : 'user',
-        content: m.parts?.[0]?.text || ''
-    })).concat({ role: 'user', content: currentPrompt });
-
-    // --- Fallback 1: Groq ---
-    console.log('🔄 All Gemini models failed → Trying Groq...');
-    const groqResult = await _groqCall(openAiMessages);
-    if (groqResult.ok) return groqResult;
-
-    // --- Fallback 2: OpenRouter ---
-    console.log('🔄 Groq failed → Trying OpenRouter...');
-    const orResult = await _openRouterCall(openAiMessages);
-    if (orResult.ok) return orResult;
-
-    return { ok: false };
-}
-
-// ========================================
-// 📁 FILE READING — PDF, JS, HTML, TXT, etc.
-// ========================================
-async function directGeminiCallWithFile(prompt, fileBase64, mimeType) {
-    // 1. ડાયનેમિક મોડલ અને કી મેળવો
-    const chain = getModelChain();
-    const geminiConfig = chain.find(c => c.provider === 'gemini');
-    
-    // જો ચેનમાં મોડલ ના હોય તો ડિફોલ્ટ કી વાપરો
-    const modelName = geminiConfig ? geminiConfig.model : 'gemini-1.5-flash';
-    const apiKey = geminiConfig ? geminiConfig.key : getGeminiKeys()[0];
-
-    if (!apiKey) return { ok: false, answer: '⚠️ Gemini API Key is missing.' };
-
-    const filePart = {
-        inline_data: { mime_type: mimeType, data: fileBase64 }
-    };
-
-    // --- Try Gemini ---
-    try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [filePart, { text: prompt }] }],
-                generationConfig: { temperature: 0.5, maxOutputTokens: 4096 }
-            })
-        });
-
-        const data = await response.json();
-        if (response.ok && data.candidates && data.candidates[0]?.content) {
-            return { ok: true, answer: data.candidates[0].content.parts[0].text };
-        }
-        console.warn('Gemini file call error:', data.error?.message);
-    } catch (err) {
-        console.error('Gemini file call error:', err.message);
-    }
-
-    // --- Fallback for text files (Groq / OpenRouter) ---
-    if (['text/javascript', 'text/html', 'text/plain', 'text/css'].includes(mimeType)) {
-        try {
-            const textContent = atob(fileBase64);
-            const combinedPrompt = `File Content:\n\`\`\`\n${textContent.slice(0, 8000)}\n\`\`\`\n\nUser Query: ${prompt}`;
-
-            console.log('🔄 Gemini file failed → Trying Groq...');
-            const groqResult = await _groqCall([{ role: 'user', content: combinedPrompt }]);
-            if (groqResult.ok) return groqResult;
-
-            console.log('🔄 Groq failed → Trying OpenRouter...');
-            const orResult = await _openRouterCall([{ role: 'user', content: combinedPrompt }]);
-            if (orResult.ok) return orResult;
-        } catch (e) {
-            console.error('Text extraction for fallback failed:', e.message);
-        }
-    }
-
-    return { ok: false, answer: '⚠️ File read nahi thayo. Gemini API check karo.' };
-}
-// ========================================
-// 📁 FILE → BASE64 CONVERTER (Browser utility)
-// nivi.js ma use karva mate
-// ========================================
 window.readFileAsBase64 = function (file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => {
-            // Remove "data:mime/type;base64," prefix
-            const base64 = reader.result.split(',')[1];
-            resolve(base64);
-        };
+        reader.onload = () => resolve(reader.result.split(',')[1]);
         reader.onerror = () => reject(new Error('File read failed'));
         reader.readAsDataURL(file);
     });
 };
 
-// ========================================
-// 📁 MIME TYPE DETECTOR
-// ========================================
 window.getFileMimeType = function (filename) {
     const ext = filename.split('.').pop().toLowerCase();
     const map = {
-        'pdf':  'application/pdf',
-        'js':   'text/javascript',
-        'html': 'text/html',
-        'htm':  'text/html',
-        'css':  'text/css',
-        'txt':  'text/plain',
-        'md':   'text/plain',
-        'json': 'application/json',
-        'csv':  'text/csv',
-        'png':  'image/png',
-        'jpg':  'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'webp': 'image/webp',
-        'gif':  'image/gif',
+        'pdf':'application/pdf', 'js':'text/javascript', 'html':'text/html', 'css':'text/css',
+        'txt':'text/plain', 'json':'application/json', 'csv':'text/csv',
+        'png':'image/png', 'jpg':'image/jpeg', 'jpeg':'image/jpeg', 'webp':'image/webp'
     };
     return map[ext] || 'text/plain';
 };
 
-// ========================================
-// ⚙️ SETTINGS HELPER — localStorage keys info
-// LocalStorage keys used:
-//   geminiApiKey     → comma-separated Gemini API keys
-//   groqApiKey       → single Groq API key
-//   openRouterApiKey → single OpenRouter API key
-//   openRouterModels → comma-separated model names
-//                      e.g. "meta-llama/llama-3.1-8b-instruct:free,deepseek/deepseek-r1:free"
-// ========================================
-window.saveApiSettings = function ({ gemini, groq, openRouter, openRouterModels }) {
-    if (gemini !== undefined)          localStorage.setItem('geminiApiKey', gemini);
-    if (groq !== undefined)            localStorage.setItem('groqApiKey', groq);
-    if (openRouter !== undefined)      localStorage.setItem('openRouterApiKey', openRouter);
-    if (openRouterModels !== undefined) localStorage.setItem('openRouterModels', openRouterModels);
-    console.log('✅ API Settings saved.');
-};
-
-window.getApiStatus = function () {
-    return {
-        gemini:          getGeminiKeys().length > 0 ? `✅ ${getGeminiKeys().length} key(s)` : '❌ Not set',
-        groq:            getGroqKey() ? '✅ Set' : '❌ Not set',
-        openRouter:      getOpenRouterKey() ? '✅ Set' : '❌ Not set',
-        openRouterModels: getOpenRouterModels().join(', ')
-    };
-};
-// ========================================
-// 🔑 MODEL CHAIN HELPER
-// ========================================
-window.getModelChain = function() {
-    return JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
-};
-
-// ========================================
-// 🚀 UNIVERSAL STREAMING CALL
-// ========================================
-async function directGeminiCallStreamMultiTurn(priorHistory, currentPrompt, onChunk, useSearch = false) {
-    const chain = getModelChain();
-    if (chain.length === 0) return { ok: false };
+// MULTI-TURN TEXT STREAMING WITH FALLBACKS
+window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk) {
+    const chain = window.getModelChain();
+    if (chain.length === 0) { onChunk("⚠️ No models configured in settings."); return; }
 
     for (const item of chain) {
+        if (window.AppState._abortController) break;
         try {
             if (item.provider === 'gemini') {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${item.model || 'gemini-1.5-flash'}:streamGenerateContent?alt=sse&key=${item.key}`;
-                const body = {
-                    contents: [...priorHistory, { role: 'user', parts: [{ text: currentPrompt }] }],
-                    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-                };
-                if (useSearch) body.tools = [{ googleSearch: {} }];
-
-                const response = await fetch(url, { method: 'POST', body: JSON.stringify(body) });
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({ contents: [...priorHistory, { role: 'user', parts: [{ text: currentPrompt }] }] })
+                });
                 if (!response.ok) continue;
-
+                
                 const reader = response.body.getReader();
-                const decoder = new TextDecoder();
                 let fullText = "";
                 while (true) {
+                    if (window.AppState._abortController) break;
                     const { value, done } = await reader.read();
                     if (done) break;
-                    const chunk = decoder.decode(value);
+                    const chunk = new TextDecoder().decode(value);
                     const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
                     for (const line of lines) {
                         try {
                             const data = JSON.parse(line.replace('data: ', ''));
-                            const part = data.candidates[0].content.parts[0].text;
-                            fullText += part; if (onChunk) onChunk(fullText);
+                            if(data.candidates && data.candidates[0].content) {
+                                fullText += data.candidates[0].content.parts[0].text;
+                                onChunk(fullText);
+                            }
                         } catch(e) {}
                     }
                 }
-                return { ok: true, answer: fullText };
+                return { ok: true };
             } else {
-                // OpenRouter / Nvidia Fallback (Non-Streaming for reliability)
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                // OPENROUTER / GROQ FALLBACK (Non-Streaming)
+                const apiEndpoint = item.provider === 'groq' ? 'https://api.groq.com/openai/v1/chat/completions' : (item.url || 'https://openrouter.ai/api/v1/chat/completions');
+                const messages = priorHistory.map(m => ({ role: m.role==='model'?'assistant':'user', content: m.parts[0].text })).concat({role:'user', content:currentPrompt});
+                const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${item.key}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: item.model,
-                        messages: priorHistory.map(m => ({ role: m.role==='model'?'assistant':'user', content: m.parts[0].text })).concat({role:'user', content:currentPrompt})
-                    })
+                    body: JSON.stringify({ model: item.model, messages: messages })
                 });
                 const data = await response.json();
-                if (data.choices) {
-                    const ans = data.choices[0].message.content;
-                    if (onChunk) onChunk(ans);
-                    return { ok: true, answer: ans };
+                if (data.choices && data.choices[0]) {
+                    onChunk(data.choices[0].message.content);
+                    return { ok: true };
                 }
             }
-        } catch(e) { console.warn(`Model ${item.model} failed. Trying next...`); }
+        } catch(e) { console.warn(`Model ${item.model} failed. Switching...`); }
     }
+    onChunk("⚠️ All configured models failed to respond.");
     return { ok: false };
-}
-
-// Global functions as they were
-window.directGeminiCallStreamMultiTurn = directGeminiCallStreamMultiTurn;
-window.readFileAsBase64 = (file) => new Promise((res) => {
-    const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(file);
-});
-window.getFileMimeType = (n) => {
-    const ext = n.split('.').pop();
-    return { pdf:'application/pdf', js:'text/javascript', png:'image/png', jpg:'image/jpeg' }[ext] || 'text/plain';
 };
 
-// ========================================
-// 📤 GLOBAL EXPORTS
-// ========================================
-window.directGeminiCall             = directGeminiCall;
-window.directGeminiCallMultiTurn    = directGeminiCallMultiTurn;
-window.directGeminiCallWithFile     = directGeminiCallWithFile;
-window.directGeminiCallStreamMultiTurn = directGeminiCallStreamMultiTurn;
+// FILE READING WITH DYNAMIC KEY FETCH
+window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
+    const chain = window.getModelChain();
+    const geminiConfig = chain.find(c => c.provider === 'gemini');
+    if (!geminiConfig || !geminiConfig.key) return { ok: false, answer: '⚠️ Gemini API Key is missing for file upload.' };
 
-console.log('✅ Gemini Module Loaded | Fallback: Groq → OpenRouter | File Reading: ON');
-console.log('📊 API Status:', getApiStatus());
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiConfig.model || 'gemini-1.5-flash'}:generateContent?key=${geminiConfig.key}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType, data: fileBase64 } }, { text: prompt }] }]
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.candidates) {
+            return { ok: true, answer: data.candidates[0].content.parts[0].text };
+        }
+    } catch (err) { console.error('File call error:', err.message); }
+
+    // Text File Fallback Logic
+    if (['text/javascript', 'text/html', 'text/plain', 'text/css'].includes(mimeType)) {
+        try {
+            const fallbackModel = chain.find(c => c.provider !== 'gemini');
+            if(fallbackModel && fallbackModel.key) {
+                 const textContent = atob(fileBase64);
+                 const apiEndpoint = fallbackModel.provider === 'groq' ? 'https://api.groq.com/openai/v1/chat/completions' : (fallbackModel.url || 'https://openrouter.ai/api/v1/chat/completions');
+                 const res = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${fallbackModel.key}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: fallbackModel.model, messages: [{role:'user', content:`File Content:\n\`\`\`\n${textContent.slice(0, 8000)}\n\`\`\`\n\nUser Query: ${prompt}`}] })
+                });
+                const data = await res.json();
+                if(data.choices) return { ok: true, answer: data.choices[0].message.content };
+            }
+        } catch(e) {}
+    }
+    return { ok: false, answer: '⚠️ File read failed. Ensure Gemini is configured as primary.' };
+};
