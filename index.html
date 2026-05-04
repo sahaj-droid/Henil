@@ -857,8 +857,9 @@
     toggleGenerating(true);
     if(window.AppState) AppState._abortController = false;
 
+    // જૂના પેલા Thinking Dots વાળા કોડની જગ્યાએ આ લાઈન આવશે:
     const resId = 'nivi-' + Date.now();
-    appendMsg('nivi', `<div class="thinking-dots"><span></span><span></span><span></span></div>`, resId);
+    appendMsg('nivi', '', resId); // <--- કોઈ ટપકાં કે ટેક્સ્ટ નહીં, સીધું જ ટાઈપિંગ શરૂ થશે
 
     try {
       if (file && typeof directGeminiCallWithFile === 'function') {
