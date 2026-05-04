@@ -484,11 +484,13 @@ code { font-family: var(--mono); font-size: 13px; }
     .hamburger { background: transparent; border: none; color: var(--text-sub); cursor: pointer; padding: 5px; margin-right: 15px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: 0.2s; }
     .hamburger:hover { color: var(--text); background: var(--bg-hover); }
 
-    /* Message Actions (Copy & Delete) */
-    .msg-actions { display: none; gap: 12px; margin-top: 6px; font-size: 11px; font-family: var(--mono); color: var(--text-muted); }
-    .msg-row:hover .msg-actions { display: flex; }
-    .action-icon { cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:4px; }
-    .action-icon:hover { color: var(--text); }
+/* Premium Action Buttons */
+.msg-actions {display: none; gap: 8px; margin-top: 10px; background: var(--bg-hover); padding: 4px; border-radius: 8px; border: 1px solid var(--border); width: fit-content;}
+.msg-row:hover .msg-actions { display: flex; animation: fadeIn 0.2s ease;}
+.action-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; transition: all 0.2s; color: var(--text-sub); border: 1px solid transparent;}
+.action-btn:hover { background: var(--bg); color: var(--accent); border-color: var(--border-accent);}
+.action-btn.delete:hover { color: var(--red); border-color: rgba(248, 113, 113, 0.3);}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); }}
   </style>
 </head>
 <body>
@@ -837,8 +839,12 @@ function appendMsg(role, text, id) {
 
     const actionsHtml = `
       <div class="msg-actions">
-        <span class="action-icon" onclick="copyMsg('${msgId}')"> Copy</span>
-        <span class="action-icon" onclick="deleteMsg('${msgId}')" style="color:var(--red);"> Delete</span>
+        <div class="action-btn" onclick="copyMsg('${msgId}')" title="Copy Message">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </div>
+        <div class="action-btn delete" onclick="deleteMsg('${msgId}')" title="Delete Message">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </div>
       </div>
     `;
 
@@ -1014,12 +1020,11 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1024&height=1024&nologo=true`;
       
       const imgHtml = `
-        <b>Cover Art Generated:</b><br>
-        <img src="${imageUrl}" style="max-width:100%; border-radius:12px; margin-top:10px; border: 1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop = 99999;">
-        <div style="margin-top: 10px;">
-          <a href="${imageUrl}" target="_blank" download="Nivi_CoverArt.jpg" style="text-decoration: none; font-size: 12px; font-family: var(--mono); background: var(--bg-hover); color: var(--text); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='var(--accent-dim)'; this.style.color='var(--accent)'; this.style.borderColor='var(--border-accent)';" onmouseout="this.style.background='var(--bg-hover)'; this.style.color='var(--text)'; this.style.borderColor='var(--border)';">
-          Download Image
-          </a>
+        <div style="margin-top:10px; position:relative; width:fit-content;">
+          <img src="${imageUrl}" style="max-width:100%; border-radius:12px; border: 1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop = 99999;">
+          <a href="${imageUrl}" target="_blank" download="Nivi_Art.jpg" class="action-btn" style="position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); color:white;">
+           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+         </a>
         </div>
       `;
       
@@ -1112,12 +1117,10 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       renderSidebarData();
     }
   }
-
   // ── FILE OPENER ──
   function openAttachedFile(fileName) {
     const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
     const fileObj = files.find(f => f.name === fileName);
-    
     if (fileObj && fileObj.data) {
       // Base64 માંથી પાછી ફાઈલ બનાવીને ઓપન કરો
       const byteCharacters = atob(fileObj.data);
@@ -1127,14 +1130,12 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       }
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], {type: fileObj.mimeType || 'application/octet-stream'});
-      
       const fileURL = URL.createObjectURL(blob);
       window.open(fileURL, '_blank');
     } else {
       alert("ફાઈલનો ડેટા મળ્યો નથી!");
     }
   }
-
   // ── SETTINGS ──
   function openSettings() {
     const container = document.getElementById('modelChainContainer');
@@ -1147,8 +1148,7 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
     }
     document.getElementById('settingsModal').classList.add('open');
   }
-
-  function addModelRow(config = { provider: 'gemini', model: '', key: '', url: '' }) {
+ function addModelRow(config = { provider: 'gemini', model: '', key: '', url: '' }) {
     const container = document.getElementById('modelChainContainer');
     if (!container) return;
     const row = document.createElement('div');
