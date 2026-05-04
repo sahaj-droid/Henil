@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Markdown & Code Highlighting -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <title>Nivi Pro — AI Workspace</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -39,7 +43,30 @@
       color: var(--text); font-family: var(--sans);
       overflow: hidden;
     }
+/* Code Block Styling */
+pre {
+    background: #000 !important;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+    overflow-x: auto;
+    position: relative;
+}
+code { font-family: var(--mono); font-size: 13px; }
 
+/* Token Counter Badge */
+.token-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--bg-hover);
+    color: var(--text-sub);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    margin-top: 5px;
+    display: inline-block;
+}
     /* ── SCROLLBARS ── */
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -534,10 +561,10 @@
           <h1 class="hero-title">Nivi Workspace</h1>
           <p class="hero-sub">Multi-model AI with project context, file analysis & Firebase sync</p>
           <div class="hero-chips">
-            <div class="hero-chip" onclick="quickPrompt('Explain my codebase structure')">📦 Analyze codebase</div>
-            <div class="hero-chip" onclick="quickPrompt('Summarize the uploaded document')">📄 Summarize doc</div>
-            <div class="hero-chip" onclick="quickPrompt('Debug this error and suggest fixes')">🐛 Debug code</div>
-            <div class="hero-chip" onclick="quickPrompt('Help me plan this project sprint')">🗂 Plan sprint</div>
+            <div class="hero-chip" onclick="quickPrompt('Explain my codebase structure')"> Analyze codebase</div>
+            <div class="hero-chip" onclick="quickPrompt('Summarize the uploaded document')"> Summarize doc</div>
+            <div class="hero-chip" onclick="quickPrompt('Debug this error and suggest fixes')"> Debug code</div>
+            <div class="hero-chip" onclick="quickPrompt('Help me plan this project sprint')"> Plan sprint</div>
           </div>
         </div>
       </div>
@@ -765,10 +792,10 @@ window.handleFileSelect = function(inp) {
         <h1 class="hero-title">Nivi Workspace</h1>
         <p class="hero-sub">Multi-model AI with project context, file analysis & Firebase sync</p>
         <div class="hero-chips">
-          <div class="hero-chip" onclick="quickPrompt('Explain my codebase structure')">📦 Analyze codebase</div>
-          <div class="hero-chip" onclick="quickPrompt('Summarize the uploaded document')">📄 Summarize doc</div>
-          <div class="hero-chip" onclick="quickPrompt('Debug this error and suggest fixes')">🐛 Debug code</div>
-          <div class="hero-chip" onclick="quickPrompt('Help me plan this project sprint')">🗂 Plan sprint</div>
+          <div class="hero-chip" onclick="quickPrompt('Explain my codebase structure')"> Analyze codebase</div>
+          <div class="hero-chip" onclick="quickPrompt('Summarize the uploaded document')"> Summarize doc</div>
+          <div class="hero-chip" onclick="quickPrompt('Debug this error and suggest fixes')"> Debug code</div>
+          <div class="hero-chip" onclick="quickPrompt('Help me plan this project sprint')"> Plan sprint</div>
         </div>
       </div>`;
     renderSidebarData();
@@ -779,33 +806,27 @@ function appendMsg(role, text, id) {
     const hero = document.getElementById('heroSection');
     if (hero) hero.style.display = 'none';
 
-    // દરેક મેસેજને એક યુનિક આઈડી આપીએ છીએ
     const msgId = id || 'msg-' + Date.now() + Math.random().toString(36).substr(2, 5);
     
     const row = document.createElement('div');
     row.className = `msg-row ${role === 'user' ? 'user-row' : 'nivi-row'}`;
-    row.id = 'row-' + msgId; // ડિલીટ કરવા માટે રો નો આઈડી 
+    row.id = 'row-' + msgId;
 
-    const avatarHtml = role === 'nivi'
-      ? `<div class="avatar nivi-avatar">✦</div>`
-      : '';
+    const avatarHtml = role === 'nivi' ? `<div class="avatar nivi-avatar">✦</div>` : '';
 
     const formattedText = role === 'nivi' && typeof _formatNiviResponse === 'function'
       ? _formatNiviResponse(text)
       : text.replace(/\n/g, '<br>');
 
-    // ઓરિજિનલ ટેક્સ્ટ સેવ કરીએ જેથી કોપી કરવામાં HTML ટેગ્સ ના આવે
     const escapedText = text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
-    // Copy અને Delete ના બટન્સ 
     const actionsHtml = `
       <div class="msg-actions">
-        <span class="action-icon" onclick="copyMsg('${msgId}')">📋 Copy</span>
-        <span class="action-icon" onclick="deleteMsg('${msgId}')" style="color:var(--red);">🗑️ Delete</span>
+        <span class="action-icon" onclick="copyMsg('${msgId}')"> Copy</span>
+        <span class="action-icon" onclick="deleteMsg('${msgId}')" style="color:var(--red);"> Delete</span>
       </div>
     `;
 
-    // મેસેજ બબલ અને બટન્સ 
     const content = `<div style="display:flex; flex-direction:column; align-items:${role==='user'?'flex-end':'flex-start'}; max-width:82%; width:100%;">
       <div class="bubble" id="${msgId}" data-raw="${escapedText}">${formattedText}</div>
       ${actionsHtml}
@@ -813,8 +834,14 @@ function appendMsg(role, text, id) {
 
     row.innerHTML = avatarHtml + content;
     win.appendChild(row);
+
+    // કોડ બ્લોક હાઈલાઈટિંગ
+    if (role === 'nivi') {
+      row.querySelectorAll('pre code').forEach((block) => {
+        if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+      });
+    }
     
-    // સ્માર્ટ ઑટો-સ્કોલ (માત્ર ત્યારે જ સ્કોલ થશે જો યુઝર નીચે હોય)
     const wrap = document.getElementById('chatWrap');
     if (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 150) {
       wrap.scrollTop = wrap.scrollHeight;
@@ -826,11 +853,12 @@ function appendMsg(role, text, id) {
     if (el) {
       el.innerHTML = typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text;
       
-      // લાઈવ સ્ટ્રીમિંગ વખતે કોપી કરવા માટેનું ટેક્સ્ટ પણ અપડેટ કરતા રહીએ 
+      // લાઈવ હાઈલાઈટિંગ
+      el.querySelectorAll('pre code').forEach((block) => {
+        if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+      });
       const escapedText = text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
       el.setAttribute('data-raw', escapedText);
-
-      // સ્માર્ટ ઑટો-સ્કોલ
       const wrap = document.getElementById('chatWrap');
       if (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 150) {
         wrap.scrollTop = wrap.scrollHeight;
@@ -862,7 +890,7 @@ function appendMsg(role, text, id) {
          // કોપી થાય એટલે નાનું નોટિફિકેશન
          const btn = el.nextElementSibling.querySelector('span');
          const oldHtml = btn.innerHTML;
-         btn.innerHTML = '✅ Copied';
+         btn.innerHTML = 'Copied';
          setTimeout(() => btn.innerHTML = oldHtml, 2000);
       });
     }
@@ -954,7 +982,15 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       // સીધું જ હાઈ-ક્વોલિટી ઈમેજ URL જનરેટ કરશે
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1024&height=1024&nologo=true`;
       
-      const imgHtml = `🎨 <b>Cover Art Generated:</b><br><img src="${imageUrl}" style="max-width:100%; border-radius:12px; margin-top:10px; border: 1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop = 99999;">`;
+      const imgHtml = `
+        <b>Cover Art Generated:</b><br>
+        <img src="${imageUrl}" style="max-width:100%; border-radius:12px; margin-top:10px; border: 1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop = 99999;">
+        <div style="margin-top: 10px;">
+          <a href="${imageUrl}" target="_blank" download="Nivi_CoverArt.jpg" style="text-decoration: none; font-size: 12px; font-family: var(--mono); background: var(--bg-hover); color: var(--text); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='var(--accent-dim)'; this.style.color='var(--accent)'; this.style.borderColor='var(--border-accent)';" onmouseout="this.style.background='var(--bg-hover)'; this.style.color='var(--text)'; this.style.borderColor='var(--border)';">
+          Download Image
+          </a>
+        </div>
+      `;
       
       appendMsg('nivi', imgHtml, resId);
       
@@ -991,7 +1027,7 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
         const r = await directGeminiCallWithFile(text || "Analyze this file.", base64, mime);
         
         if(!window.AppState || !AppState._abortController) {
-          updateMsg(resId, r.answer || "⚠️ No answer received.");
+          updateMsg(resId, r.answer || "No answer received.");
           if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name);
           const activeProj = document.getElementById('activeProjectSelect').value;
           
@@ -1026,7 +1062,7 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
         });
       }
     } catch(err) {
-      if(!window.AppState || !AppState._abortController) updateMsg(resId, "⚠️ Connection Error: " + err.message);
+      if(!window.AppState || !AppState._abortController) updateMsg(resId, "Connection Error: " + err.message);
     } finally {
       // Always stop generating
       toggleGenerating(false);
