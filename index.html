@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nivi Pro — AI Workspace</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0d0e10;
@@ -26,8 +26,8 @@
       --text: #e2e8f0;
       --text-sub: #64748b;
       --text-muted: #334155;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'Syne', sans-serif;
+      --mono: 'Roboto Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
       --radius: 12px;
       --sidebar-w: 280px;
     }
@@ -264,7 +264,7 @@
     .nivi-avatar { background: linear-gradient(135deg, var(--accent), var(--purple)); }
 
     .bubble { max-width: 100%; font-size: 14px; line-height: 1.7; font-family: var(--mono); }
-    
+
     .user-row .bubble {
       background: var(--bg-bubble-user);
       border: 1px solid rgba(99,179,237,0.1);
@@ -966,6 +966,7 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       renderSidebarData();
       return; // અહીંથી જ અટકી જશે, LLM API ને કોલ નહીં કરે
     }
+
     const userText = files.length > 0 ? `📎 ${fileNames}\n${text}` : text;
     appendMsg('user', userText);
     
@@ -1008,7 +1009,19 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
         
       } else if (typeof directGeminiCallStreamMultiTurn === 'function') {
         const history = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m => ({ role: m.role==='nivi'?'model':'user', parts:[{text:m.text}] })) : [];
-        await directGeminiCallStreamMultiTurn(history, text, (chunk) => {
+        
+        // ----- 🎵 LYRICIST MODE -----
+        let apiText = text;
+        if (text.toLowerCase().startsWith('/song ')) {
+           const topic = text.substring(6).trim();
+           // Nivi ને છૂપી રીતે લિરિસિસ્ટ બનવાની ઇન્સ્ટ્રક્શન આપીશું
+           apiText = `તમે એક પ્રોફેશનલ અને અત્યંત ક્રિએટિવ ગીતકાર (Lyricist) છો. હિન્દી અને ગુજરાતી ભાષામાં ડીપ ઇમોશનલ થીમ અને અર્બન (Urban) એટમોસ્ફિયર પર ઓરિજિનલ ગીતો લખવામાં તમે એક્સપર્ટ છો. 
+           
+કૃપા કરીને નીચેના વિષય પર એક શાનદાર ગીત લખો: "${topic}". 
+ગીતમાં Verse, Chorus (Hook) અને Bridge હોવા જોઈએ. શબ્દોમાં એકદમ રૉ (raw) ઇમોશન્સ અને મોડર્ન ફીલ આવવી જોઈએ.`;
+        }
+        // અહીં text ના બદલે આપણો apiText મોકલીશું
+        await directGeminiCallStreamMultiTurn(history, apiText, (chunk) => {
           if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
         });
       }
