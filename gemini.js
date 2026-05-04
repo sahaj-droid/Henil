@@ -357,79 +357,80 @@ window.getApiStatus = function () {
     };
 };
 // ========================================
-// 🌊 GEMINI MULTI-TURN STREAMING (3.1 -> 2.0 -> Groq Fallback)
+// 🔑 MODEL CHAIN HELPER
+// ========================================
+window.getModelChain = function() {
+    return JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
+};
+
+// ========================================
+// 🚀 UNIVERSAL STREAMING CALL
 // ========================================
 async function directGeminiCallStreamMultiTurn(priorHistory, currentPrompt, onChunk, useSearch = false) {
-    // 🚀 તમારી ડિમાન્ડ મુજબ: પહેલા 3.1, પછી 2.0 
-    const models = ['gemini-3.1-flash-lite-preview', 'gemini-2.0-flash'];
-    const keys = getGeminiKeys();
+    const chain = getModelChain();
+    if (chain.length === 0) return { ok: false };
 
-    if (keys.length === 0) return { ok: false };
-    const k = keys[0]; 
-
-    const contents = [...priorHistory, { role: 'user', parts: [{ text: currentPrompt }] }];
-    const body = {
-        contents,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-    };
-
-    // 🚀 ગૂગલ સર્ચ નો સાચો સ્પેલિંગ
-    if (useSearch) {
-        body.tools = [{ googleSearch: {} }];
-    }
-
-    // એક પછી એક મોડલ ટ્રાય કરશે
-    for (const modelName of models) {
+    for (const item of chain) {
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${k}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
+            if (item.provider === 'gemini') {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${item.model || 'gemini-1.5-flash'}:streamGenerateContent?alt=sse&key=${item.key}`;
+                const body = {
+                    contents: [...priorHistory, { role: 'user', parts: [{ text: currentPrompt }] }],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+                };
+                if (useSearch) body.tools = [{ googleSearch: {} }];
 
-            if (!response.ok) {
-                console.warn(`⚠️ ${modelName} failed (${response.status}). Trying next model...`);
-                continue; // જો 3.1 ફેલ થાય તો સીધું 2.0 પર જશે
-            }
+                const response = await fetch(url, { method: 'POST', body: JSON.stringify(body) });
+                if (!response.ok) continue;
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-            let fullText = "";
-
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
-
-                for (const line of lines) {
-                    const dataStr = line.replace('data: ', '').trim();
-                    if (dataStr) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = "";
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+                    for (const line of lines) {
                         try {
-                            const data = JSON.parse(dataStr);
-                            if (data.candidates && data.candidates[0].content) {
-                                const textPart = data.candidates[0].content.parts.map(p => p.text).join('');
-                                fullText += textPart;
-                                if (onChunk) onChunk(fullText); // UI ને નવો શબ્દ મોકલો
-                            }
-                        } catch (e) {
-                            // Incomplete JSON chunk, ignore
-                        }
+                            const data = JSON.parse(line.replace('data: ', ''));
+                            const part = data.candidates[0].content.parts[0].text;
+                            fullText += part; if (onChunk) onChunk(fullText);
+                        } catch(e) {}
                     }
                 }
+                return { ok: true, answer: fullText };
+            } else {
+                // OpenRouter / Nvidia Fallback (Non-Streaming for reliability)
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${item.key}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: item.model,
+                        messages: priorHistory.map(m => ({ role: m.role==='model'?'assistant':'user', content: m.parts[0].text })).concat({role:'user', content:currentPrompt})
+                    })
+                });
+                const data = await response.json();
+                if (data.choices) {
+                    const ans = data.choices[0].message.content;
+                    if (onChunk) onChunk(ans);
+                    return { ok: true, answer: ans };
+                }
             }
-            return { ok: true, answer: fullText }; // 🚀 સક્સેસ!
-        } catch (e) {
-            console.error(`Stream error with ${modelName}:`, e.message);
-        }
+        } catch(e) { console.warn(`Model ${item.model} failed. Trying next...`); }
     }
-
-    // જો Gemini 3.1 અને 2.0 બંને ફેલ થાય, તો જ Groq પાસે જશે
-    console.log("🔄 Both Gemini models failed for stream → Falling back to Groq/OpenRouter...");
-    return await directGeminiCallMultiTurn(priorHistory, currentPrompt);
+    return { ok: false };
 }
+
+// Global functions as they were
+window.directGeminiCallStreamMultiTurn = directGeminiCallStreamMultiTurn;
+window.readFileAsBase64 = (file) => new Promise((res) => {
+    const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(file);
+});
+window.getFileMimeType = (n) => {
+    const ext = n.split('.').pop();
+    return { pdf:'application/pdf', js:'text/javascript', png:'image/png', jpg:'image/jpeg' }[ext] || 'text/plain';
+};
 
 // ========================================
 // 📤 GLOBAL EXPORTS
