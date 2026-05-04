@@ -88,7 +88,7 @@
         </button>
         <input type="file" id="fileInp" style="display:none" onchange="handleFileSelect(this)">
         
-        <textarea id="mainInput" class="main-textarea" placeholder="Enter a prompt here" rows="1" onkeydown="handleKey(event)"></textarea>
+        <textarea id="mainInput" class="main-textarea" placeholder="Enter a prompt here" rows="1" onkeydown="handleKey(event)" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px'; overflowY='hidden';" style="overflow-y: hidden;"></textarea>
         
         <button id="stopBtn" class="action-btn stop-btn" onclick="stopGeneration()" title="Stop Generating">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
@@ -139,10 +139,20 @@
       window.AppState._abortController = true;
     }
 
-    function clearChat() {
+function clearChat() {
+      // 1. અત્યારની ચેટને ડિલીટ કરવાને બદલે Archive માં સેવ કરો
+      if (AppState._tabChatHistory && AppState._tabChatHistory.length > 0) {
+        let archives = JSON.parse(localStorage.getItem('nivi_chat_archives') || '[]');
+        archives.push({ id: Date.now(), chat: AppState._tabChatHistory });
+        localStorage.setItem('nivi_chat_archives', JSON.stringify(archives));
+      }
+
+      // 2. નવી ચેટ માટે સ્ક્રીન અને કરંટ મેમરી ક્લિયર કરો
       AppState._tabChatHistory = [];
-      localStorage.removeItem('niviTabChat');
+      localStorage.setItem('niviTabChat', '[]'); 
+      
       document.getElementById('chatWindow').innerHTML = `<div id="heroSection" style="margin-top: 15vh;"><h1 style="font-size: 48px; font-weight: 500; background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hello, dost</h1><h2 style="font-size: 48px; font-weight: 500; color: #444746;">How can I help you?</h2></div>`;
+      
       renderSidebarData();
     }
 
