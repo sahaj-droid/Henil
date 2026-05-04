@@ -438,7 +438,17 @@
     .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
     .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes think { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
+/* Sidebar Toggle Logic */
+    .sidebar { transition: margin-left 0.3s ease; }
+    .sidebar.collapsed { margin-left: calc(var(--sidebar-w) * -1); }
+    .hamburger { background: transparent; border: none; color: var(--text-sub); cursor: pointer; padding: 5px; margin-right: 15px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: 0.2s; }
+    .hamburger:hover { color: var(--text); background: var(--bg-hover); }
 
+    /* Message Actions (Copy & Delete) */
+    .msg-actions { display: none; gap: 12px; margin-top: 6px; font-size: 11px; font-family: var(--mono); color: var(--text-muted); }
+    .msg-row:hover .msg-actions { display: flex; }
+    .action-icon { cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:4px; }
+    .action-icon:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -490,17 +500,26 @@
     </div>
   </aside>
 
-  <!-- MAIN -->
+<!-- MAIN -->
   <main class="main">
     <!-- TOPBAR -->
     <div class="topbar">
-      <div class="workspace-pill">
-        <span class="wp-label">workspace</span>
-        <span class="wp-sep">/</span>
-        <select id="activeProjectSelect" onchange="changeActiveProject()">
-          <option value="default">default</option>
-        </select>
+      
+      <!-- આ નવો ડીવ છે જેમાં Hamburger અને Workspace Pill બંને ભેગા છે 👇 -->
+      <div style="display: flex; align-items: center;">
+        <button class="hamburger" onclick="toggleSidebar()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        
+        <div class="workspace-pill">
+          <span class="wp-label">workspace</span>
+          <span class="wp-sep">/</span>
+          <select id="activeProjectSelect" onchange="changeActiveProject()">
+            <option value="default">default</option>
+          </select>
+        </div>
       </div>
+      <!-- અહીંયા ઉપરનો નવો ભાગ પૂરો થયો 👆 -->
       <div class="topbar-right">
         <div class="status-chip connected" id="syncStatusUI">
           <span class="status-dot"></span>
@@ -538,7 +557,7 @@
           <button class="pill-btn" onclick="document.getElementById('fileInp').click()" title="Attach File">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </button>
-          <input type="file" id="fileInp" style="display:none" onchange="handleFileSelect(this)">
+          <input type="file" id="fileInp" multiple style="display:none" onchange="handleFileSelect(this)">
 
           <textarea id="mainInput" placeholder="> ask nivi anything..." rows="1"
             onkeydown="handleKey(event)"
@@ -649,15 +668,26 @@
 
   // Override handleFileSelect to use new preview
   const _origHandleFileSelect = window.handleFileSelect;
-  window.handleFileSelect = function(inp) {
-    if (inp.files && inp.files[0]) {
-      if(window.AppState) window.AppState._pendingFile = inp.files[0];
+window.handleFileSelect = function(inp) {
+    if (inp.files && inp.files.length > 0) {
+      // યુઝર ગમે તેટલી ફાઈલ નાખે, આપણે 3 ફાઈલ સુધીની જ લિમિટ રાખીશું 
+      if(window.AppState) window.AppState._pendingFiles = Array.from(inp.files).slice(0, 3);
       const preview = document.getElementById('filePreview');
-      document.getElementById('filePreviewName').textContent = inp.files[0].name;
+      
+      // બધી ફાઈલોના નામ ભેગા કરીને દેખાડો
+      const fileNames = window.AppState._pendingFiles.map(f => f.name).join(', ');
+      document.getElementById('filePreviewName').textContent = fileNames;
+      
       preview.classList.add('show');
       document.getElementById('mainInput').focus();
     }
   };
+
+  function clearFile() {
+    if(window.AppState) AppState._pendingFiles = []; // Array ખાલી કરી દો
+    document.getElementById('fileInp').value = '';
+    document.getElementById('filePreview').classList.remove('show');
+  }
 
   // ── MODALS ──
   function openProjectModal() {
@@ -746,13 +776,17 @@
     renderSidebarData();
   }
 
-  function appendMsg(role, text, id) {
+function appendMsg(role, text, id) {
     const win = document.getElementById('chatWindow');
     const hero = document.getElementById('heroSection');
     if (hero) hero.style.display = 'none';
 
+    // દરેક મેસેજને એક યુનિક આઈડી આપીએ છીએ
+    const msgId = id || 'msg-' + Date.now() + Math.random().toString(36).substr(2, 5);
+    
     const row = document.createElement('div');
     row.className = `msg-row ${role === 'user' ? 'user-row' : 'nivi-row'}`;
+    row.id = 'row-' + msgId; // ડિલીટ કરવા માટે રો નો આઈડી 
 
     const avatarHtml = role === 'nivi'
       ? `<div class="avatar nivi-avatar">✦</div>`
@@ -762,17 +796,47 @@
       ? _formatNiviResponse(text)
       : text.replace(/\n/g, '<br>');
 
-    const content = `<div class="bubble" id="${id||''}">${formattedText}</div>`;
+    // ઓરિજિનલ ટેક્સ્ટ સેવ કરીએ જેથી કોપી કરવામાં HTML ટેગ્સ ના આવે
+    const escapedText = text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+    // Copy અને Delete ના બટન્સ 
+    const actionsHtml = `
+      <div class="msg-actions">
+        <span class="action-icon" onclick="copyMsg('${msgId}')">📋 Copy</span>
+        <span class="action-icon" onclick="deleteMsg('${msgId}')" style="color:var(--red);">🗑️ Delete</span>
+      </div>
+    `;
+
+    // મેસેજ બબલ અને બટન્સ 
+    const content = `<div style="display:flex; flex-direction:column; align-items:${role==='user'?'flex-end':'flex-start'}; max-width:82%; width:100%;">
+      <div class="bubble" id="${msgId}" data-raw="${escapedText}">${formattedText}</div>
+      ${actionsHtml}
+    </div>`;
+
     row.innerHTML = avatarHtml + content;
     win.appendChild(row);
-    document.getElementById('chatWrap').scrollTop = 99999;
+    
+    // સ્માર્ટ ઑટો-સ્કોલ (માત્ર ત્યારે જ સ્કોલ થશે જો યુઝર નીચે હોય)
+    const wrap = document.getElementById('chatWrap');
+    if (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 150) {
+      wrap.scrollTop = wrap.scrollHeight;
+    }
   }
 
   function updateMsg(id, text) {
     const el = document.getElementById(id);
     if (el) {
       el.innerHTML = typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text;
-      document.getElementById('chatWrap').scrollTop = 99999;
+      
+      // લાઈવ સ્ટ્રીમિંગ વખતે કોપી કરવા માટેનું ટેક્સ્ટ પણ અપડેટ કરતા રહીએ 
+      const escapedText = text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+      el.setAttribute('data-raw', escapedText);
+
+      // સ્માર્ટ ઑટો-સ્કોલ
+      const wrap = document.getElementById('chatWrap');
+      if (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 150) {
+        wrap.scrollTop = wrap.scrollHeight;
+      }
     }
   }
 
@@ -789,6 +853,36 @@
         });
       }
     } catch(e) {}
+  }
+ // ── COPY અને DELETE ના ફંક્શન્સ ──
+  function copyMsg(id) {
+    const el = document.getElementById(id);
+    if(el) {
+      // HTML ડીકોડ કરીને સાચું ટેક્સ્ટ કોપી કરો
+      const rawText = el.getAttribute('data-raw').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+      navigator.clipboard.writeText(rawText).then(() => {
+         // કોપી થાય એટલે નાનું નોટિફિકેશન
+         const btn = el.nextElementSibling.querySelector('span');
+         const oldHtml = btn.innerHTML;
+         btn.innerHTML = '✅ Copied';
+         setTimeout(() => btn.innerHTML = oldHtml, 2000);
+      });
+    }
+  }
+
+  function deleteMsg(id) {
+    if(confirm("શું તમે આ મેસેજ ડિલીટ કરવા માંગો છો?")) {
+      const row = document.getElementById('row-' + id);
+      const el = document.getElementById(id);
+      if(!el) return;
+      const textToMatch = el.getAttribute('data-raw').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+      if(row) row.remove(); // સ્ક્રીન પરથી કાઢી નાખશે
+      // મેમરીમાંથી કાઢવા માટે
+      if(window.AppState && AppState._tabChatHistory) {
+         AppState._tabChatHistory = AppState._tabChatHistory.filter(m => m.text !== textToMatch);
+         localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+      }
+    }
   }
 
   // ── SIDEBAR DATA ──
@@ -836,56 +930,74 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
     }
   }
 
-  // ── SEND ──
+// ── SEND ──
   async function handleSend() {
     if(window.AppState && AppState._isGenerating) return;
 
     const inp = document.getElementById('mainInput');
     const text = inp.value.trim();
-    const file = window.AppState ? AppState._pendingFile : null;
-    if (!text && !file) return;
+    
+    // Multiple files support
+    const files = window.AppState && AppState._pendingFiles ? AppState._pendingFiles : [];
+    const file = files.length > 0 ? files[0] : null; // Gemini માટે પહેલી ફાઈલ 
+    const fileNames = files.map(f => f.name).join(', ');
+    
+    if (!text && files.length === 0) return;
 
-    const userText = file ? `📎 ${file.name}\n${text}` : text;
+    const userText = files.length > 0 ? `📎 ${fileNames}\n${text}` : text;
     appendMsg('user', userText);
+    
     if(window.AppState) {
       AppState._tabChatHistory.push({ role:'user', text: userText });
       localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
     }
+    
     inp.value = ''; inp.style.height = 'auto';
     clearFile();
     toggleGenerating(true);
     if(window.AppState) AppState._abortController = false;
 
-    // જૂના પેલા Thinking Dots વાળા કોડની જગ્યાએ આ લાઈન આવશે:
+    // Thinking Dots ના બદલે ડાયરેક્ટ ટાઈપિંગ
     const resId = 'nivi-' + Date.now();
-    appendMsg('nivi', '', resId); // <--- કોઈ ટપકાં કે ટેક્સ્ટ નહીં, સીધું જ ટાઈપિંગ શરૂ થશે
+    appendMsg('nivi', '', resId); 
 
     try {
       if (file && typeof directGeminiCallWithFile === 'function') {
         const base64 = await window.readFileAsBase64(file);
         const mime = window.getFileMimeType ? window.getFileMimeType(file.name) : file.type;
         const r = await directGeminiCallWithFile(text || "Analyze this file.", base64, mime);
+        
         if(!window.AppState || !AppState._abortController) {
           updateMsg(resId, r.answer || "⚠️ No answer received.");
           if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name);
           const activeProj = document.getElementById('activeProjectSelect').value;
-          if(typeof saveFileToCloudWorkspace === 'function') saveFileToCloudWorkspace(activeProj, file.name, mime, base64);
+          
+          // બધી સિલેક્ટ કરેલી ફાઈલો ક્લાઉડમાં સેવ કરો
+          if(typeof saveFileToCloudWorkspace === 'function') {
+             for (let f of files) {
+                const b64 = await window.readFileAsBase64(f);
+                const mType = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
+                saveFileToCloudWorkspace(activeProj, f.name, mType, b64);
+             }
+          }
         }
-        if(window.AppState) AppState._pendingFile = null;
+        if(window.AppState) AppState._pendingFiles = [];
         document.getElementById('fileInp').value = '';
+        
       } else if (typeof directGeminiCallStreamMultiTurn === 'function') {
         const history = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m => ({ role: m.role==='nivi'?'model':'user', parts:[{text:m.text}] })) : [];
         await directGeminiCallStreamMultiTurn(history, text, (chunk) => {
           if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
         });
       }
-} catch(err) {
+    } catch(err) {
       if(!window.AppState || !AppState._abortController) updateMsg(resId, "⚠️ Connection Error: " + err.message);
     } finally {
       // Always stop generating
       toggleGenerating(false);
+      
       if(!window.AppState || !AppState._abortController) {
-      if(window.AppState) {
+        if(window.AppState) {
           AppState._tabChatHistory.push({ role:'nivi', text: document.getElementById(resId)?.innerText || '' });
           // 1. LocalStorage માં તાજી હિસ્ટ્રી સેવ કરો
           localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
@@ -898,26 +1010,29 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       renderSidebarData();
     }
   }
-function openAttachedFile(fileName) {
-  const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
-  const fileObj = files.find(f => f.name === fileName);
-  
-  if (fileObj && fileObj.data) {
-    // Base64 માંથી પાછી ફાઈલ બનાવીને ઓપન કરો
-    const byteCharacters = atob(fileObj.data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], {type: fileObj.mimeType || 'application/octet-stream'});
+
+  // ── FILE OPENER ──
+  function openAttachedFile(fileName) {
+    const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+    const fileObj = files.find(f => f.name === fileName);
     
-    const fileURL = URL.createObjectURL(blob);
-    window.open(fileURL, '_blank');
-  } else {
-    alert("ફાઈલનો ડેટા મળ્યો નથી!");
+    if (fileObj && fileObj.data) {
+      // Base64 માંથી પાછી ફાઈલ બનાવીને ઓપન કરો
+      const byteCharacters = atob(fileObj.data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], {type: fileObj.mimeType || 'application/octet-stream'});
+      
+      const fileURL = URL.createObjectURL(blob);
+      window.open(fileURL, '_blank');
+    } else {
+      alert("ફાઈલનો ડેટા મળ્યો નથી!");
+    }
   }
-}
+
   // ── SETTINGS ──
   function openSettings() {
     const container = document.getElementById('modelChainContainer');
@@ -960,7 +1075,10 @@ function openAttachedFile(fileName) {
     `;
     container.appendChild(row);
   }
-
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.classList.toggle('collapsed');
+  }
   function saveSettings() {
     const rows = document.querySelectorAll('.model-row');
     const chain = [];
