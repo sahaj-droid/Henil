@@ -62,7 +62,8 @@
   <div class="sidebar">
     <div class="sidebar-brand">NIVI_PRO</div>
     <button onclick="clearChat()" style="background:#2b2c2f; border:none; color:white; padding:10px; border-radius:30px; cursor:pointer; font-weight:500; margin-bottom:15px; font-family:var(--font-mono); transition:0.2s;" onmouseover="this.style.background='#3c4043'" onmouseout="this.style.background='#2b2c2f'">[+] New Terminal</button>
-
+    <div class="section-label">⚙️ Active Model</div>
+    <div id="modelList" class="data-list" style="max-height: 80px;"></div>
     <div class="section-label">📁 My Projects</div>
     <div id="projectList" class="data-list" style="max-height: 120px;"></div>
     <button class="btn-outline" onclick="openProjectModal()">+ Create Workspace</button>
@@ -137,11 +138,29 @@
       <button onclick="saveSettings()" class="save-btn">💾 Save Configuration</button>
     </div>
   </div>
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyATS7Jw8Gek7sDEq8p19KkfwFe59cZYG8c", 
+    authDomain: "realtradepro-e5cf7.firebaseapp.com",
+    projectId: "realtradepro-e5cf7",
+    storageBucket: "realtradepro-e5cf7.firebasestorage.app",
+    messagingSenderId: "869277689884",
+    appId: "1:869277689884:web:561e33a1731acd384a17d9"
+    };
+    // ફાયરબેઝ ચાલુ કરો
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    // ડેટાબેઝ (Firestore) કનેક્ટ કરો
+    const db = firebase.firestore();
+  </script>
 
   <script src="nivi.js"></script>
   <script src="gemini.js"></script>
-  <script src="firebase-sync.js"></script> 
-  <script>
+  <script src="firebase-sync.js"></script>
     // ==========================================
     // 1. INITIALIZATION & UI STATE
     // ==========================================
@@ -174,21 +193,6 @@
       document.getElementById('newProjectName').focus();
     }
 
-    function createNewProject() {
-      const pName = document.getElementById('newProjectName').value.trim();
-      if(!pName) return alert("Enter project name");
-      
-      let projs = JSON.parse(localStorage.getItem('nivi_projects') || '[]');
-      const projId = 'proj_' + Date.now();
-      projs.push({ id: projId, name: pName, files: [] });
-      localStorage.setItem('nivi_projects', JSON.stringify(projs));
-      
-      document.getElementById('projectModal').style.display = 'none';
-      document.getElementById('newProjectName').value = '';
-      
-      renderProjectsUI();
-    }
-
     function renderProjectsUI() {
       const projs = JSON.parse(localStorage.getItem('nivi_projects') || '[]');
       const sidebarList = document.getElementById('projectList');
@@ -204,7 +208,10 @@
     function changeActiveProject() {
       const selected = document.getElementById('activeProjectSelect').value;
       console.log("Switched to workspace:", selected);
-      // Pachi ahi aape Firebase mathi files pull karavanu logic nakhishu.
+      // નવો પ્રોજેક્ટ સિલેક્ટ કરતા જ ફાયરબેઝ માંથી ફાઈલ ખેંચી લેશે
+      if(typeof syncWorkspaceFiles === 'function') {
+         syncWorkspaceFiles(selected);
+      }
     }
 
     // ==========================================
@@ -319,7 +326,11 @@
           if(!window.AppState || !AppState._abortController) {
               updateMsg(resId, r.answer || "⚠️ No answer received.");
               if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name);
-          }
+          // ફાયરબેઝ માં અપલોડ
+           const activeProj = document.getElementById('activeProjectSelect').value;
+           if(typeof saveFileToCloudWorkspace === 'function') {
+               saveFileToCloudWorkspace(activeProj, file.name, mime, base64);
+           }
           if(window.AppState) AppState._pendingFile = null;
           document.getElementById('fileInp').value = ''; 
         } else if (typeof directGeminiCallStreamMultiTurn === 'function') {
@@ -392,6 +403,20 @@
       localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
       toggleModal(false);
       renderSidebarData();
+    }
+  function createNewProject() {
+      const pName = document.getElementById('newProjectName').value.trim();
+      if(!pName) return alert("Enter project name");
+      
+      const projId = 'proj_' + Date.now();
+      
+      // સીધું ફાયરબેઝમાં નાખો 
+      if(typeof createCloudWorkspace === 'function') {
+         createCloudWorkspace(projId, pName);
+      }
+      
+      document.getElementById('projectModal').style.display = 'none';
+      document.getElementById('newProjectName').value = '';
     }
   </script>
 </body>
