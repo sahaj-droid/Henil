@@ -7,15 +7,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-app: #131314; /* Gemini style dark */
+      --bg-app: #131314; 
       --bg-side: #1e1f20;
       --bg-msg-user: #2b2c2f;
       --bg-msg-nivi: transparent;
-      --accent: #4285f4; /* Google Blue */
+      --accent: #4285f4; 
       --text: #e3e3e3;
       --text-sub: #b4b4b4;
       --border: #444746;
-      --font-mono: 'JetBrains Mono', monospace; /* User preference */
+      --font-mono: 'JetBrains Mono', monospace; 
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -62,7 +62,8 @@
     /* Modal Styling */
     .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-side); padding: 25px; border-radius: 20px; width: 450px; border: 1px solid var(--border); position: relative; }
-    .close-x { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 20px; color: var(--text-sub); }
+    .close-x { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 20px; color: var(--text-sub); transition: 0.2s; }
+    .close-x:hover { color: #fff; }
   </style>
 </head>
 <body>
@@ -108,7 +109,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
         </button>
 
-        <button id="sendBtn" class="action-btn" style="color: var(--accent);" onclick="handleSend()">
+        <button id="sendBtn" class="action-btn" style="color: var(--accent);" onclick="handleSendUI()">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
@@ -119,57 +120,99 @@
   <div class="modal" id="settingsModal">
     <div class="modal-content">
       <span class="close-x" onclick="toggleModal(false)">✕</span>
-      <h3 style="margin-bottom:20px;">Settings</h3>
-      </div>
+      <h3 style="margin-bottom:20px; color:var(--text);">Configuration</h3>
+      <p style="font-size: 13px; color: var(--text-sub);">Model configuration UI will go here.</p>
+    </div>
   </div>
 
   <script src="gemini.js"></script>
   <script src="nivi.js"></script>
   <script>
-    // --- JS LOGIC FOR NEW FEATURES ---
+    // --- UI LOGIC ---
 
-    // 1. Enter key to send
+    // Modal Control
+    function toggleModal(show) {
+      document.getElementById('settingsModal').style.display = show ? 'flex' : 'none';
+    }
+
+    // Enter key to send
     function handleKey(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        handleSend();
+        handleSendUI();
       }
     }
 
-    // 2. Stop Button Toggle Logic
+    // Stop Button Toggle Logic
     function toggleGenerating(isGenerating) {
       document.getElementById('stopBtn').style.display = isGenerating ? 'flex' : 'none';
       document.getElementById('sendBtn').style.display = isGenerating ? 'none' : 'flex';
     }
 
-    // 3. Message Rendering with Alignment
+    // File Selection Feedback
+    function handleFileSelect(inp) {
+        if (inp.files && inp.files[0]) {
+            alert("File Ready: " + inp.files[0].name);
+            document.getElementById('mainInput').focus();
+        }
+    }
+
+    // Message Rendering with Alignment
     function appendMsg(role, text) {
       const win = document.getElementById('chatWindow');
       const row = document.createElement('div');
       row.className = `msg-row ${role === 'user' ? 'user-row' : 'nivi-row'}`;
       
       const avatarHtml = role === 'nivi' ? `<div class="avatar nivi-avatar">✦</div>` : '';
-      const content = `<div class="bubble">${role === 'nivi' ? _formatNiviResponse(text) : text.replace(/\n/g, '<br>')}</div>`;
+      
+      // Basic formatting stub (relies on nivi.js for full formatting later)
+      const formattedText = role === 'nivi' && typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text.replace(/\n/g, '<br>');
+      const content = `<div class="bubble">${formattedText}</div>`;
       
       row.innerHTML = avatarHtml + content;
       win.appendChild(row);
       win.scrollTop = win.scrollHeight;
     }
 
-    // 4. File Provision & Sidebar
-    function renderSidebarData() {
-      // Models
-      const models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
-      document.getElementById('modelList').innerHTML = models.map(m => `<div class="data-item">📦 ${m.provider}: ${m.model}</div>`).join('');
+    // Stub for sending message (Connects HTML to your JS logic)
+    function handleSendUI() {
+      const inp = document.getElementById('mainInput');
+      const text = inp.value.trim();
+      if (!text) return;
+
+      const hero = document.getElementById('heroSection');
+      if (hero) hero.style.display = 'none';
+
+      appendMsg('user', text);
+      inp.value = '';
       
-      // Files (Memory)
-      const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
-      document.getElementById('fileList').innerHTML = files.map(f => `<div class="data-item" title="Nivi has this in memory">📄 ${f.name}</div>`).join('');
+      toggleGenerating(true);
+      
+      // Simulate Nivi logic processing (Replace this with actual Nivi/Gemini call later)
+      setTimeout(() => {
+        appendMsg('nivi', 'I am ready to assist you. (Backend logic connection pending)');
+        toggleGenerating(false);
+      }, 1000);
     }
 
-    // 5. History Storage Answer
-    // Chat history and file metadata are saved in LocalStorage.
-    // For large files, we store base64 strings in LocalStorage (within 5MB limit) or IndexedDB.
+    // Stop button stub
+    function stopNivi() {
+      toggleGenerating(false);
+      console.log("Generation stopped by user.");
+    }
+
+    // Render Sidebar Data from LocalStorage
+    function renderSidebarData() {
+      const models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[{"provider": "Gemini", "model": "3.1-flash"}]');
+      document.getElementById('modelList').innerHTML = models.map(m => `<div class="data-item">📦 ${m.provider}: ${m.model}</div>`).join('');
+      
+      const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+      if(files.length > 0) {
+        document.getElementById('fileList').innerHTML = files.map(f => `<div class="data-item">📄 ${f.name}</div>`).join('');
+      } else {
+        document.getElementById('fileList').innerHTML = `<div class="data-item" style="opacity:0.5;">No files in memory</div>`;
+      }
+    }
 
     window.onload = renderSidebarData;
   </script>
