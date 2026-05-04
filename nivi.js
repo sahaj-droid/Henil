@@ -684,7 +684,11 @@ ${modularPrompt}
 // ======================================
 function _formatNiviResponse(text) {
   if (!text) return '';
-  
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<span style="font-weight:700;color:#4285f4;">$1</span>')
+    .replace(/^\s*[•\-\*]\s+(.+)$/gm, '<div style="margin-bottom:4px;">● $1</div>')
+    .replace(/\n/g, '<br>');
+}
   let html = text;
 
   // ૧. ક્યારેક AI ખાલી લાઈનમાં એકલો '*' આપી દે છે, તેને હટાવવા:
