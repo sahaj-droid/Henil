@@ -224,58 +224,50 @@ async function directGeminiCallMultiTurn(priorHistory, currentPrompt) {
 
 // ========================================
 // 📁 FILE READING — PDF, JS, HTML, TXT, etc.
-// Gemini natively reads files as base64
 // ========================================
 async function directGeminiCallWithFile(prompt, fileBase64, mimeType) {
-    const modelName = 'gemini-3.1-flash-lite-preview';
-    const keys = getGeminiKeys();
+    // 1. ડાયનેમિક મોડલ અને કી મેળવો
+    const chain = getModelChain();
+    const geminiConfig = chain.find(c => c.provider === 'gemini');
+    
+    // જો ચેનમાં મોડલ ના હોય તો ડિફોલ્ટ કી વાપરો
+    const modelName = geminiConfig ? geminiConfig.model : 'gemini-1.5-flash';
+    const apiKey = geminiConfig ? geminiConfig.key : getGeminiKeys()[0];
+
+    if (!apiKey) return { ok: false, answer: '⚠️ Gemini API Key is missing.' };
 
     const filePart = {
-        inline_data: {
-            mime_type: mimeType,
-            data: fileBase64
-        }
+        inline_data: { mime_type: mimeType, data: fileBase64 }
     };
 
-    // --- Try Gemini (only Gemini supports native file reading) ---
-    if (keys.length > 0) {
-        for (const k of keys) {
-            try {
-                await new Promise(r => setTimeout(r, 500));
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${k}`;
+    // --- Try Gemini ---
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [filePart, { text: prompt }] }],
+                generationConfig: { temperature: 0.5, maxOutputTokens: 4096 }
+            })
+        });
 
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            role: 'user',
-                            parts: [filePart, { text: prompt }]
-                        }],
-                        generationConfig: { temperature: 0.5, maxOutputTokens: 4096 }
-                    })
-                });
-
-                const data = await response.json();
-                if (response.ok && data.candidates && data.candidates[0]?.content) {
-                    return { ok: true, answer: data.candidates[0].content.parts[0].text };
-                }
-                if (response.status === 429) { continue; }
-                console.warn('Gemini file call error:', data.error?.message);
-            } catch (err) {
-                console.error('Gemini file call error:', err.message);
-            }
+        const data = await response.json();
+        if (response.ok && data.candidates && data.candidates[0]?.content) {
+            return { ok: true, answer: data.candidates[0].content.parts[0].text };
         }
+        console.warn('Gemini file call error:', data.error?.message);
+    } catch (err) {
+        console.error('Gemini file call error:', err.message);
     }
 
-    // --- Fallback for text files: Extract text → send as prompt ---
-    // (PDF binary nahi chaltu Groq/OpenRouter ma, but .js/.html/.txt chalse)
+    // --- Fallback for text files (Groq / OpenRouter) ---
     if (['text/javascript', 'text/html', 'text/plain', 'text/css'].includes(mimeType)) {
         try {
             const textContent = atob(fileBase64);
             const combinedPrompt = `File Content:\n\`\`\`\n${textContent.slice(0, 8000)}\n\`\`\`\n\nUser Query: ${prompt}`;
 
-            console.log('🔄 Gemini file failed → Trying Groq with extracted text...');
+            console.log('🔄 Gemini file failed → Trying Groq...');
             const groqResult = await _groqCall([{ role: 'user', content: combinedPrompt }]);
             if (groqResult.ok) return groqResult;
 
@@ -287,9 +279,8 @@ async function directGeminiCallWithFile(prompt, fileBase64, mimeType) {
         }
     }
 
-    return { ok: false, answer: '⚠️ File read nahi thayo. Gemini key check karo.' };
+    return { ok: false, answer: '⚠️ File read nahi thayo. Gemini API check karo.' };
 }
-
 // ========================================
 // 📁 FILE → BASE64 CONVERTER (Browser utility)
 // nivi.js ma use karva mate
