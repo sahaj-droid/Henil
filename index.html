@@ -139,28 +139,28 @@
     </div>
   </div>
   
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyATS7Jw8Gek7sDEq8p19KkfwFe59cZYG8c", 
-    authDomain: "realtradepro-e5cf7.firebaseapp.com",
-    projectId: "realtradepro-e5cf7",
-    storageBucket: "realtradepro-e5cf7.firebasestorage.app",
-    messagingSenderId: "869277689884",
-    appId: "1:869277689884:web:561e33a1731acd384a17d9"
+    const firebaseConfig = {
+      apiKey: "AIzaSyATS7Jw8Gek7sDEq8p19KkfwFe59cZYG8c", 
+      authDomain: "realtradepro-e5cf7.firebaseapp.com",
+      projectId: "realtradepro-e5cf7",
+      storageBucket: "realtradepro-e5cf7.firebasestorage.app",
+      messagingSenderId: "869277689884",
+      appId: "1:869277689884:web:561e33a1731acd384a17d9"
     };
-    // ફાયરબેઝ ચાલુ કરો
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
-    // ડેટાબેઝ (Firestore) કનેક્ટ કરો
     const db = firebase.firestore();
   </script>
 
   <script src="nivi.js"></script>
   <script src="gemini.js"></script>
   <script src="firebase-sync.js"></script>
+
+  <script>
     // ==========================================
     // 1. INITIALIZATION & UI STATE
     // ==========================================
@@ -198,7 +198,9 @@
       const sidebarList = document.getElementById('projectList');
       const dropdown = document.getElementById('activeProjectSelect');
       
-      sidebarList.innerHTML = projs.map(p => `<div class="data-item" onclick="document.getElementById('activeProjectSelect').value='${p.id}'; changeActiveProject();">📁 ${p.name}</div>`).join('');
+      if (sidebarList) {
+        sidebarList.innerHTML = projs.map(p => `<div class="data-item" onclick="document.getElementById('activeProjectSelect').value='${p.id}'; changeActiveProject();">📁 ${p.name}</div>`).join('');
+      }
       
       let options = `<option value="default">/root/default</option>`;
       projs.forEach(p => { options += `<option value="${p.id}">${p.name}</option>`; });
@@ -208,7 +210,6 @@
     function changeActiveProject() {
       const selected = document.getElementById('activeProjectSelect').value;
       console.log("Switched to workspace:", selected);
-      // નવો પ્રોજેક્ટ સિલેક્ટ કરતા જ ફાયરબેઝ માંથી ફાઈલ ખેંચી લેશે
       if(typeof syncWorkspaceFiles === 'function') {
          syncWorkspaceFiles(selected);
       }
@@ -244,8 +245,10 @@
       const content = `<div class="bubble" id="${id||''}">${formattedText}</div>`;
       
       row.innerHTML = avatarHtml + content;
-      win.appendChild(row);
-      win.scrollTop = win.scrollHeight;
+      if (win) {
+        win.appendChild(row);
+        win.scrollTop = win.scrollHeight;
+      }
     }
 
     function updateMsg(id, text) {
@@ -253,7 +256,7 @@
       if (el) {
         el.innerHTML = typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text;
         const win = document.getElementById('chatWindow');
-        win.scrollTop = win.scrollHeight;
+        if (win) win.scrollTop = win.scrollHeight;
       }
     }
 
@@ -276,20 +279,28 @@
       let models = [];
       try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
       if(models.length === 0) models = [{provider: "System", model: "Not Set"}];
-      document.getElementById('modelList').innerHTML = models.map(m => `<div class="data-item">📦 ${m.provider}: ${m.model || 'Default'}</div>`).join('');
+      
+      const ml = document.getElementById('modelList');
+      if (ml) ml.innerHTML = models.map(m => `<div class="data-item">📦 ${m.provider}: ${m.model || 'Default'}</div>`).join('');
       
       const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
-      if(files.length > 0) {
-        document.getElementById('fileList').innerHTML = files.map(f => `<div class="data-item">📄 ${f.name}</div>`).join('');
-      } else {
-        document.getElementById('fileList').innerHTML = `<div class="data-item" style="opacity:0.5;">No active files</div>`;
+      const fl = document.getElementById('fileList');
+      if (fl) {
+        if(files.length > 0) {
+          fl.innerHTML = files.map(f => `<div class="data-item">📄 ${f.name}</div>`).join('');
+        } else {
+          fl.innerHTML = `<div class="data-item" style="opacity:0.5;">No active files</div>`;
+        }
       }
 
       const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
-      if(history.length > 0) {
-        document.getElementById('chatHistory').innerHTML = `<div class="data-item">💬 Last Session (${history.length})</div>`;
-      } else {
-        document.getElementById('chatHistory').innerHTML = `<div class="data-item" style="opacity:0.5;">No history</div>`;
+      const ch = document.getElementById('chatHistory');
+      if (ch) {
+        if(history.length > 0) {
+          ch.innerHTML = `<div class="data-item">💬 Last Session (${history.length})</div>`;
+        } else {
+          ch.innerHTML = `<div class="data-item" style="opacity:0.5;">No history</div>`;
+        }
       }
     }
 
@@ -323,16 +334,20 @@
           const base64 = await window.readFileAsBase64(file);
           const mime = window.getFileMimeType ? window.getFileMimeType(file.name) : file.type;
           const r = await directGeminiCallWithFile(text || "Analyze this file.", base64, mime);
+          
           if(!window.AppState || !AppState._abortController) {
               updateMsg(resId, r.answer || "⚠️ No answer received.");
               if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name);
-          // ફાયરબેઝ માં અપલોડ
-           const activeProj = document.getElementById('activeProjectSelect').value;
-           if(typeof saveFileToCloudWorkspace === 'function') {
-               saveFileToCloudWorkspace(activeProj, file.name, mime, base64);
-           }
+              
+              const activeProj = document.getElementById('activeProjectSelect').value;
+              if(typeof saveFileToCloudWorkspace === 'function') {
+                  saveFileToCloudWorkspace(activeProj, file.name, mime, base64);
+              }
+          }
+          
           if(window.AppState) AppState._pendingFile = null;
           document.getElementById('fileInp').value = ''; 
+          
         } else if (typeof directGeminiCallStreamMultiTurn === 'function') {
           const history = window.AppState ? AppState._tabChatHistory.slice(0, -1).map(m => ({ role: m.role==='nivi'?'model':'user', parts:[{text:m.text}] })) : [];
           await directGeminiCallStreamMultiTurn(history, text, (chunk) => {
@@ -360,16 +375,19 @@
     
     function openSettings() {
       const container = document.getElementById('modelChainContainer');
-      container.innerHTML = '';
-      let chain = [];
-      try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
-      if (chain.length === 0) addModelRow({ provider: 'gemini', model: '', key: '', url: '' });
-      else chain.forEach(config => addModelRow(config));
+      if (container) {
+        container.innerHTML = '';
+        let chain = [];
+        try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+        if (chain.length === 0) addModelRow({ provider: 'gemini', model: '', key: '', url: '' });
+        else chain.forEach(config => addModelRow(config));
+      }
       toggleModal(true);
     }
 
     function addModelRow(config = { provider: 'gemini', model: '', key: '', url: '' }) {
       const container = document.getElementById('modelChainContainer');
+      if (!container) return;
       const row = document.createElement('div');
       row.className = 'model-config-row';
       row.style.cssText = 'background: #1a1a1c; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 10px; position: relative; display: flex; flex-direction: column; gap: 10px;';
@@ -404,20 +422,23 @@
       toggleModal(false);
       renderSidebarData();
     }
-  function createNewProject() {
+
+    function createNewProject() {
       const pName = document.getElementById('newProjectName').value.trim();
       if(!pName) return alert("Enter project name");
       
       const projId = 'proj_' + Date.now();
-      
-      // સીધું ફાયરબેઝમાં નાખો 
       if(typeof createCloudWorkspace === 'function') {
-         createCloudWorkspace(projId, pName);
+      createCloudWorkspace(projId, pName);
+      } else {
+         let projs = JSON.parse(localStorage.getItem('nivi_projects') || '[]');
+         projs.push({ id: projId, name: pName, files: [] });
+         localStorage.setItem('nivi_projects', JSON.stringify(projs));
       }
-      
       document.getElementById('projectModal').style.display = 'none';
       document.getElementById('newProjectName').value = '';
+      renderProjectsUI();
     }
-  </script>
+</script>
 </body>
 </html>
