@@ -453,7 +453,7 @@
       </div>
       <button class="new-chat-btn" onclick="clearChat()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New Terminal
+        New Chat
       </button>
     </div>
 
@@ -807,12 +807,12 @@
       </div>`
     ).join('');
 
-    const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
     const fl = document.getElementById('fileList');
     if (fl) {
       if (files.length > 0) {
         fl.innerHTML = files.map(f =>
-          `<div class="s-item" title="${f.name}">
+          `<div class="s-item" onclick="openAttachedFile('${f.name}')" title="Click to view ${f.name}">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
           </div>`
@@ -821,7 +821,6 @@
         fl.innerHTML = `<div class="s-item" style="opacity:0.4; cursor:default; font-size:11px;">No files yet</div>`;
       }
     }
-
     const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
     const ch = document.getElementById('chatHistory');
     if (ch) {
@@ -880,20 +879,45 @@
           if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
         });
       }
-    } catch(err) {
+} catch(err) {
       if(!window.AppState || !AppState._abortController) updateMsg(resId, "⚠️ Connection Error: " + err.message);
-    }
-
-    if(!window.AppState || !AppState._abortController) {
+    } finally {
+      // Always stop generating
+      toggleGenerating(false);
+      if(!window.AppState || !AppState._abortController) {
       if(window.AppState) {
-        AppState._tabChatHistory.push({ role:'nivi', text: document.getElementById(resId)?.innerText || '' });
-        localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+          AppState._tabChatHistory.push({ role:'nivi', text: document.getElementById(resId)?.innerText || '' });
+          // 1. LocalStorage માં તાજી હિસ્ટ્રી સેવ કરો
+          localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+        }
       }
+      // 2. જો ફાયરબેઝ કનેક્ટેડ હોય તો ક્લાઉડમાં સેવ કરો
+      if (typeof saveUserData === 'function') {
+        saveUserData('history');
+      }
+      renderSidebarData();
     }
-    toggleGenerating(false);
-    renderSidebarData();
   }
-
+function openAttachedFile(fileName) {
+  const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+  const fileObj = files.find(f => f.name === fileName);
+  
+  if (fileObj && fileObj.data) {
+    // Base64 માંથી પાછી ફાઈલ બનાવીને ઓપન કરો
+    const byteCharacters = atob(fileObj.data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {type: fileObj.mimeType || 'application/octet-stream'});
+    
+    const fileURL = URL.createObjectURL(blob);
+    window.open(fileURL, '_blank');
+  } else {
+    alert("ફાઈલનો ડેટા મળ્યો નથી!");
+  }
+}
   // ── SETTINGS ──
   function openSettings() {
     const container = document.getElementById('modelChainContainer');
