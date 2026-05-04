@@ -121,8 +121,15 @@
   <script src="nivi.js"></script>
   <script src="gemini.js"></script>
   <script>
-    // --- UI & Event Handlers ---
-    window.onload = () => { renderSidebarData(); restoreChat(); };
+<script>
+    // ==========================================
+    // 1. INITIALIZATION & UI STATE
+    // ==========================================
+    window.onload = () => {
+      renderProjectsUI();
+      renderSidebarData();
+      restoreChat();
+    };
 
     function handleKey(e) {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -131,32 +138,190 @@
     function toggleGenerating(isGen) {
       document.getElementById('stopBtn').style.display = isGen ? 'flex' : 'none';
       document.getElementById('sendBtn').style.display = isGen ? 'none' : 'flex';
-      window.AppState._isGenerating = isGen;
+      if(window.AppState) window.AppState._isGenerating = isGen;
     }
 
     function stopGeneration() {
       toggleGenerating(false);
-      window.AppState._abortController = true;
+      if(window.AppState) window.AppState._abortController = true;
     }
 
-function clearChat() {
-      // 1. અત્યારની ચેટને ડિલીટ કરવાને બદલે Archive માં સેવ કરો
-      if (AppState._tabChatHistory && AppState._tabChatHistory.length > 0) {
+    // ==========================================
+    // 2. PROJECT / WORKSPACE LOGIC
+    // ==========================================
+    function openProjectModal() {
+      document.getElementById('projectModal').style.display = 'flex';
+      document.getElementById('newProjectName').focus();
+    }
+
+    function createNewProject() {
+      const pName = document.getElementById('newProjectName').value.trim();
+      if(!pName) return alert("Enter project name");
+      
+      let projs = JSON.parse(localStorage.getItem('nivi_projects') || '[]');
+      const projId = 'proj_' + Date.now();
+      projs.push({ id: projId, name: pName, files: [] });
+      localStorage.setItem('nivi_projects', JSON.stringify(projs));
+      
+      document.getElementById('projectModal').style.display = 'none';
+      document.getElementById('newProjectName').value = '';
+      
+      renderProjectsUI();
+    }
+
+    function renderProjectsUI() {
+      const projs = JSON.parse(localStorage.getItem('nivi_projects') || '[]');
+      const sidebarList = document.getElementById('projectList');
+      const dropdown = document.getElementById('activeProjectSelect');
+      
+      sidebarList.innerHTML = projs.map(p => `<div class="data-item">📁 ${p.name}</div>`).join('');
+      
+      let options = `<option value="default">/root/default</option>`;
+      projs.forEach(p => { options += `<option value="${p.id}">${p.name}</option>`; });
+      dropdown.innerHTML = options;
+    }
+
+    function changeActiveProject() {
+      const selected = document.getElementById('activeProjectSelect').value;
+      console.log("Switched to workspace:", selected);
+      // Firebase linkage will happen here
+    }
+
+    // ==========================================
+    // 3. CHAT UI & LOGIC
+    // ==========================================
+    function clearChat() {
+      if (window.AppState && AppState._tabChatHistory && AppState._tabChatHistory.length > 0) {
         let archives = JSON.parse(localStorage.getItem('nivi_chat_archives') || '[]');
         archives.push({ id: Date.now(), chat: AppState._tabChatHistory });
         localStorage.setItem('nivi_chat_archives', JSON.stringify(archives));
       }
 
-      // 2. નવી ચેટ માટે સ્ક્રીન અને કરંટ મેમરી ક્લિયર કરો
-      AppState._tabChatHistory = [];
+      if(window.AppState) AppState._tabChatHistory = [];
       localStorage.setItem('niviTabChat', '[]'); 
       
-      document.getElementById('chatWindow').innerHTML = `<div id="heroSection" style="margin-top: 15vh;"><h1 style="font-size: 48px; font-weight: 500; background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hello, dost</h1><h2 style="font-size: 48px; font-weight: 500; color: #444746;">How can I help you?</h2></div>`;
-      
+      document.getElementById('chatWindow').innerHTML = `<div id="heroSection" style="margin-top: 15vh;"><h1 style="font-size: 42px; font-weight: 500; background: linear-gradient(90deg, #4285f4, #9b72cb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nivi Workspace</h1><h2 style="font-size: 16px; font-weight: 400; color: var(--text-sub); font-family: var(--font-mono); margin-top:10px;">Ready for new commands.</h2></div>`;
       renderSidebarData();
     }
 
-    // --- Settings Modal Logic ---
+    function appendMsg(role, text, id) {
+      const win = document.getElementById('chatWindow');
+      const hero = document.getElementById('heroSection');
+      if (hero) hero.style.display = 'none';
+
+      const row = document.createElement('div');
+      row.className = `msg-row ${role === 'user' ? 'user-row' : 'nivi-row'}`;
+      
+      const avatarHtml = role === 'nivi' ? `<div class="avatar nivi-avatar">✦</div>` : '';
+      const formattedText = role === 'nivi' && typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text.replace(/\n/g, '<br>');
+      const content = `<div class="bubble" id="${id||''}">${formattedText}</div>`;
+      
+      row.innerHTML = avatarHtml + content;
+      win.appendChild(row);
+      win.scrollTop = win.scrollHeight;
+    }
+
+    function updateMsg(id, text) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text;
+        const win = document.getElementById('chatWindow');
+        win.scrollTop = win.scrollHeight;
+      }
+    }
+
+    function restoreChat() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+        if(saved.length > 0) {
+          if(window.AppState) AppState._tabChatHistory = [];
+          const hero = document.getElementById('heroSection');
+          if (hero) hero.style.display = 'none';
+          saved.forEach(msg => appendMsg(msg.role, msg.text));
+        }
+      } catch(e) {}
+    }
+
+    function renderSidebarData() {
+      let models = [];
+      try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+      if(models.length === 0) models = [{provider: "System", model: "Not Set"}];
+      document.getElementById('modelList').innerHTML = models.map(m => `<div class="data-item">📦 ${m.provider}: ${m.model || 'Default'}</div>`).join('');
+      
+      const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+      if(files.length > 0) {
+        document.getElementById('fileList').innerHTML = files.map(f => `<div class="data-item">📄 ${f.name}</div>`).join('');
+      } else {
+        document.getElementById('fileList').innerHTML = `<div class="data-item" style="opacity:0.5;">No active files</div>`;
+      }
+
+      const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+      if(history.length > 0) {
+        document.getElementById('chatHistory').innerHTML = `<div class="data-item">💬 Last Session (${history.length})</div>`;
+      } else {
+        document.getElementById('chatHistory').innerHTML = `<div class="data-item" style="opacity:0.5;">No history</div>`;
+      }
+    }
+
+    async function handleSend() {
+      if(window.AppState && AppState._isGenerating) return;
+      
+      const inp = document.getElementById('mainInput');
+      const text = inp.value.trim();
+      const file = window.AppState ? AppState._pendingFile : null;
+
+      if (!text && !file) return;
+
+      const userText = file ? `📎 ${file.name}\n${text}` : text;
+      appendMsg('user', userText);
+      if(window.AppState) {
+          AppState._tabChatHistory.push({ role:'user', text: userText });
+          localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+      }
+      inp.value = '';
+      inp.style.height = 'auto'; // Reset text box height
+      document.getElementById('filePreview').style.display = 'none';
+      
+      toggleGenerating(true);
+      if(window.AppState) AppState._abortController = false;
+
+      const resId = 'nivi-' + Date.now();
+      appendMsg('nivi', '<span style="color:var(--text-sub); font-size:13px;">Thinking...</span>', resId);
+
+      try {
+        if (file && typeof directGeminiCallWithFile === 'function') {
+          const base64 = await window.readFileAsBase64(file);
+          const mime = window.getFileMimeType ? window.getFileMimeType(file.name) : file.type;
+          const r = await directGeminiCallWithFile(text || "Analyze this file.", base64, mime);
+          if(!window.AppState || !AppState._abortController) {
+              updateMsg(resId, r.answer || "⚠️ No answer received.");
+              if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name);
+          }
+          if(window.AppState) AppState._pendingFile = null;
+          document.getElementById('fileInp').value = ''; 
+        } else if (typeof directGeminiCallStreamMultiTurn === 'function') {
+          const history = window.AppState ? AppState._tabChatHistory.slice(0, -1).map(m => ({ role: m.role==='nivi'?'model':'user', parts:[{text:m.text}] })) : [];
+          await directGeminiCallStreamMultiTurn(history, text, (chunk) => {
+             if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
+          });
+        }
+      } catch (err) {
+        if(!window.AppState || !AppState._abortController) updateMsg(resId, "⚠️ Connection Error: " + err.message);
+      }
+      
+      if(!window.AppState || !AppState._abortController) {
+          if(window.AppState) {
+             AppState._tabChatHistory.push({ role:'nivi', text: document.getElementById(resId).innerText });
+             localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+          }
+      }
+      toggleGenerating(false);
+      renderSidebarData();
+    }
+
+    // ==========================================
+    // 4. SETTINGS MODAL LOGIC
+    // ==========================================
     function toggleModal(show) { document.getElementById('settingsModal').style.display = show ? 'flex' : 'none'; }
     
     function openSettings() {
@@ -177,16 +342,16 @@ function clearChat() {
       row.innerHTML = `
         <span onclick="this.parentElement.remove()" style="position:absolute; top:12px; right:15px; color:#ea4335; cursor:pointer; font-weight:bold; font-size:16px;" title="Remove Model">✕</span>
         <div style="display: flex; gap: 10px; padding-right: 20px;">
-          <select class="conf-provider setting-input" style="flex: 1; cursor:pointer;">
+          <select class="conf-provider setting-input" style="flex: 1; margin:0; cursor:pointer;">
             <option value="gemini" ${config.provider === 'gemini' ? 'selected' : ''}>Gemini</option>
             <option value="openrouter" ${config.provider === 'openrouter' ? 'selected' : ''}>OpenRouter</option>
             <option value="groq" ${config.provider === 'groq' ? 'selected' : ''}>Groq</option>
             <option value="nvidia" ${config.provider === 'nvidia' ? 'selected' : ''}>Nvidia</option>
           </select>
-          <input type="text" class="conf-model setting-input" placeholder="Model Name" value="${config.model}" style="flex: 2;">
+          <input type="text" class="conf-model setting-input" placeholder="Model Name" value="${config.model}" style="flex: 2; margin:0;">
         </div>
-        <input type="password" class="conf-key setting-input" placeholder="API Key" value="${config.key}">
-        <input type="text" class="conf-url setting-input" placeholder="API Link (Optional)" value="${config.url || ''}" style="font-size:11px; color:var(--text-sub);">
+        <input type="password" class="conf-key setting-input" placeholder="API Key" value="${config.key}" style="margin:0;">
+        <input type="text" class="conf-url setting-input" placeholder="API Link (Optional)" value="${config.url || ''}" style="margin:0; font-size:11px; color:var(--text-sub);">
       `;
       container.appendChild(row);
     }
