@@ -1,3 +1,13 @@
+// ── SAVE FILE TO MEMORY ──
+function saveFileToMemory(filename, base64Data, mimeType) {
+  let files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+  const idx = files.findIndex(f => f.name === filename);
+  const entry = { name: filename, ts: Date.now(), data: base64Data || null, mimeType: mimeType || 'text/plain' };
+  if (idx >= 0) files[idx] = entry;
+  else files.push(entry);
+  localStorage.setItem('nivi_file_memory', JSON.stringify(files));
+  if(typeof renderSidebarData === 'function') renderSidebarData();
+}
 // ── GLOBAL APP STATE ──
 window.AppState = window.AppState || {
   _tabChatHistory: [],
