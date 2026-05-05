@@ -662,7 +662,7 @@ function delMsg(id){
 function renderSidebarData(){
   let models=[];try{models=JSON.parse(localStorage.getItem('nivi_model_chain')||'[]');}catch(e){}
   if(!models.length)models=[{provider:'—',model:'Not Configured'}];
-  const clr={gemini:'var(--accent)',openrouter:'var(--purple)',groq:'var(--green)',nvidia:'var(--amber)'};
+  const clr={gemini:'var(--accent)',openrouter:'var(--purple)',nvidia:'var(--amber)',custom:'var(--green)'};
   const ml=document.getElementById('modelList');
   if(ml)ml.innerHTML=models.map((m,i)=>`<div class="si" title="${m.provider}: ${m.model}"><span style="color:${clr[m.provider]||'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.model||m.provider}</span>${i===0?'<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>':''}</div>`).join('');
   const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
@@ -787,27 +787,111 @@ function openSettings(){
   else chain.forEach(cfg=>addModelRow(cfg));
   document.getElementById('settingsModal').classList.add('open');
 }
+function _providerDefaults(provider) {
+  // Per-provider: default URL + model hint — all overridable via localStorage
+  const defs = {
+    gemini:     { url: '',  modelHint: 'gemini-2.0-flash-lite', keyLS: 'nivi_key_gemini',     urlLS: '' },
+    openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions',           modelHint: 'openai/gpt-4o-mini',             keyLS: 'nivi_key_openrouter', urlLS: 'nivi_url_openrouter' },
+    nvidia:     { url: 'https://integrate.api.nvidia.com/v1/chat/completions',    modelHint: 'nvidia/llama-3.1-nemotron-70b-instruct', keyLS: 'nivi_key_nvidia', urlLS: 'nivi_url_nvidia' },
+    custom:     { url: '',  modelHint: '',                       keyLS: '',                    urlLS: '' },
+  };
+  return defs[provider] || defs.custom;
+}
+
 function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
   const c=document.getElementById('modelChainContainer');if(!c)return;
+  const def = _providerDefaults(config.provider);
+  // Auto-fill from localStorage if not in config
+  const resolvedKey   = config.key   || localStorage.getItem(def.keyLS) || '';
+  const resolvedUrl   = config.url   || (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
+  const resolvedModel = config.model || localStorage.getItem(`nivi_model_${config.provider}`) || def.modelHint || '';
+
   const row=document.createElement('div');row.className='mrow';
-  row.innerHTML=`<button class="mrow-rm" onclick="this.closest('.mrow').remove()">✕</button>
-  <div class="mrow-grid" style="margin-bottom:6px;">
-    <div><div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">Provider</div>
-    <select class="conf-provider fsel"><option value="gemini" ${config.provider==='gemini'?'selected':''}>Gemini</option><option value="openrouter" ${config.provider==='openrouter'?'selected':''}>OpenRouter</option><option value="groq" ${config.provider==='groq'?'selected':''}>Groq</option><option value="nvidia" ${config.provider==='nvidia'?'selected':''}>Nvidia</option></select></div>
-    <div><div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">Model</div>
-    <input type="text" class="conf-model fsel" placeholder="e.g. gemini-1.5-flash" value="${config.model}"></div>
-  </div>
-  <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API Key</div>
-  <input type="password" class="conf-key fsel" placeholder="sk-..." value="${config.key}" style="width:100%;margin-bottom:6px;">
-  <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API URL (optional)</div>
-  <input type="text" class="conf-url fsel" placeholder="https://openrouter.ai/api/v1/..." value="${config.url||''}" style="width:100%;font-size:10px;color:var(--text-sub);">`;
+  row.innerHTML=`
+    <button class="mrow-rm" onclick="this.closest('.mrow').remove()">✕</button>
+
+    <div style="margin-bottom:10px;">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em;">Provider</div>
+      <div style="display:flex;gap:6px;">
+        ${['gemini','openrouter','nvidia','custom'].map(p=>`
+          <button onclick="switchProviderInRow(this,'${p}')"
+            style="flex:1;padding:6px 4px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;border:1px solid ${config.provider===p?'var(--border-a)':'var(--border)'};background:${config.provider===p?'var(--accent-dim)':'transparent'};color:${config.provider===p?'var(--accent)':'var(--text-sub)'};"
+            data-provider="${p}">
+            ${{gemini:'✦ Gemini',openrouter:'⭕ OpenRouter',nvidia:'⚡ Nvidia',custom:'🔧 Custom'}[p]}
+          </button>`).join('')}
+      </div>
+      <input type="hidden" class="conf-provider" value="${config.provider}">
+    </div>
+
+    <div class="mrow-grid" style="margin-bottom:8px;">
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">Model</div>
+        <input type="text" class="conf-model fsel" placeholder="${def.modelHint||'model name'}" value="${resolvedModel}" style="width:100%;">
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API Key</div>
+        <input type="password" class="conf-key fsel" placeholder="Paste API key..." value="${resolvedKey}" style="width:100%;">
+      </div>
+    </div>
+
+    <div id="urlRow_${Date.now()}" style="${config.provider==='gemini'?'display:none;':''}">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API URL <span style="opacity:.5;">(auto-filled, override if needed)</span></div>
+      <input type="text" class="conf-url fsel" value="${resolvedUrl}" placeholder="https://..." style="width:100%;font-size:10px;color:var(--text-sub);">
+    </div>
+  `;
   c.appendChild(row);
 }
+
+function switchProviderInRow(btn, provider) {
+  const row = btn.closest('.mrow');
+  // Update hidden input
+  row.querySelector('.conf-provider').value = provider;
+  // Update button styles
+  row.querySelectorAll('[data-provider]').forEach(b => {
+    const active = b.dataset.provider === provider;
+    b.style.borderColor = active ? 'var(--border-a)' : 'var(--border)';
+    b.style.background  = active ? 'var(--accent-dim)' : 'transparent';
+    b.style.color       = active ? 'var(--accent)' : 'var(--text-sub)';
+  });
+  // Auto-fill fields from localStorage
+  const def = _providerDefaults(provider);
+  const keyField   = row.querySelector('.conf-key');
+  const modelField = row.querySelector('.conf-model');
+  const urlField   = row.querySelector('.conf-url');
+  const urlRow     = row.querySelector('[id^="urlRow_"]');
+
+  // Only auto-fill if field is empty
+  if (!keyField.value)   keyField.value   = localStorage.getItem(def.keyLS) || '';
+  if (!modelField.value) modelField.value = localStorage.getItem(`nivi_model_${provider}`) || def.modelHint || '';
+  if (urlField) {
+    if (!urlField.value) urlField.value = (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
+  }
+  // Hide URL row for Gemini (not needed), show for others
+  if (urlRow) urlRow.style.display = provider === 'gemini' ? 'none' : '';
+  modelField.placeholder = def.modelHint || 'model name';
+}
+
 function saveSettings(){
   const rows=document.querySelectorAll('.mrow'),chain=[];
-  rows.forEach(row=>{const p=row.querySelector('.conf-provider').value,m=row.querySelector('.conf-model').value.trim(),k=row.querySelector('.conf-key').value.trim(),u=row.querySelector('.conf-url').value.trim();if(m||k)chain.push({provider:p,model:m,key:k,url:u});});
-  localStorage.setItem('nivi_model_chain',JSON.stringify(chain));
-  closeModal('settingsModal');renderSidebarData();
+  rows.forEach(row=>{
+    const provider = row.querySelector('.conf-provider').value;
+    const model    = row.querySelector('.conf-model').value.trim();
+    const key      = row.querySelector('.conf-key').value.trim();
+    const url      = row.querySelector('.conf-url')?.value.trim() || '';
+
+    if(!model && !key) return; // skip empty rows
+
+    // Also persist key + url to localStorage per-provider for auto-fill next time
+    const def = _providerDefaults(provider);
+    if(key   && def.keyLS) localStorage.setItem(def.keyLS, key);
+    if(url   && def.urlLS) localStorage.setItem(def.urlLS, url);
+    if(model) localStorage.setItem(`nivi_model_${provider}`, model);
+
+    chain.push({provider, model, key, url});
+  });
+  localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
+  closeModal('settingsModal');
+  renderSidebarData();
 }
 </script>
 </body>
