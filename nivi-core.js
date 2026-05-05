@@ -35,34 +35,34 @@ function clearFile(){
 
 // ── INITIALIZATION ──
 window.onload=async()=>{
-  // Session ID ensure karo — exist kare to reuse, nahi to navi banao
   if(!localStorage.getItem('nivi_current_session_id')){
     localStorage.setItem('nivi_current_session_id', 'session_' + Date.now());
   }
   renderProjectsUI();
   renderSidebarData();
   updateActiveModelUI();
-  let restored = false;
+
   if(typeof loadNiviChat === 'function'){
     try {
       const fbChat = await loadNiviChat();
-      // Firebase thi [] aave (deleted) to localStorage pan clear karo
-      if(fbChat !== null && fbChat.length === 0){
+      if(fbChat && fbChat.length > 0){
+        // Firebase master — localStorage overwrite karo
+        localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
+        if(window.AppState) AppState._tabChatHistory = fbChat;
+        fbChat.forEach(msg => appendMsg(msg.role, msg.text));
+        console.log('✅ Chat restored from Firebase');
+      } else {
+        // Firebase empty — localStorage pan clear karo
         localStorage.setItem('niviTabChat', '[]');
         if(window.AppState) AppState._tabChatHistory = [];
-        console.log('✅ Firebase empty — localStorage cleared');
-        restored = true; // hero show thase
-      } else if(fbChat && fbChat.length > 0){
-        if(window.AppState) AppState._tabChatHistory = [];
-        localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
-        fbChat.forEach(msg => appendMsg(msg.role, msg.text));
-        if(window.AppState) AppState._tabChatHistory = fbChat;
-        restored = true;
-        console.log('✅ Chat restored from Firebase');
+        console.log('✅ Firebase empty — fresh start');
       }
-    } catch(e){ console.warn('Firebase restore failed, using localStorage'); }
+    } catch(e){
+      // Firebase fail — localStorage fallback
+      console.warn('Firebase failed, localStorage fallback');
+      restoreChat();
+    }
   }
-  if(!restored) restoreChat(); // localStorage fallback
 };
 
 // ── UI HELPERS ──
