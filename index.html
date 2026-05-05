@@ -211,9 +211,6 @@
       .chat-inner{padding:0 14px;}
       .input-zone{padding:0 12px 15px;}
     }
-    pre { position: relative; }
-    .run-art-btn {position: absolute; top: 8px; right: 8px; z-index: 10; opacity: 0; transition: opacity 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);}
-    pre:hover .run-art-btn { opacity: 1; }
   </style>
 </head>
 <body>
@@ -472,6 +469,28 @@ function _openPanel(){
   document.getElementById('artPanel').classList.add('open');
 }
 
+
+// ── Inject responsive CSS into HTML previews ──
+function _injectResponsiveCSS(html) {
+  const css = `<style>
+    *{box-sizing:border-box;}
+    html,body{
+      margin:0;padding:12px;
+      width:100%;min-height:100%;
+      font-family:system-ui,sans-serif;
+      font-size:16px;
+      background:#fff;color:#111;
+    }
+    body>*{max-width:100%;}
+    input,button,select,textarea{max-width:100%;}
+    img{max-width:100%;height:auto;}
+  </style>`;
+  // <head> hoy to inject, nai to prepend
+  if(html.includes('</head>')) return html.replace('</head>', css + '</head>');
+  if(html.includes('<body')) return html.replace('<body', css + '<body');
+  return css + html;
+}
+
 function switchTab(t){
   ART.tab=t;
   if(!ART.cur)return;
@@ -487,7 +506,7 @@ function switchTab(t){
   }else if(t==='preview'){
     if(cfg.isImg){document.getElementById('viewImg').style.display='flex';document.getElementById('imgEl').src=objUrl;}
     else if(cfg.isPdf){document.getElementById('viewPdf').style.display='flex';document.getElementById('pdfEl').setAttribute('src',objUrl);}
-    else if(ext==='html'){document.getElementById('viewPreview').style.display='flex';document.getElementById('previewIframe').srcdoc=txt;}
+    else if(ext==='html'){document.getElementById('viewPreview').style.display='flex';document.getElementById('previewIframe').srcdoc=_injectResponsiveCSS(txt);}
   }
 }
 
@@ -518,7 +537,7 @@ function _renderSheet(t){
   }else if(t==='preview'){
     if(cfg.isImg){const w=document.createElement('div');w.style.cssText='display:flex;align-items:center;justify-content:center;padding:16px;background:#111;min-height:200px;';const img=document.createElement('img');img.src=objUrl;img.style.cssText='max-width:100%;border-radius:8px;';w.appendChild(img);c.appendChild(w);}
     else if(cfg.isPdf){const em=document.createElement('embed');em.src=objUrl;em.type='application/pdf';em.style.cssText='width:100%;height:60vh;border:none;';c.appendChild(em);}
-    else if(ext==='html'){const ifr=document.createElement('iframe');ifr.style.cssText='width:100%;height:60vh;border:none;background:#fff;';ifr.setAttribute('sandbox','allow-scripts allow-same-origin');ifr.srcdoc=txt;c.appendChild(ifr);}
+    else if(ext==='html'){const ifr=document.createElement('iframe');ifr.style.cssText='width:100%;height:60vh;border:none;background:#fff;';ifr.setAttribute('sandbox','allow-scripts allow-same-origin');ifr.srcdoc=_injectResponsiveCSS(txt);c.appendChild(ifr);}
   }
 }
 
@@ -639,49 +658,13 @@ function clearChat(){
   renderSidebarData();
 }
 
-// ૧. ── સુધારેલું FORMATTER (ગીત અને ટોકન માટે) ──
 function _fmt(text){
   if(!text)return'';
   if(text.includes('<img')&&text.includes('pollinations'))return text;
-  
-  // ડબલ ટોકન ના થાય એના માટે જૂના ટોકન કાઢી નાખો
-  let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
-  
-  if(typeof marked!=='undefined'){
-    marked.setOptions({ breaks: true }); // ગીતોની લાઈનો પ્રોપર આવે તે માટે
-    const h=marked.parse(cleanText);
-    const w=cleanText.trim().split(/\s+/).length;
-    return h+`<div class="tbdg" style="margin-top:10px;">~${Math.ceil(w*1.3)} tokens</div>`;
-  }
-  return cleanText.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  if(typeof marked!=='undefined'){const h=marked.parse(text);const w=text.trim().split(/\s+/).length;return h+`<div class="tbdg">~${Math.ceil(w*1.3)} tokens</div>`;}
+  return text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
 }
 
-// ── કોડ બ્લોકમાં બટન ઉમેરવાનું સહિયારું ફંક્શન ──
-function addArtifactButtons(el) {
-  el.querySelectorAll('pre').forEach((pre, idx) => {
-    const codeEl = pre.querySelector('code');
-    if(codeEl && typeof hljs!=='undefined') hljs.highlightElement(codeEl);
-
-    // જો બટન ના હોય તો બનાવો
-    if(!pre.querySelector('.run-art-btn') && codeEl){
-      const langMatch = codeEl.className.match(/language-(\w+)/);
-      let ext = langMatch ? langMatch[1] : 'txt';
-      if(ext==='javascript') ext='js'; if(ext==='python') ext='py';
-
-      const btn = document.createElement('button');
-      btn.className = 'tbtn prim run-art-btn';
-      btn.innerHTML = '⚡ Run / View';
-      btn.onclick = () => {
-        const codeTxt = codeEl.innerText;
-        const b64 = btoa(unescape(encodeURIComponent(codeTxt)));
-        openArt({name: `Nivi_Code_${idx+1}.${ext}`, type: 'text/plain'}, b64);
-      };
-      pre.appendChild(btn);
-    }
-  });
-}
-
-// ૨. ── સુધારેલું APPEND MSG ──
 function appendMsg(role,text,id){
   const win=document.getElementById('chatWindow');
   const hero=document.getElementById('heroSection');if(hero)hero.style.display='none';
@@ -695,23 +678,16 @@ function appendMsg(role,text,id){
   const align=role==='user'?'flex-end':'flex-start';const mw=role==='user'?'max-width:80%;':'width:100%;';
   row.innerHTML=`${av}<div style="display:flex;flex-direction:column;align-items:${align};${mw}"><div class="bubble" id="${msgId}" data-raw="${esc}">${fmt}</div>${acts}</div>`;
   win.appendChild(row);
-  
-  if(role==='nivi') addArtifactButtons(row); // આર્ટિફેક્ટ અને હાઈલાઈટ
+  if(role==='nivi')row.querySelectorAll('pre code').forEach(b=>{if(typeof hljs!=='undefined')hljs.highlightElement(b);});
   const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
 }
 
-// ૩. ── સુધારેલું UPDATE MSG (SPEED FIX) ──
 function updateMsg(id,text){
   const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=_fmt(text);
+  el.querySelectorAll('pre code').forEach(b=>{if(typeof hljs!=='undefined')hljs.highlightElement(b);});
   el.setAttribute('data-raw',text.replace(/'/g,"&#39;").replace(/"/g,"&quot;"));
-
-  // Speed Fix: 50ms નું Debouncing
-  clearTimeout(window['renderTimer_'+id]);
-  window['renderTimer_'+id] = setTimeout(() => {
-    el.innerHTML=_fmt(text);
-    addArtifactButtons(el); // આર્ટિફેક્ટ અને હાઈલાઈટ
-    const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
-  }, 50);
+  const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
 }
 
 function restoreChat(){
