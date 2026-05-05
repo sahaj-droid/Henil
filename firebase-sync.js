@@ -1,298 +1,200 @@
 // ========================================
-// FIREBASE SYNC MODULE — RealTradePro v3.0 & Nivi Pro
-// Handles: Save/Load user data to/from Firebase, Auto-sync debouncing
+// FIREBASE SYNC MODULE — Nivi Pro v2.0
+// Nivi-specific: No auth required, userId hardcoded from localStorage
 // ========================================
 
-// ======================================
-// 1. SAVE USER DATA TO FIREBASE (RTP OLD LOGIC)
-// ======================================
-async function saveUserData(field = null) {
-  if (!AppState.currentUser) return;
-  if (AppState._syncInProgress) return;
-  
-  AppState._syncInProgress = true;
-  
+// ── Nivi User ID — localStorage thi fetch, fallback fixed ID ──
+function _getNiviUserId() {
+  return localStorage.getItem('nivi_user_id') || 'user_1774995803095';
+}
+
+// ── NIVI CHAT SAVE TO FIREBASE ──
+async function saveNiviChat(chatHistory) {
+  if (!chatHistory || chatHistory.length === 0) return;
+  const userId = _getNiviUserId();
   try {
-    const userRef = db.collection('users').doc(AppState.currentUser.userId);
-    const data = {};
-    
-    if (field === null || field === 'watchlists') data.watchlists = AppState.watchlists;
-    if (field === null || field === 'holdings') data.holdings = AppState.h;
-    if (field === null || field === 'history') data.history = AppState.hist;
-    if (field === null || field === 'alerts') data.alerts = AppState.alerts;
-    if (field === null || field === 'settings') {
-      data.settings = {
-        apiUrl: localStorage.getItem('customAPI') || '',
-        sheetId: localStorage.getItem('sheetId') || '',
-        geminiKey: localStorage.getItem('geminiApiKey') ? '***' : '',
-        refreshSec: parseInt(localStorage.getItem('refreshSec')) || 10
-      };
-    }
-    
-    data.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
-    await userRef.set(data, { merge: true });
-    
-    AppState._lastSyncTime = Date.now();
-    localStorage.setItem('lastCloudSync', AppState._lastSyncTime.toString());
-  } catch (e) {
-    console.error('saveUserData error:', e);
-  } finally {
-    AppState._syncInProgress = false;
+    const chatId = 'session_' + new Date().toISOString().split('T')[0]; // daily session
+    await db.collection('users').doc(userId)
+            .collection('niviChats').doc(chatId).set({
+      messages: chatHistory,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      msgCount: chatHistory.length
+    }, { merge: true });
+    console.log('✅ Nivi chat saved to Firebase');
+    _updateSyncUI('connected');
+  } catch(e) {
+    console.error('saveNiviChat error:', e);
+    _updateSyncUI('error');
   }
 }
 
-function triggerAutoSync(field) {
-  if (AppState._syncDebounceTimer) clearTimeout(AppState._syncDebounceTimer);
-  AppState._syncDebounceTimer = setTimeout(() => saveUserData(field), 2000);
-}
-
-// ======================================
-// PUSH TO CLOUD (Manual)
-// ======================================
-async function pushToCloud(showMsg = true) {
-  if (AppState._syncInProgress) return;
-  AppState._syncInProgress = true;
-  
-  const syncBtn = document.getElementById('syncStatusBtn');
-  if (syncBtn) {
-    syncBtn.innerText = 'Saving...';
-    syncBtn.style.color = '#f59e0b';
-  }
-  
+// ── NIVI CHAT LOAD FROM FIREBASE ──
+async function loadNiviChat() {
+  const userId = _getNiviUserId();
   try {
-    await saveUserData();
-    AppState._lastSyncTime = Date.now();
-    localStorage.setItem('lastCloudSync', AppState._lastSyncTime.toString());
-    
-    const lsd = document.getElementById('lastSyncDisplay');
-    if (lsd) {
-      const dt = new Date(AppState._lastSyncTime);
-      lsd.innerText = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' ' + dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    const chatId = 'session_' + new Date().toISOString().split('T')[0];
+    const doc = await db.collection('users').doc(userId)
+                        .collection('niviChats').doc(chatId).get();
+    if (doc.exists && doc.data().messages) {
+      return doc.data().messages;
     }
-    
-    if (syncBtn) {
-      syncBtn.innerText = 'Saved ✓';
-      syncBtn.style.color = '#22c55e';
-    }
-    if (showMsg) showPopup('Firebase sync complete ✓');
-    
-    setTimeout(() => {
-      if (syncBtn) {
-        syncBtn.innerText = 'Sync Now';
-        syncBtn.style.color = '#38bdf8';
-      }
-    }, 3000);
-    
-  } catch (e) {
-    if (syncBtn) {
-      syncBtn.innerText = 'Sync Failed';
-      syncBtn.style.color = '#ef4444';
-    }
-    if (showMsg) showPopup('Firebase sync failed');
-    console.error('pushToCloud error:', e);
+  } catch(e) {
+    console.error('loadNiviChat error:', e);
   }
-  
-  AppState._syncInProgress = false;
+  return null;
 }
 
-// ======================================
-// PULL FROM CLOUD (Manual)
-// ======================================
-async function pullFromCloud(showMsg = false) {
-  if (!AppState.currentUser) {
-    if (showMsg) showPopup('Login required');
-    return;
-  }
-  
-  const syncBtn = document.getElementById('syncStatusBtn');
-  if (syncBtn) {
-    syncBtn.innerText = 'Loading...';
-    syncBtn.style.color = '#f59e0b';
-  }
-  
+// ── CHAT ARCHIVE SAVE (jyare New Chat click thay) ──
+async function archiveNiviChat(chatHistory) {
+  if (!chatHistory || chatHistory.length === 0) return;
+  const userId = _getNiviUserId();
   try {
-    const doc = await db.collection('users').doc(AppState.currentUser.userId).get();
-    const data = doc.data();
-    
-    if (!data) {
-      if (showMsg) showPopup('No data in Firebase');
-      return;
-    }
-    
-    let changed = false;
-    
-    if (data.watchlists?.length) {
-      AppState.watchlists = data.watchlists;
-      localStorage.setItem('watchlists', JSON.stringify(AppState.watchlists));
-      AppState.wl = AppState.watchlists[AppState.currentWL]?.stocks || [];
-      localStorage.setItem('wl', JSON.stringify(AppState.wl));
-      changed = true;
-    }
-    
-    if (data.holdings?.length) {
-      AppState.h = data.holdings;
-      localStorage.setItem('h', JSON.stringify(AppState.h));
-      changed = true;
-    }
-    
-    if (data.history?.length) {
-      AppState.hist = data.history;
-      localStorage.setItem('hist', JSON.stringify(AppState.hist));
-      changed = true;
-    }
-    
-    if (data.alerts?.length) {
-      AppState.alerts = data.alerts;
-      localStorage.setItem('alerts', JSON.stringify(AppState.alerts));
-      changed = true;
-    }
-    
-    AppState._lastSyncTime = Date.now();
-    localStorage.setItem('lastCloudSync', AppState._lastSyncTime.toString());
-    
-    const lsd = document.getElementById('lastSyncDisplay');
-    if (lsd) {
-      const dt = new Date(AppState._lastSyncTime);
-      lsd.innerText = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' ' + dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    }
-    
-    if (syncBtn) {
-      syncBtn.innerText = 'Loaded ✓';
-      syncBtn.style.color = '#22c55e';
-    }
-    
-    setTimeout(() => {
-      if (syncBtn) {
-        syncBtn.innerText = 'Sync Now';
-        syncBtn.style.color = '#38bdf8';
-      }
-    }, 3000);
-    
-    if (changed) {
-      if (typeof renderWLTabs === 'function') renderWLTabs();
-      if (typeof renderWL === 'function') renderWL();
-      if (typeof renderHold === 'function') renderHold();
-      if (typeof renderHist === 'function') renderHist();
-      if (showMsg) showPopup('Data loaded from Firebase ✓');
-    } else {
-      if (showMsg) showPopup('Firebase: no new data');
-    }
-    
-  } catch (e) {
-    if (syncBtn) {
-      syncBtn.innerText = 'Load Error';
-      syncBtn.style.color = '#ef4444';
-    }
-    if (showMsg) showPopup('Firebase load error');
-    console.error('pullFromCloud error:', e);
+    const archiveId = 'archive_' + Date.now();
+    await db.collection('users').doc(userId)
+            .collection('niviChats').doc(archiveId).set({
+      messages: chatHistory,
+      archivedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      msgCount: chatHistory.length,
+      type: 'archive'
+    });
+    console.log('✅ Chat archived to Firebase:', archiveId);
+  } catch(e) {
+    console.error('archiveNiviChat error:', e);
   }
 }
 
-// =======================================================
-// 🚀 2. NIVI WORKSPACE MODULE (NEW)
-// =======================================================
+// ── LOAD CHAT ARCHIVES LIST (sidebar history mate) ──
+async function loadNiviChatArchives() {
+  const userId = _getNiviUserId();
+  try {
+    const snap = await db.collection('users').doc(userId)
+                         .collection('niviChats')
+                         .where('type', '==', 'archive')
+                         .orderBy('archivedAt', 'desc')
+                         .limit(10).get();
+    const archives = [];
+    snap.forEach(doc => archives.push({ id: doc.id, ...doc.data() }));
+    return archives;
+  } catch(e) {
+    console.error('loadNiviChatArchives error:', e);
+    return [];
+  }
+}
 
-// A. પ્રોજેક્ટ ક્લાઉડમાંથી ખેંચો (Load Workspaces)
+// ── SYNC STATUS UI ──
+function _updateSyncUI(state) {
+  const el = document.getElementById('syncStatusUI');
+  if (!el) return;
+  if (state === 'connected') {
+    el.className = 'status-chip on';
+    el.innerHTML = '<span class="sdot"></span>Firebase';
+  } else if (state === 'syncing') {
+    el.className = 'status-chip';
+    el.style.cssText = 'color:var(--amber);border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.08);';
+    el.innerHTML = '<span class="sdot" style="background:var(--amber)"></span>Syncing...';
+  } else if (state === 'error') {
+    el.className = 'status-chip';
+    el.style.cssText = 'color:var(--red);border-color:rgba(248,113,113,.2);background:rgba(248,113,113,.08);';
+    el.innerHTML = '<span class="sdot" style="background:var(--red)"></span>Sync Error';
+  }
+}
+
+// ── AUTO SYNC — debounced (chat update thay tyare call thay) ──
+let _syncTimer = null;
+function triggerChatSync(chatHistory) {
+  _updateSyncUI('syncing');
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => saveNiviChat(chatHistory), 2500);
+}
+
+// ========================================
+// WORKSPACE MODULE (existing — unchanged)
+// ========================================
 async function fetchCloudWorkspaces() {
-  if (!AppState.currentUser) return;
+  const userId = _getNiviUserId();
   try {
-    const snap = await db.collection('users').doc(AppState.currentUser.userId).collection('workspaces').get();
+    const snap = await db.collection('users').doc(userId).collection('workspaces').get();
     let projs = [];
     snap.forEach(doc => { projs.push({ id: doc.id, ...doc.data() }); });
-    
     localStorage.setItem('nivi_projects', JSON.stringify(projs));
     if (typeof renderProjectsUI === 'function') renderProjectsUI();
-  } catch (e) { console.error("Error fetching workspaces:", e); }
+  } catch(e) { console.error('fetchCloudWorkspaces error:', e); }
 }
 
-// B. નવો પ્રોજેક્ટ બનાવો (Create Workspace)
 async function createCloudWorkspace(projId, projName) {
-  if (!AppState.currentUser) return;
+  const userId = _getNiviUserId();
   try {
-    await db.collection('users').doc(AppState.currentUser.userId).collection('workspaces').doc(projId).set({
-        name: projName,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    await db.collection('users').doc(userId).collection('workspaces').doc(projId).set({
+      name: projName,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    console.log("✅ Workspace initialized in Firebase.");
-    // નવો પ્રોજેક્ટ બન્યા પછી તરત લિસ્ટ અપડેટ કરો
-    fetchCloudWorkspaces(); 
-  } catch (e) { console.error("Error creating workspace:", e); }
+    fetchCloudWorkspaces();
+  } catch(e) { console.error('createCloudWorkspace error:', e); }
 }
 
-// C. ફાઈલ અપલોડ કરો (Save File to Active Project)
 async function saveFileToCloudWorkspace(projId, fileName, mimeType, base64Data) {
-  if (!AppState.currentUser || projId === 'default') {
-      console.warn("No active project or user not logged in. Saving to local only.");
-      return;
-  }
-  
-  const syncUI = document.getElementById('syncStatusUI');
-  if(syncUI) { syncUI.innerText = '⟳ Syncing...'; syncUI.style.color = '#f59e0b'; }
-
+  if (projId === 'default') return;
+  const userId = _getNiviUserId();
+  _updateSyncUI('syncing');
   try {
-    // Note: Firestore has 1MB limit per document. Good for Code/Text files.
     const fileId = 'file_' + Date.now();
-    await db.collection('users').doc(AppState.currentUser.userId)
+    await db.collection('users').doc(userId)
             .collection('workspaces').doc(projId)
             .collection('files').doc(fileId).set({
-        name: fileName,
-        mimeType: mimeType,
-        data: base64Data, 
-        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+      name: fileName, mimeType, data: base64Data,
+      uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    console.log("✅ File saved to Firebase.");
-    if(syncUI) { syncUI.innerText = '● Firebase Connected'; syncUI.style.color = '#22c55e'; }
-    
-    // ફાઈલ અપલોડ થયા પછી સાઇડબાર અપડેટ કરો
+    _updateSyncUI('connected');
     syncWorkspaceFiles(projId);
-  } catch (e) {
-    console.error("Error saving file to Firebase:", e);
-    if(syncUI) { syncUI.innerText = '⚠ Sync Error'; syncUI.style.color = '#ef4444'; }
+  } catch(e) {
+    console.error('saveFileToCloudWorkspace error:', e);
+    _updateSyncUI('error');
   }
 }
 
-// D. પ્રોજેક્ટ બદલતી વખતે ફાઈલો ખેંચો (Load Files on Switch)
 async function syncWorkspaceFiles(projId) {
-   if (!AppState.currentUser || projId === 'default') {
-       localStorage.setItem('nivi_file_memory', '[]');
-       if (typeof renderSidebarData === 'function') renderSidebarData();
-       return;
-   }
-
-   const syncUI = document.getElementById('syncStatusUI');
-   if(syncUI) { syncUI.innerText = '⟳ Loading Files...'; syncUI.style.color = '#f59e0b'; }
-
-   try {
-       const snap = await db.collection('users').doc(AppState.currentUser.userId)
-            .collection('workspaces').doc(projId)
-            .collection('files').get();
-       
-       let files = [];
-       snap.forEach(doc => files.push({ id: doc.id, ...doc.data() }));
-       
-       // સાઇડબાર અને મેમરીમાં અપડેટ કરો 
-       localStorage.setItem('nivi_file_memory', JSON.stringify(files));
-       if (typeof renderSidebarData === 'function') renderSidebarData();
-       
-       if(syncUI) { syncUI.innerText = '● Firebase Connected'; syncUI.style.color = '#22c55e'; }
-   } catch (e) {
-       console.error("Error syncing workspace files:", e);
-       if(syncUI) { syncUI.innerText = '⚠ Load Error'; syncUI.style.color = '#ef4444'; }
-   }
+  if (projId === 'default') {
+    localStorage.setItem('nivi_file_memory', '[]');
+    if (typeof renderSidebarData === 'function') renderSidebarData();
+    return;
+  }
+  const userId = _getNiviUserId();
+  try {
+    const snap = await db.collection('users').doc(userId)
+                         .collection('workspaces').doc(projId)
+                         .collection('files').get();
+    let files = [];
+    snap.forEach(doc => files.push({ id: doc.id, ...doc.data() }));
+    localStorage.setItem('nivi_file_memory', JSON.stringify(files));
+    if (typeof renderSidebarData === 'function') renderSidebarData();
+    _updateSyncUI('connected');
+  } catch(e) {
+    console.error('syncWorkspaceFiles error:', e);
+    _updateSyncUI('error');
+  }
 }
 
-// ======================================
-// REGISTER FUNCTIONS TO WINDOW
-// ======================================
-window.saveUserData = saveUserData;
-window.triggerAutoSync = triggerAutoSync;
-window.pushToCloud = pushToCloud;
-window.pullFromCloud = pullFromCloud;
+// ── OLD saveUserData — RTP compatibility (no-op in Nivi standalone) ──
+async function saveUserData(field = null) {
+  // Nivi Pro ma auth nathi — chat save separately thay via saveNiviChat
+  if (field === 'history') {
+    const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+    triggerChatSync(history);
+  }
+}
+function triggerAutoSync(field) { saveUserData(field); }
 
-// Nivi Exports
-window.fetchCloudWorkspaces = fetchCloudWorkspaces;
-window.createCloudWorkspace = createCloudWorkspace;
+// ── EXPORTS ──
+window.saveUserData          = saveUserData;
+window.triggerAutoSync       = triggerAutoSync;
+window.saveNiviChat          = saveNiviChat;
+window.loadNiviChat          = loadNiviChat;
+window.archiveNiviChat       = archiveNiviChat;
+window.loadNiviChatArchives  = loadNiviChatArchives;
+window.triggerChatSync       = triggerChatSync;
+window.fetchCloudWorkspaces  = fetchCloudWorkspaces;
+window.createCloudWorkspace  = createCloudWorkspace;
 window.saveFileToCloudWorkspace = saveFileToCloudWorkspace;
-window.syncWorkspaceFiles = syncWorkspaceFiles;
+window.syncWorkspaceFiles    = syncWorkspaceFiles;
 
-console.log('✅ firebase-sync.js loaded with Nivi Workspaces');
+console.log('✅ firebase-sync.js v2.0 loaded — Nivi Pro chat sync ready');
