@@ -123,8 +123,10 @@ function _fmt(text) {
     let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
     if(typeof marked !== 'undefined') {
     const renderer = new marked.Renderer();
-    renderer.html = function(htmlString) {
-      return htmlString.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    renderer.html = function(token) {
+      // marked v5+ passes object {type, raw, text}, older versions pass string
+      const raw = typeof token === 'string' ? token : (token.raw || token.text || '');
+      return raw.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     };
     marked.setOptions({ 
         breaks: true,
