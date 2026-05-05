@@ -67,20 +67,25 @@ code { font-family: var(--mono); font-size: 13px; }
     margin-top: 5px;
     display: inline-block;
 }
-/* Nivi ના જવાબ માટેનું સ્ટાઇલિંગ */
+/* Nivi ના જવાબ માટે પ્રીમિયમ બોક્સ */
 .nivi-row .bubble {
-  background: transparent; /* Gemini જેવો ક્લીન લુક */
-  padding: 8px 0;
-  width: 100%;
+    background: var(--bg-panel); /* ડાર્ક બેકગ્રાઉન્ડ */
+    border: 1px solid var(--border); /* આછો બોર્ડર */
+    padding: 14px 18px;
+    border-radius: 4px 16px 16px 16px; /* ઉપર ડાબી બાજુથી થોડું શાર્પ લુક */
+    color: var(--text);
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* થોડો 3D શેડો ઇફેક્ટ */
 }
 
-/* કોડ બ્લોક માટે ખાસ બોક્સ */
+/* Nivi ની અંદર આવતા કોડ બ્લોકને થોડો સેટ કરવા */
 .nivi-row pre {
-  background: #000 !important;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 12px 0;
+    background: #000 !important;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    width: 100%;
 }
     /* ── SCROLLBARS ── */
     ::-webkit-scrollbar { width: 3px; }
