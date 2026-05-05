@@ -638,15 +638,13 @@ function updateMsg(id, text) {
   }
 // --- આ ફંક્શન ઉમેરવું ફરજિયાત છે ---
 function _formatNiviResponse(text) {
-  if (text.includes('<img') || text.includes('<a')) return text;
-  let cleanText = text.replace(/Tokens:\s*~\d+/g, '').replace(/<div class="token-badge".*?<\/div>/g, '');
-  if (typeof marked === 'undefined') return cleanText.replace(/\n/g, '<br>');
-  marked.setOptions({ breaks: true });
-  const rawHtml = marked.parse(cleanText);
-  const words = cleanText.trim().split(/\s+/).length;
-  const tokens = Math.ceil(words * 1.3);
-  const tokenHtml = `<div class="token-badge" style="margin-top: 14px;">Tokens: ~${tokens}</div>`;
-  return rawHtml + tokenHtml;
+if (text.includes('<img') || text.includes('<a')) return text;
+if (typeof marked === 'undefined') return text.replace(/\n/g, '<br>');
+const rawHtml = marked.parse(text);
+const words = text.trim().split(/\s+/).length;
+const tokens = Math.ceil(words * 1.3);
+const tokenHtml = `<div class="token-badge">Tokens: ~${tokens}</div>`;
+return rawHtml + tokenHtml;
 }
   // ── SIDEBAR DATA ──
   function renderSidebarData() {
