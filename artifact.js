@@ -219,3 +219,98 @@ async function artAction(action) {
     renderSidebarData();
   }
 }
+// ── CODEMIRROR EDITOR ──
+let _cmInstance = null;
+
+function toggleArtEdit() {
+  if (!ART.cur || !ART.cur.txt) return;
+  const viewCode = document.getElementById('viewCode');
+  const viewEditor = document.getElementById('viewEditor');
+  const editBtn = document.getElementById('editArtBtn');
+  const saveBtn = document.getElementById('saveArtBtn');
+
+  // Editor open karo
+  viewCode.style.display = 'none';
+  viewEditor.style.display = 'flex';
+  editBtn.style.display = 'none';
+  saveBtn.style.display = 'flex';
+
+  // CodeMirror mode detect karo
+  const modeMap = {
+    js: 'javascript', html: 'htmlmixed',
+    css: 'css', py: 'python', json: 'javascript'
+  };
+  const mode = modeMap[ART.cur.ext] || 'plaintext';
+
+  // CodeMirror init
+  if (_cmInstance) _cmInstance.toTextArea();
+  _cmInstance = CodeMirror.fromTextArea(document.getElementById('cmEditor'), {
+    value: ART.cur.txt,
+    mode: mode,
+    theme: 'dracula',
+    lineNumbers: true,
+    lineWrapping: true,
+    indentUnit: 2,
+    tabSize: 2,
+    autofocus: true
+  });
+  _cmInstance.setValue(ART.cur.txt);
+  _cmInstance.refresh();
+}
+
+function saveArtEdit() {
+  if (!_cmInstance || !ART.cur) return;
+  const newCode = _cmInstance.getValue();
+
+  // ART.cur update karo
+  ART.cur.txt = newCode;
+  const b64 = btoa(unescape(encodeURIComponent(newCode)));
+  ART.cur.b64 = b64;
+
+  // Firebase ma save karo
+  const proj = document.getElementById('activeProjectSelect')?.value || 'default';
+  if (proj !== 'default' && typeof saveFileToCloudWorkspace === 'function') {
+    saveFileToCloudWorkspace(proj, ART.cur.name, ART.cur.mime || 'text/plain', b64);
+  }
+
+  // localStorage memory update
+  if (typeof saveFileToMemory === 'function') {
+    saveFileToMemory(ART.cur.name, b64, ART.cur.mime || 'text/plain');
+  }
+
+  // Editor band karo — code view ma dikhaao
+  const viewCode = document.getElementById('viewCode');
+  const viewEditor = document.getElementById('viewEditor');
+  const editBtn = document.getElementById('editArtBtn');
+  const saveBtn = document.getElementById('saveArtBtn');
+
+  viewEditor.style.display = 'none';
+  viewCode.style.display = 'flex';
+  editBtn.style.display = 'flex';
+  saveBtn.style.display = 'none';
+
+  // Highlight updated code
+  const el = document.getElementById('codeEl');
+  el.textContent = newCode;
+  el.className = `language-${ART.cur.cfg.hl || 'plaintext'}`;
+  if (typeof hljs !== 'undefined') hljs.highlightElement(el);
+
+  // Success feedback
+  const sb = document.getElementById('saveArtBtn');
+  if (sb) { sb.textContent = '✓ Saved!'; setTimeout(() => { sb.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Save'; }, 2000); }
+}
+
+// ── CLOSE ART — editor pan reset karo ──
+const _origCloseArt = closeArt;
+closeArt = function() {
+  if (_cmInstance) { _cmInstance.toTextArea(); _cmInstance = null; }
+  const editBtn = document.getElementById('editArtBtn');
+  const saveBtn = document.getElementById('saveArtBtn');
+  const viewCode = document.getElementById('viewCode');
+  const viewEditor = document.getElementById('viewEditor');
+  if (editBtn) editBtn.style.display = 'flex';
+  if (saveBtn) saveBtn.style.display = 'none';
+  if (viewCode) viewCode.style.display = 'flex';
+  if (viewEditor) viewEditor.style.display = 'none';
+  _origCloseArt();
+};
