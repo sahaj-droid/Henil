@@ -116,15 +116,22 @@ function clearChat(){
   if(typeof saveUserData === 'function') saveUserData('history');
 }
 
-function _fmt(text){
-  if(!text)return'';
-  if(text.includes('<img')&&text.includes('pollinations'))return text;
-  let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
-  if(typeof marked!=='undefined'){
-    marked.setOptions({ breaks: true }); 
-    const h=marked.parse(cleanText);
-    const w=cleanText.trim().split(/\s+/).length;
-    return h+`<div class="tbdg" style="margin-top:10px;">~${Math.ceil(w*1.3)} tokens</div>`;
+function _fmt(text) {
+  if(!text) return '';
+    if(text.includes('<img') && text.includes('pollinations')) return text;
+    let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
+    if(typeof marked !== 'undefined') {
+    const renderer = new marked.Renderer();
+    renderer.html = function(htmlString) {
+      return htmlString.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    };
+    marked.setOptions({ 
+        breaks: true,
+        renderer: renderer
+    });
+    const h = marked.parse(cleanText);
+    const w = cleanText.trim().split(/\s+/).length;
+    return h + `<div class="tbdg" style="margin-top:10px;">~${Math.ceil(w*1.3)} tokens</div>`;
   }
   return cleanText.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
 }
