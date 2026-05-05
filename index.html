@@ -643,30 +643,25 @@ const HERO_HTML=`<div id="heroSection"><div class="hero-icon">✦</div><h1 class
 function clearChat(){
   const history = window.AppState?._tabChatHistory || [];
   if(history.length > 0){
-    // 1. Firebase ma archive karo (async — background ma thase)
     if(typeof archiveNiviChat === 'function') archiveNiviChat(history);
-    // 2. LocalStorage ma pan rakho
     let a=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
     a.unshift({id:Date.now(), msgCount: history.length, chat: history});
-    if(a.length > 20) a = a.slice(0,20); // max 20 archives
+    if(a.length > 20) a = a.slice(0,20);
     localStorage.setItem('nivi_chat_archives', JSON.stringify(a));
   }
-  // 3. Current chat clear karo
   if(window.AppState) AppState._tabChatHistory=[];
   localStorage.setItem('niviTabChat','[]');
   closeArt();closeSheet();
   document.getElementById('chatWindow').innerHTML=HERO_HTML;
   renderSidebarData();
+  if(typeof saveUserData === 'function') saveUserData('history');
 }
 
 // ૧. ── સુધારેલું FORMATTER (ગીત અને ટોકન માટે) ──
 function _fmt(text){
   if(!text)return'';
   if(text.includes('<img')&&text.includes('pollinations'))return text;
-  
-  // ડબલ ટોકન ના થાય એના માટે જૂના ટોકન કાઢી નાખો
   let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
-  
   if(typeof marked!=='undefined'){
     marked.setOptions({ breaks: true }); // ગીતોની લાઈનો પ્રોપર આવે તે માટે
     const h=marked.parse(cleanText);
@@ -850,12 +845,13 @@ function deleteProject(id, name){
 }
 
 function deleteCurrentChat(){
-  if(!confirm('આખી ચેટ ડીલીટ કરવી છે? (આર્કાઇવમાં પણ સેવ નહિ થાય)')) return;
+  if(!confirm('Are you sure ?)')) return;
   if(window.AppState) AppState._tabChatHistory = [];
   localStorage.setItem('niviTabChat', '[]');
   closeArt(); closeSheet();
   document.getElementById('chatWindow').innerHTML = HERO_HTML;
   renderSidebarData();
+  if(typeof saveUserData === 'function') saveUserData('history');
 }
 
 function deleteArchivedChat(id){
