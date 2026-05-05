@@ -42,8 +42,17 @@ window.onload=async()=>{
 // ── UI HELPERS ──
 window.handleKey = function(e) {if (e.key === 'Enter' && !e.shiftKey) {e.preventDefault(); document.getElementById('sendBtn').click();}};
 function qp(t){document.getElementById('mainInput').value=t;document.getElementById('mainInput').focus();}
-function toggleGen(g){document.getElementById('stopBtn').style.display=g?'flex':'none';document.getElementById('sendBtn').style.display=g?'none':'flex';if(window.AppState)window.AppState._isGenerating=g;}
-function stopGeneration(){toggleGen(false);if(window.AppState)window.AppState._abortController=true;}
+window.toggleGen = function(g) {
+  const stopBtn = document.getElementById('stopBtn');
+  const sendBtn = document.getElementById('sendBtn');
+  if(stopBtn) stopBtn.style.display = g ? 'flex' : 'none';
+  if(sendBtn) sendBtn.style.display = g ? 'none' : 'flex';
+  if(window.AppState) window.AppState._isGenerating = g;
+};
+window.stopGeneration = function() {
+    window.toggleGen(false);
+    if(window.AppState) window.AppState._abortController = true;
+};
 function toggleSidebar(){const s=document.getElementById('sidebar');if(window.innerWidth<=768)s.classList.toggle('mob-open');else s.classList.toggle('collapsed');}
 function openProjectModal(){document.getElementById('projectModal').classList.add('open');setTimeout(()=>document.getElementById('newProjectName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -391,7 +400,7 @@ async function handleSend(){
   }
 
 // ── SETTINGS MODAL ──
-function openSettings(){
+window.openSettings = function() {
   const c=document.getElementById('modelChainContainer');if(!c)return;
   c.innerHTML='';let chain=[];try{chain=JSON.parse(localStorage.getItem('nivi_model_chain')||'[]');}catch(e){}
   if(!chain.length)addModelRow({provider:'gemini',model:'',key:'',url:''});
