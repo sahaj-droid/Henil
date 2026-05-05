@@ -28,13 +28,16 @@ function handleFileSelect(inp) {
   }
 }
 
-function saveFileToMemory(filename) {
+// base64 + mimeType pan save karo — sidebar thi click karta artifact open thay
+function saveFileToMemory(filename, base64Data, mimeType) {
   let files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
-  if (!files.find(f => f.name === filename)) {
-    files.push({ name: filename, ts: Date.now() });
-    localStorage.setItem('nivi_file_memory', JSON.stringify(files));
-    if(typeof renderSidebarData === 'function') renderSidebarData();
-  }
+  // already exist kare to update karo, nahi to add karo
+  const idx = files.findIndex(f => f.name === filename);
+  const entry = { name: filename, ts: Date.now(), data: base64Data || null, mimeType: mimeType || 'text/plain' };
+  if (idx >= 0) files[idx] = entry;
+  else files.push(entry);
+  localStorage.setItem('nivi_file_memory', JSON.stringify(files));
+  if(typeof renderSidebarData === 'function') renderSidebarData();
 }
 
 function appendMsg(role, text, id) {
@@ -95,7 +98,7 @@ async function handleSend() {
       const r = await window.directGeminiCallWithFile(text || "Analyze this file.", base64, mime);
       if(!window.AppState._abortController) {
           updateMsg(resId, r.answer || "⚠️ No answer received.");
-          saveFileToMemory(file.name);
+          saveFileToMemory(file.name, base64, mime); // ← base64 + mime pan save
       }
       AppState._pendingFile = null;
       document.getElementById('fileInp').value = ''; 
