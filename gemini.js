@@ -1,120 +1,249 @@
+// ═══════════════════════════════════════════════════════════
+//  NIVI PRO — Universal AI Engine v2.0
+//  Providers: Gemini | OpenRouter | Nvidia (+ any OpenAI-compatible)
+//  Config: localStorage only — no code change needed
+// ═══════════════════════════════════════════════════════════
+
+// Provider default URLs — override via localStorage 'nivi_provider_urls'
+const PROVIDER_DEFAULTS = {
+  gemini:      { url: null,  format: 'gemini' },   // special Gemini API format
+  openrouter:  { url: 'https://openrouter.ai/api/v1/chat/completions', format: 'openai' },
+  nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions', format: 'openai' },
+  custom:      { url: '',    format: 'openai' },    // user-defined endpoint
+};
+
+// ── Helper: get full config for a provider ──
+function _resolveProvider(item) {
+  const def = PROVIDER_DEFAULTS[item.provider] || PROVIDER_DEFAULTS.custom;
+  
+  // URL: item.url > localStorage override > default
+  let urls = {};
+  try { urls = JSON.parse(localStorage.getItem('nivi_provider_urls') || '{}'); } catch(e) {}
+  
+  const resolvedUrl = item.url || urls[item.provider] || def.url || '';
+  const format = def.format;
+  
+  // Key: item.key > localStorage per-provider key
+  const lsKeyName = `nivi_key_${item.provider}`;
+  const resolvedKey = item.key || localStorage.getItem(lsKeyName) || '';
+  
+  // Model: item.model > localStorage per-provider default model
+  const lsModelName = `nivi_model_${item.provider}`;
+  const resolvedModel = item.model || localStorage.getItem(lsModelName) || '';
+
+  return { ...item, url: resolvedUrl, key: resolvedKey, model: resolvedModel, format };
+}
+
+// ── getModelChain ──
 window.getModelChain = function() {
-    return JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
+  return JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
 };
 
-window.readFileAsBase64 = function (file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = () => reject(new Error('File read failed'));
-        reader.readAsDataURL(file);
-    });
+// ── File utilities ──
+window.readFileAsBase64 = function(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('File read failed'));
+    reader.readAsDataURL(file);
+  });
 };
 
-window.getFileMimeType = function (filename) {
-    const ext = filename.split('.').pop().toLowerCase();
-    const map = {
-        'pdf':'application/pdf', 'js':'text/javascript', 'html':'text/html', 'css':'text/css',
-        'txt':'text/plain', 'json':'application/json', 'csv':'text/csv',
-        'png':'image/png', 'jpg':'image/jpeg', 'jpeg':'image/jpeg', 'webp':'image/webp'
-    };
-    return map[ext] || 'text/plain';
+window.getFileMimeType = function(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const map = {
+    'pdf':'application/pdf','js':'text/javascript','html':'text/html',
+    'css':'text/css','txt':'text/plain','json':'application/json',
+    'csv':'text/csv','md':'text/plain','py':'text/plain',
+    'png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg',
+    'webp':'image/webp','gif':'image/gif'
+  };
+  return map[ext] || 'text/plain';
 };
 
-// MULTI-TURN TEXT STREAMING WITH FALLBACKS
-window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk) {
-    const chain = window.getModelChain();
-    if (chain.length === 0) { onChunk("⚠️ No models configured in settings."); return; }
+// ── OpenAI-compatible call (OpenRouter, Nvidia, custom) ──
+async function _openaiCall(cfg, messages, onChunk) {
+  const response = await fetch(cfg.url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${cfg.key}`,
+      'Content-Type': 'application/json',
+      ...(cfg.provider === 'openrouter' ? {
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Nivi Pro'
+      } : {})
+    },
+    body: JSON.stringify({
+      model: cfg.model,
+      messages,
+      stream: !!onChunk,
+      max_tokens: 4096
+    })
+  });
 
-    for (const item of chain) {
-        if (window.AppState._abortController) break;
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`${response.status}: ${err.slice(0,200)}`);
+  }
+
+  // Streaming
+  if (onChunk) {
+    const reader = response.body.getReader();
+    let fullText = '';
+    while (true) {
+      if (window.AppState?._abortController) break;
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunk = new TextDecoder().decode(value);
+      const lines = chunk.split('\n').filter(l => l.startsWith('data: ') && l !== 'data: [DONE]');
+      for (const line of lines) {
         try {
-            if (item.provider === 'gemini') {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${item.model || 'gemini-1.5-flash'}:streamGenerateContent?alt=sse&key=${item.key}`;
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: JSON.stringify({ contents: [...priorHistory, { role: 'user', parts: [{ text: currentPrompt }] }] })
-                });
-                if (!response.ok) continue;
-                
-                const reader = response.body.getReader();
-                let fullText = "";
-                while (true) {
-                    if (window.AppState._abortController) break;
-                    const { value, done } = await reader.read();
-                    if (done) break;
-                    const chunk = new TextDecoder().decode(value);
-                    const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
-                    for (const line of lines) {
-                        try {
-                            const data = JSON.parse(line.replace('data: ', ''));
-                            if(data.candidates && data.candidates[0].content) {
-                                fullText += data.candidates[0].content.parts[0].text;
-                                onChunk(fullText);
-                            }
-                        } catch(e) {}
-                    }
-                }
-                return { ok: true };
-            } else {
-                // OPENROUTER / GROQ FALLBACK (Non-Streaming)
-                const apiEndpoint = item.provider === 'groq' ? 'https://api.groq.com/openai/v1/chat/completions' : (item.url || 'https://openrouter.ai/api/v1/chat/completions');
-                const messages = priorHistory.map(m => ({ role: m.role==='model'?'assistant':'user', content: m.parts[0].text })).concat({role:'user', content:currentPrompt});
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${item.key}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: item.model, messages: messages })
-                });
-                const data = await response.json();
-                if (data.choices && data.choices[0]) {
-                    onChunk(data.choices[0].message.content);
-                    return { ok: true };
-                }
-            }
-        } catch(e) { console.warn(`Model ${item.model} failed. Switching...`); }
+          const data = JSON.parse(line.replace('data: ', ''));
+          const delta = data.choices?.[0]?.delta?.content || '';
+          if (delta) { fullText += delta; onChunk(fullText); }
+        } catch(e) {}
+      }
     }
-    onChunk("⚠️ All configured models failed to respond.");
-    return { ok: false };
-};
+    return { ok: true, text: fullText };
+  }
 
-// FILE READING WITH DYNAMIC KEY FETCH
-window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
-    const chain = window.getModelChain();
-    const geminiConfig = chain.find(c => c.provider === 'gemini');
-    if (!geminiConfig || !geminiConfig.key) return { ok: false, answer: '⚠️ Gemini API Key is missing for file upload.' };
+  // Non-streaming
+  const data = await response.json();
+  if (data.choices?.[0]) return { ok: true, text: data.choices[0].message.content };
+  throw new Error('No choices in response');
+}
+
+// ── Gemini streaming call ──
+async function _geminiStreamCall(cfg, history, prompt, onChunk) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model || 'gemini-1.5-flash'}:streamGenerateContent?alt=sse&key=${cfg.key}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [...history, { role: 'user', parts: [{ text: prompt }] }]
+    })
+  });
+
+  if (!response.ok) throw new Error(`Gemini ${response.status}`);
+
+  const reader = response.body.getReader();
+  let fullText = '';
+  while (true) {
+    if (window.AppState?._abortController) break;
+    const { value, done } = await reader.read();
+    if (done) break;
+    const chunk = new TextDecoder().decode(value);
+    const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+    for (const line of lines) {
+      try {
+        const data = JSON.parse(line.replace('data: ', ''));
+        if (data.candidates?.[0]?.content) {
+          fullText += data.candidates[0].content.parts[0].text;
+          onChunk(fullText);
+        }
+      } catch(e) {}
+    }
+  }
+  return { ok: true, text: fullText };
+}
+
+// ── Gemini file call ──
+async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model || 'gemini-1.5-flash'}:generateContent?key=${cfg.key}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [
+        { inline_data: { mime_type: mimeType, data: fileBase64 } },
+        { text: prompt }
+      ]}]
+    })
+  });
+  const data = await response.json();
+  if (response.ok && data.candidates) return { ok: true, answer: data.candidates[0].content.parts[0].text };
+  throw new Error(data.error?.message || 'Gemini file call failed');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MAIN: Multi-turn streaming with automatic fallback chain
+// ═══════════════════════════════════════════════════════════
+window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk) {
+  const chain = window.getModelChain();
+  if (chain.length === 0) { onChunk('⚠️ No models configured. Open Settings to add a model.'); return; }
+
+  let lastError = '';
+  for (const rawItem of chain) {
+    if (window.AppState?._abortController) break;
+    const cfg = _resolveProvider(rawItem);
+
+    if (!cfg.key) { lastError = `No API key for ${cfg.provider}`; continue; }
+    if (!cfg.model) { lastError = `No model set for ${cfg.provider}`; continue; }
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiConfig.model || 'gemini-1.5-flash'}:generateContent?key=${geminiConfig.key}`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType, data: fileBase64 } }, { text: prompt }] }]
-            })
-        });
-
-        const data = await response.json();
-        if (response.ok && data.candidates) {
-            return { ok: true, answer: data.candidates[0].content.parts[0].text };
-        }
-    } catch (err) { console.error('File call error:', err.message); }
-
-    // Text File Fallback Logic
-    if (['text/javascript', 'text/html', 'text/plain', 'text/css'].includes(mimeType)) {
-        try {
-            const fallbackModel = chain.find(c => c.provider !== 'gemini');
-            if(fallbackModel && fallbackModel.key) {
-                 const textContent = atob(fileBase64);
-                 const apiEndpoint = fallbackModel.provider === 'groq' ? 'https://api.groq.com/openai/v1/chat/completions' : (fallbackModel.url || 'https://openrouter.ai/api/v1/chat/completions');
-                 const res = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${fallbackModel.key}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: fallbackModel.model, messages: [{role:'user', content:`File Content:\n\`\`\`\n${textContent.slice(0, 8000)}\n\`\`\`\n\nUser Query: ${prompt}`}] })
-                });
-                const data = await res.json();
-                if(data.choices) return { ok: true, answer: data.choices[0].message.content };
-            }
-        } catch(e) {}
+      if (cfg.format === 'gemini') {
+        await _geminiStreamCall(cfg, priorHistory, currentPrompt, onChunk);
+      } else {
+        // Convert Gemini history format → OpenAI format
+        const messages = priorHistory.map(m => ({
+          role: m.role === 'model' ? 'assistant' : 'user',
+          content: m.parts[0].text
+        })).concat({ role: 'user', content: currentPrompt });
+        await _openaiCall(cfg, messages, onChunk);
+      }
+      return { ok: true };
+    } catch(e) {
+      lastError = e.message;
+      console.warn(`[Nivi] ${cfg.provider}/${cfg.model} failed: ${e.message}. Trying next...`);
     }
-    return { ok: false, answer: '⚠️ File read failed. Ensure Gemini is configured as primary.' };
+  }
+
+  onChunk(`⚠️ All models failed. Last error: ${lastError}`);
+  return { ok: false };
 };
+
+// ═══════════════════════════════════════════════════════════
+//  FILE ANALYSIS — Gemini primary, OpenAI-compatible fallback
+// ═══════════════════════════════════════════════════════════
+window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
+  const chain = window.getModelChain();
+
+  // Gemini first — only provider that supports inline file data natively
+  const geminiRaw = chain.find(c => c.provider === 'gemini');
+  if (geminiRaw) {
+    const cfg = _resolveProvider(geminiRaw);
+    if (cfg.key) {
+      try {
+        return await _geminiFileCall(cfg, prompt, fileBase64, mimeType);
+      } catch(e) {
+        console.warn('[Nivi] Gemini file call failed:', e.message);
+      }
+    }
+  }
+
+  // Text file fallback — send content as text to any OpenAI-compatible provider
+  const TEXT_MIMES = ['text/javascript','text/html','text/plain','text/css','application/json','text/csv'];
+  if (TEXT_MIMES.includes(mimeType)) {
+    const fallbackRaw = chain.find(c => c.provider !== 'gemini');
+    if (fallbackRaw) {
+      const cfg = _resolveProvider(fallbackRaw);
+      if (cfg.key && cfg.url) {
+        try {
+          const textContent = atob(fileBase64).slice(0, 10000);
+          const messages = [{
+            role: 'user',
+            content: `File: ${mimeType}\n\`\`\`\n${textContent}\n\`\`\`\n\nQuery: ${prompt}`
+          }];
+          const r = await _openaiCall(cfg, messages, null);
+          return { ok: true, answer: r.text };
+        } catch(e) {
+          console.warn('[Nivi] Fallback file call failed:', e.message);
+        }
+      }
+    }
+  }
+
+  return { ok: false, answer: '⚠️ File analysis failed. Ensure Gemini is configured with a valid API key.' };
+};
+
+console.log('✅ Nivi AI Engine v2.0 loaded — Universal provider support');
