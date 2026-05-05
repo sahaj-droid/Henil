@@ -30,7 +30,7 @@ async function saveNiviChat(chatHistory) {
       messages: validChat,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       msgCount: validChat.length
-    }, { merge: true });
+    });
     
     console.log('✅ Nivi chat saved to Firebase (Count: ' + validChat.length + ')');
     _updateSyncUI('connected');
