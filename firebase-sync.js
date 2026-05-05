@@ -18,8 +18,12 @@ async function saveNiviChat(chatHistory) {
       localStorage.setItem('nivi_current_session_id', chatId);
     }
     
-    // 💥 અસલી Solution: જો ચેટ ખાલી હોય તો રિટર્ન થવાના બદલે ખાલી એરે સેવ કરો (જૂનો કચરો કાઢવા)
+// Empty array Firebase par save na karo — accidental overwrite rokvo
     const validChat = chatHistory ? chatHistory : [];
+    if (validChat.length === 0) {
+      console.warn('saveNiviChat: empty array — skip karyun');
+      return;
+    }
 
     await db.collection('users').doc(userId)
             .collection('niviChats').doc(chatId).set({
