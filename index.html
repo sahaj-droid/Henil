@@ -655,8 +655,10 @@ function clearChat(){
 function _fmt(text){
   if(!text)return'';
   if(text.includes('<img')&&text.includes('pollinations'))return text;
+  
   // ડબલ ટોકન ના થાય એના માટે જૂના ટોકન કાઢી નાખો
   let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
+  
   if(typeof marked!=='undefined'){
     marked.setOptions({ breaks: true }); // ગીતોની લાઈનો પ્રોપર આવે તે માટે
     const h=marked.parse(cleanText);
@@ -671,11 +673,13 @@ function addArtifactButtons(el) {
   el.querySelectorAll('pre').forEach((pre, idx) => {
     const codeEl = pre.querySelector('code');
     if(codeEl && typeof hljs!=='undefined') hljs.highlightElement(codeEl);
+
     // જો બટન ના હોય તો બનાવો
     if(!pre.querySelector('.run-art-btn') && codeEl){
       const langMatch = codeEl.className.match(/language-(\w+)/);
       let ext = langMatch ? langMatch[1] : 'txt';
       if(ext==='javascript') ext='js'; if(ext==='python') ext='py';
+
       const btn = document.createElement('button');
       btn.className = 'tbtn prim run-art-btn';
       btn.innerHTML = '⚡ Run / View';
@@ -688,41 +692,76 @@ function addArtifactButtons(el) {
     }
   });
 }
-// ── PROMPT-TO-ACTION SHORTCUTS (SILENT & AUTO-SCROLL FIX) ──
+// ── PROMPT-TO-ACTION SHORTCUTS (MAGIC MASK FIX) ──
 async function artAction(action) {
   if (!ART.cur || !ART.cur.txt) return;
   const code = ART.cur.txt;
   const lang = ART.cur.cfg.hl || 'code';
-  let displayMsg = "";
+  
   let apiPrompt = "";
   
-  // UI માટે નાનો મેસેજ અને API માટે મોટો પ્રોમ્પ્ટ
+  // અહીંયા આપણે <nivi-hidden> નામનો જાદુઈ ટેગ વાપરીશું
   if(action === 'explain') {
-    displayMsg = `💡 Please explain this ${lang} code.`;
-    apiPrompt = `Please explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+    apiPrompt = `💡 Please explain this ${lang} code.\n<nivi-hidden>\nPlease explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   } else if(action === 'fix') {
-    displayMsg = `🐛 Please find and fix bugs in this ${lang} code.`;
-    apiPrompt = `Please review this code for any bugs or errors, and provide the fixed version:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+    apiPrompt = `🐛 Please find and fix bugs in this ${lang} code.\n<nivi-hidden>\nPlease review this code for any bugs or errors, and provide the fixed version:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   } else if(action === 'optimize') {
-    displayMsg = `⚡ Please optimize this ${lang} code.`;
-    apiPrompt = `Please optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+    apiPrompt = `⚡ Please optimize this ${lang} code.\n<nivi-hidden>\nPlease optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   }
+  
   closeArt();
   closeSheet();
-  // ૧. UI માં માત્ર નાનકડો મેસેજ બતાવો
-  appendMsg('user', displayMsg);
-  // ૨. હિસ્ટ્રીમાં આખો લાંબો કોડ સેવ કરો (જેથી API ને પ્રોપર ડેટા મળે)
+
+  // ૧. એક જ મેસેજ UI માં મોકલો (જેમાં છુપો ટેગ છે)
+  appendMsg('user', apiPrompt);
+
+  // ૨. હિસ્ટ્રીમાં પણ એ જ સેમ મેસેજ સેવ કરો (જેથી Delete મેચ થાય!)
   if(window.AppState) {
     AppState._tabChatHistory.push({role:'user', text: apiPrompt});
     localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
   }
+
+  // ૩. નીચે સ્ક્રોલ કરો
+  setTimeout(() => {
+    const wrap = document.getElementById('chatWrap');
+    if(wrap) wrap.scrollTop = wrap.scrollHeight;
+  }, 50);
+
+  // ૪. API કોલ ચાલુ કરો
+  toggleGen(true);
+  if(window.AppState) AppState._abortController = false;
+  const resId = 'nivi-' + Date.now();
+  appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
+
+  try {
+    const hist = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user', parts:[{text:m.text}]})) : [];
+    if(typeof directGeminiCallStreamMultiTurn === 'function') {
+      await directGeminiCallStreamMultiTurn(hist, apiPrompt, (chunk) => {
+        if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
+      });
+    }
+  } catch(err) {
+    if(!window.AppState || !AppState._abortController) updateMsg(resId, '⚠ Error: ' + err.message);
+  } finally {
+    toggleGen(false);
+    if(!window.AppState || !AppState._abortController) {
+      if(window.AppState) {
+        const el = document.getElementById(resId);
+        let rawText = el?.getAttribute('data-raw')?.replace(/&#39;/g, "'").replace(/&quot;/g, '"') || el?.innerText || '';
+        AppState._tabChatHistory.push({role:'nivi', text: rawText});
+        localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+      }
+    }
+    if(typeof saveUserData === 'function') saveUserData('history');
+    renderSidebarData();
+  }
+}
 
   // ૩. તરત જ નીચે સ્ક્રોલ કરો (Scroll Fix)
   setTimeout(() => {
     const wrap = document.getElementById('chatWrap');
     if(wrap) wrap.scrollTop = wrap.scrollHeight;
   }, 50);
-
   // ૪. જાતે જ API Call કરો (Silent Backend Magic)
   toggleGen(true);
   if(window.AppState) AppState._abortController = false;
@@ -752,7 +791,6 @@ async function artAction(action) {
     renderSidebarData();
   }
 }
-// ૨. ── સુધારેલું APPEND MSG ──
 function appendMsg(role,text,id){
   const win=document.getElementById('chatWindow');
   const hero=document.getElementById('heroSection');if(hero)hero.style.display='none';
@@ -760,14 +798,18 @@ function appendMsg(role,text,id){
   const row=document.createElement('div');
   row.className=`msg-row ${role==='user'?'ur':'nr'}`;row.id='row-'+msgId;
   const av=role==='nivi'?`<div class="avatar nav">✦</div>`:'';
-  const fmt=role==='nivi'?_fmt(text):text.replace(/\n/g,'<br>');
+  // 🤫 MAGIC MASK: <nivi-hidden> વાળો લાંબો કોડ UI માંથી કાપી નાખો!
+  const uiText = text.replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, '').trim();
+  // બચેલા નાના ટેક્સ્ટને જ પ્રિન્ટ કરો
+  const safeUserText = uiText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const fmt = role==='nivi' ? _fmt(uiText) : safeUserText.replace(/\n/g,'<br>');
+  // પણ હિસ્ટ્રી (Delete) માટે ડેટામાં તો આખો મેસેજ જ સાચવો
   const esc=text.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
   const acts=`<div class="msg-actions"><div class="abt" onclick="cpMsg('${msgId}')" title="Copy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><div class="abt del" onclick="delMsg('${msgId}')" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div></div>`;
   const align=role==='user'?'flex-end':'flex-start';const mw=role==='user'?'max-width:80%;':'width:100%;';
   row.innerHTML=`${av}<div style="display:flex;flex-direction:column;align-items:${align};${mw}"><div class="bubble" id="${msgId}" data-raw="${esc}">${fmt}</div>${acts}</div>`;
   win.appendChild(row);
-  
-  if(role==='nivi') addArtifactButtons(row); // આર્ટિફેક્ટ અને હાઈલાઈટ
+  if(role==='nivi') addArtifactButtons(row);
   const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
 }
 
@@ -775,12 +817,12 @@ function appendMsg(role,text,id){
 function updateMsg(id,text){
   const el=document.getElementById(id);if(!el)return;
   el.setAttribute('data-raw',text.replace(/'/g,"&#39;").replace(/"/g,"&quot;"));
-
-  // Speed Fix: 50ms નું Debouncing
+  // 🤫 અહી પણ છુપાવો
+  const uiText = text.replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, '').trim();
   clearTimeout(window['renderTimer_'+id]);
   window['renderTimer_'+id] = setTimeout(() => {
-    el.innerHTML=_fmt(text);
-    addArtifactButtons(el); // આર્ટિફેક્ટ અને હાઈલાઈટ
+    el.innerHTML=_fmt(uiText);
+    addArtifactButtons(el); 
     const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
   }, 50);
 }
@@ -854,6 +896,7 @@ function deleteFile(name){
   if(ART.cur?.name===name){closeArt();closeSheet();}
   renderSidebarData();
 }
+
 // ═══════════════════════════════════════════════════
 //  SEND
 // ═══════════════════════════════════════════════════
@@ -864,6 +907,7 @@ async function handleSend(){
   const files=window.AppState?._pendingFiles||[];
   const file=files[0]||null;
   if(!text&&!files.length)return;
+
   // /image
   if(text.toLowerCase().startsWith('/image ')){
     const prompt=text.substring(7).trim();
@@ -922,6 +966,7 @@ async function handleSend(){
     if(!window.AppState || !AppState._abortController) {
       if(window.AppState) {
         const el = document.getElementById(resId);
+        
         // 🐛 ફિક્સ: innerText ના બદલે ઓરિજિનલ માર્કડાઉન કોડ (data-raw) સેવ કરો
         let rawText = '';
         if (el && el.getAttribute('data-raw')) {
