@@ -637,17 +637,14 @@ function appendMsg(role, text, id) {
   }
 // --- આ ફંક્શન ઉમેરવું ફરજિયાત છે ---
 function _formatNiviResponse(text) {
-  // જો કોઈ ઇમેજ જનરેટ થઈ હોય (HTML હોય), તો તેને એમનેમ જવા દો
   if (text.includes('<img') || text.includes('<a')) return text;
-  if (typeof marked === 'undefined') return text.replace(/\n/g, '<br>');
+  let cleanText = text.replace(/Tokens:\s*~\d+/g, '').replace(/<div class="token-badge".*?<\/div>/g, '');
+  if (typeof marked === 'undefined') return cleanText.replace(/\n/g, '<br>');
   marked.setOptions({ breaks: true });
-  const rawHtml = marked.parse(text);
-  
-  // ટોકન કાઉન્ટ ગણવા માટેનું લોજિક
-  const words = text.trim().split(/\s+/).length;
+  const rawHtml = marked.parse(cleanText);
+  const words = cleanText.trim().split(/\s+/).length;
   const tokens = Math.ceil(words * 1.3);
-  const tokenHtml = `<div class="token-badge">Tokens: ~${tokens}</div>`;
-  
+  const tokenHtml = `<div class="token-badge" style="margin-top: 14px;">Tokens: ~${tokens}</div>`;
   return rawHtml + tokenHtml;
 }
   // ── SIDEBAR DATA ──
@@ -655,7 +652,6 @@ function _formatNiviResponse(text) {
     let models = [];
     try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
     if(models.length === 0) models = [{provider: "—", model: "Not Configured"}];
-
     const providerColors = { gemini: 'var(--accent)', openrouter: 'var(--purple)', groq: 'var(--green)', nvidia: 'var(--amber)' };
     const ml = document.getElementById('modelList');
     if (ml) ml.innerHTML = models.map((m, i) =>
@@ -698,19 +694,14 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
 // ── SEND ──
   async function handleSend() {
     if(window.AppState && AppState._isGenerating) return;
-
     const inp = document.getElementById('mainInput');
     const text = inp.value.trim();
-    
-    // Multiple files support
-    const files = window.AppState && AppState._pendingFiles ? AppState._pendingFiles : [];
+    const files = window.AppState && AppState._pendingFiles ? AppState._pendingFiles : []; // Multiple files support
     const file = files.length > 0 ? files[0] : null; // Gemini માટે પહેલી ફાઈલ 
     const fileNames = files.map(f => f.name).join(', ');
-    
-    if (!text && files.length === 0) return;
-    // ----- IMAGE GENERATION (Creative Workspace) -----
+    if (!text && files.length === 0) return; // ----- IMAGE GENERATION (Creative Workspace) -----
     if (text.toLowerCase().startsWith('/image ')) {
-      const imagePrompt = text.substring(7).trim();
+    const imagePrompt = text.substring(7).trim();
       appendMsg('user', text);
       if(window.AppState) {
         AppState._tabChatHistory.push({ role:'user', text: text });
@@ -718,9 +709,7 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       inp.value = ''; inp.style.height = 'auto';
 
       const resId = 'nivi-' + Date.now();
-      // સીધું જ હાઈ-ક્વોલિટી ઈમેજ URL જનરેટ કરશે
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1024&height=1024&nologo=true`;
-      
       const imgHtml = `
         <div style="margin-top:10px; position:relative; width:fit-content;">
           <img src="${imageUrl}" style="max-width:100%; border-radius:12px; border: 1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop = 99999;">
@@ -731,7 +720,6 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       `;
       
       appendMsg('nivi', imgHtml, resId);
-      
       if(window.AppState) {
         AppState._tabChatHistory.push({ role:'nivi', text: imgHtml });
         localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
@@ -753,9 +741,7 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
     clearFile();
     toggleGenerating(true);
     if(window.AppState) AppState._abortController = false;
-
-    // Thinking Dots ના બદલે ડાયરેક્ટ ટાઈપિંગ
-    const resId = 'nivi-' + Date.now();
+    const resId = 'nivi-' + Date.now(); // Thinking Dots ના બદલે ડાયરેક્ટ ટાઈપિંગ
     appendMsg('nivi', '', resId); 
 
     try {
@@ -769,7 +755,6 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
           if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name);
           const activeProj = document.getElementById('activeProjectSelect').value;
           
-          // બધી સિલેક્ટ કરેલી ફાઈલો ક્લાઉડમાં સેવ કરો
           if(typeof saveFileToCloudWorkspace === 'function') {
              for (let f of files) {
                 const b64 = await window.readFileAsBase64(f);
@@ -790,9 +775,8 @@ const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
            const topic = text.substring(6).trim();
            // Nivi ને છૂપી રીતે લિરિસિસ્ટ બનવાની ઇન્સ્ટ્રક્શન આપીશું
            apiText = `તમે એક પ્રોફેશનલ અને અત્યંત ક્રિએટિવ ગીતકાર (Lyricist) છો. હિન્દી અને ગુજરાતી ભાષામાં ડીપ ઇમોશનલ થીમ અને અર્બન (Urban) એટમોસ્ફિયર પર ઓરિજિનલ ગીતો લખવામાં તમે એક્સપર્ટ છો. 
-           
-કૃપા કરીને નીચેના વિષય પર એક શાનદાર ગીત લખો: "${topic}". 
-ગીતમાં Verse, Chorus (Hook) અને Bridge હોવા જોઈએ. શબ્દોમાં એકદમ રૉ (raw) ઇમોશન્સ અને મોડર્ન ફીલ આવવી જોઈએ.`;
+           કૃપા કરીને નીચેના વિષય પર એક શાનદાર ગીત લખો: "${topic}". 
+           ગીતમાં Verse, Chorus (Hook) અને Bridge હોવા જોઈએ. શબ્દોમાં એકદમ રૉ (raw) ઇમોશન્સ અને મોડર્ન ફીલ આવવી જોઈએ.`;
         }
         // અહીં text ના બદલે આપણો apiText મોકલીશું
         await directGeminiCallStreamMultiTurn(history, apiText, (chunk) => {
