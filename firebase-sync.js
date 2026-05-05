@@ -187,7 +187,10 @@ async function syncWorkspaceFiles(projId) {
 async function saveUserData(field = null) {
   if (field === 'history') {
     const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
-    triggerChatSync(history);
+    // Debounce nahi — direct save karo (chat lose na thay)
+    if (history.length > 0) {
+      await saveNiviChat(history);
+    }
   }
 }
 function triggerAutoSync(field) { saveUserData(field); }
