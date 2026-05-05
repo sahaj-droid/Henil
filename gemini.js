@@ -115,7 +115,7 @@ async function _openaiCall(cfg, messages, onChunk) {
 
 // ── Gemini streaming call ──
 async function _geminiStreamCall(cfg, history, prompt, onChunk) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model || 'gemini-1.5-flash'}:streamGenerateContent?alt=sse&key=${cfg.key}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -149,7 +149,7 @@ async function _geminiStreamCall(cfg, history, prompt, onChunk) {
 
 // ── Gemini file call ──
 async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model || 'gemini-1.5-flash'}:generateContent?key=${cfg.key}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
