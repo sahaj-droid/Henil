@@ -681,13 +681,10 @@ function addArtifactButtons(el) {
   el.querySelectorAll('pre').forEach((pre, idx) => {
     const codeEl = pre.querySelector('code');
     if(codeEl && typeof hljs!=='undefined') hljs.highlightElement(codeEl);
-
-    // જો બટન ના હોય તો બનાવો
     if(!pre.querySelector('.run-art-btn') && codeEl){
       const langMatch = codeEl.className.match(/language-(\w+)/);
       let ext = langMatch ? langMatch[1] : 'txt';
       if(ext==='javascript') ext='js'; if(ext==='python') ext='py';
-
       const btn = document.createElement('button');
       btn.className = 'tbtn prim run-art-btn';
       btn.innerHTML = '⚡ Run / View';
@@ -706,7 +703,6 @@ async function artAction(action) {
   const code = ART.cur.txt;
   const lang = ART.cur.cfg.hl || 'code';
   let apiPrompt = "";
-  // અહીંયા આપણે <nivi-hidden> નામનો જાદુઈ ટેગ વાપરીશું
   if(action === 'explain') {
     apiPrompt = `💡 Please explain this ${lang} code.\n<nivi-hidden>\nPlease explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   } else if(action === 'fix') {
@@ -714,19 +710,14 @@ async function artAction(action) {
   } else if(action === 'optimize') {
     apiPrompt = `⚡ Please optimize this ${lang} code.\n<nivi-hidden>\nPlease optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   }
-  
   closeArt();
   closeSheet();
 
-  // ૧. એક જ મેસેજ UI માં મોકલો (જેમાં છુપો ટેગ છે)
   appendMsg('user', apiPrompt);
-
-  // ૨. હિસ્ટ્રીમાં પણ એ જ સેમ મેસેજ સેવ કરો (જેથી Delete મેચ થાય!)
   if(window.AppState) {
     AppState._tabChatHistory.push({role:'user', text: apiPrompt});
     localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
   }
-  // ૩. નીચે સ્ક્રોલ કરો
   setTimeout(() => {
     const wrap = document.getElementById('chatWrap');
     if(wrap) wrap.scrollTop = wrap.scrollHeight;
@@ -737,7 +728,6 @@ async function artAction(action) {
   if(window.AppState) AppState._abortController = false;
   const resId = 'nivi-' + Date.now();
   appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
-
   try {
     const hist = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user', parts:[{text:m.text}]})) : [];
     if(typeof directGeminiCallStreamMultiTurn === 'function') {
@@ -787,7 +777,6 @@ function appendMsg(role,text,id){
 function updateMsg(id,text){
   const el=document.getElementById(id);if(!el)return;
   el.setAttribute('data-raw',text.replace(/'/g,"&#39;").replace(/"/g,"&quot;"));
-  // 🤫 અહી પણ છુપાવો
   const uiText = text.replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, '').trim();
   clearTimeout(window['renderTimer_'+id]);
   window['renderTimer_'+id] = setTimeout(() => {
@@ -820,8 +809,25 @@ function delMsg(id){
     if(typeof saveUserData==='function') saveUserData('history'); 
   }
 }
+// ── જૂની ચેટ લોડ કરવાનું ફંક્શન ──
+function loadArchivedChat(id){
+  const archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
+  const archive = archives.find(a => a.id === id);
+  if(!archive) return;
+  if(window.AppState) AppState._tabChatHistory = archive.chat || [];
+  localStorage.setItem('niviTabChat', JSON.stringify(archive.chat || []));
+  const win = document.getElementById('chatWindow');
+  const bubbles = win.querySelectorAll('.msg-row');
+  bubbles.forEach(b => b.remove());
+  const hero = document.getElementById('heroSection');
+  if(hero) hero.style.display = 'none';
+  (archive.chat || []).forEach(msg => {
+  appendMsg(msg.role, msg.text);
+  });
+renderSidebarData();
+}
+  
 // ── નવા ડીલીટ (Trash) ફંક્શન્સ ──
-
 function deleteProject(id, name){
   if(!confirm(`"${name}" વર્કસ્પેસ ડીલીટ કરવું છે?`)) return;
   let projs = JSON.parse(localStorage.getItem('nivi_projects')||'[]');
@@ -893,12 +899,11 @@ function renderSidebarData(){
         </button>
       </div>`;
     }
-    // જૂની આર્કાઇવ કરેલી ચેટ્સ
-    if(archives.length){
+if(archives.length){
       html += archives.map((a) => {
         let d = new Date(a.id);
         let dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        return `<div class="si" style="position:relative;" onmouseenter="this.querySelector('.adel').style.opacity='1'" onmouseleave="this.querySelector('.adel').style.opacity='0'">
+         return `<div class="si" style="position:relative;cursor:pointer;" onclick="loadArchivedChat(${a.id})" onmouseenter="this.querySelector('.adel').style.opacity='1'" onmouseleave="this.querySelector('.adel').style.opacity='0'">
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;">${dateStr}</span><span class="bdg">${a.msgCount}</span>
           <button class="adel" onclick="event.stopPropagation();deleteArchivedChat(${a.id})" title="Delete Saved Chat" style="opacity:0;position:absolute;right:4px;width:18px;height:18px;border-radius:4px;background:var(--bg-hover);border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;padding:0;">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -927,7 +932,6 @@ function deleteFile(name){
   if(ART.cur?.name===name){closeArt();closeSheet();}
   renderSidebarData();
 }
-
 // ═══════════════════════════════════════════════════
 //  SEND
 // ═══════════════════════════════════════════════════
