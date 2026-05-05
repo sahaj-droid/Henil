@@ -20,13 +20,18 @@ function clearFile(){
 window.onload=async()=>{
   renderProjectsUI();
   renderSidebarData();
-  updateActiveModelUI()
-  // Firebase thi chat load karo, nai to localStorage fallback
+  updateActiveModelUI();
   let restored = false;
   if(typeof loadNiviChat === 'function'){
     try {
       const fbChat = await loadNiviChat();
-      if(fbChat && fbChat.length > 0){
+      // Firebase thi [] aave (deleted) to localStorage pan clear karo
+      if(fbChat !== null && fbChat.length === 0){
+        localStorage.setItem('niviTabChat', '[]');
+        if(window.AppState) AppState._tabChatHistory = [];
+        console.log('✅ Firebase empty — localStorage cleared');
+        restored = true; // hero show thase
+      } else if(fbChat && fbChat.length > 0){
         if(window.AppState) AppState._tabChatHistory = [];
         localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
         fbChat.forEach(msg => appendMsg(msg.role, msg.text));
