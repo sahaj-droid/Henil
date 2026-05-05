@@ -494,3 +494,4 @@ function saveSettings(){
   closeModal('settingsModal');
   renderSidebarData();
 }
+}
