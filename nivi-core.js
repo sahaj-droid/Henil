@@ -397,7 +397,23 @@ async function handleSend(){
         apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
       }
       const hist=window.AppState?AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user',parts:[{text:m.text}]})):[];
-      await directGeminiCallStreamMultiTurn(hist,apiText,(chunk)=>{if(!window.AppState||!AppState._abortController)updateMsg(resId,chunk);});
+      
+      // Active project files — Nivi context ma aapvo
+      const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+      let fileContext = '';
+      if (files.length > 0) {
+        const textFiles = files.filter(f => f.data && ['text/javascript','text/html','text/css','text/plain','application/json'].includes(f.mimeType));
+        if (textFiles.length > 0) {
+          fileContext = '\n\n---\n[Project Files in Memory]\n' + 
+            textFiles.slice(0, 3).map(f => {
+              const content = atob(f.data).slice(0, 2000); // max 2000 chars per file
+              return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
+            }).join('\n\n');
+        }
+      }
+      const finalPrompt = fileContext ? apiText + fileContext : apiText;
+      
+      await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!window.AppState||!AppState._abortController)updateMsg(resId,chunk);});
     }
   }catch(err){
     if(!window.AppState||!AppState._abortController)updateMsg(resId,'⚠ Connection Error: '+err.message);
