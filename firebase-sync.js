@@ -8,19 +8,23 @@ function _getNiviUserId() {
   return localStorage.getItem('nivi_user_id') || 'user_1774995803095';
 }
 
-// ── NIVI CHAT SAVE TO FIREBASE ──
+// ── NIVI CHAT SAVE TO FIREBASE (PRO FIX APPLIED 🛠️) ──
 async function saveNiviChat(chatHistory) {
-  if (!chatHistory || chatHistory.length === 0) return;
   const userId = _getNiviUserId();
   try {
     const chatId = 'session_' + new Date().toISOString().split('T')[0]; // daily session
+    
+    // 💥 અસલી Solution: જો ચેટ ખાલી હોય તો રિટર્ન થવાના બદલે ખાલી એરે સેવ કરો (જૂનો કચરો કાઢવા)
+    const validChat = chatHistory ? chatHistory : [];
+
     await db.collection('users').doc(userId)
             .collection('niviChats').doc(chatId).set({
-      messages: chatHistory,
+      messages: validChat,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      msgCount: chatHistory.length
+      msgCount: validChat.length
     }, { merge: true });
-    console.log('✅ Nivi chat saved to Firebase');
+    
+    console.log('✅ Nivi chat saved to Firebase (Count: ' + validChat.length + ')');
     _updateSyncUI('connected');
   } catch(e) {
     console.error('saveNiviChat error:', e);
@@ -174,9 +178,8 @@ async function syncWorkspaceFiles(projId) {
   }
 }
 
-// ── OLD saveUserData — RTP compatibility (no-op in Nivi standalone) ──
+// ── OLD saveUserData — RTP compatibility ──
 async function saveUserData(field = null) {
-  // Nivi Pro ma auth nathi — chat save separately thay via saveNiviChat
   if (field === 'history') {
     const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
     triggerChatSync(history);
