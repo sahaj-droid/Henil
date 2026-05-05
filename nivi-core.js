@@ -1,3 +1,10 @@
+// ── GLOBAL APP STATE ──
+window.AppState = window.AppState || {
+  _tabChatHistory: [],
+  _pendingFiles: [],
+  _isGenerating: false,
+  _abortController: false
+};
 // ═══════════════════════════════════════════════════
 //  CORE LOGIC (nivi-core.js)
 // ═══════════════════════════════════════════════════
