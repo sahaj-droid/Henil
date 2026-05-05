@@ -120,13 +120,13 @@ function clearChat(){
 function _fmt(text) {
   if(!text) return '';
     if(text.includes('<img') && text.includes('pollinations')) return text;
+    if(text.includes('class="thinking"')) return text; // thinking animation — as-is
     let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
     if(typeof marked !== 'undefined') {
     const renderer = new marked.Renderer();
     renderer.html = function(token) {
-      // marked v5+ passes object {type, raw, text}, older versions pass string
       const raw = typeof token === 'string' ? token : (token.raw || token.text || '');
-      return raw.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return raw; // HTML escape nahi — as-is return karo
     };
     marked.setOptions({ 
         breaks: true,
