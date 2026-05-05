@@ -390,7 +390,7 @@ async function handleSend(){
     if(typeof saveUserData === 'function') saveUserData('history');
     renderSidebarData(); // આ ફરીથી સાઇડબાર બનાવશે
   }
-
+}
 // ── SETTINGS MODAL ──
 window.openSettings = function() {
   const c=document.getElementById('modelChainContainer');if(!c)return;
@@ -485,5 +485,4 @@ function saveSettings(){
   localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
   closeModal('settingsModal');
   renderSidebarData();
-}
 }
