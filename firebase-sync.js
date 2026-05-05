@@ -12,7 +12,11 @@ function _getNiviUserId() {
 async function saveNiviChat(chatHistory) {
   const userId = _getNiviUserId();
   try {
-    const chatId = 'session_' + new Date().toISOString().split('T')[0]; // daily session
+    let chatId = localStorage.getItem('nivi_current_session_id');
+    if (!chatId) {
+      chatId = 'session_' + Date.now();
+      localStorage.setItem('nivi_current_session_id', chatId);
+    }
     
     // 💥 અસલી Solution: જો ચેટ ખાલી હોય તો રિટર્ન થવાના બદલે ખાલી એરે સેવ કરો (જૂનો કચરો કાઢવા)
     const validChat = chatHistory ? chatHistory : [];
@@ -36,7 +40,8 @@ async function saveNiviChat(chatHistory) {
 async function loadNiviChat() {
   const userId = _getNiviUserId();
   try {
-    const chatId = 'session_' + new Date().toISOString().split('T')[0];
+    const chatId = localStorage.getItem('nivi_current_session_id');
+    if (!chatId) return null; // koi session nahi — hero show thase
     const doc = await db.collection('users').doc(userId)
                         .collection('niviChats').doc(chatId).get();
     if (doc.exists && doc.data().messages) {
