@@ -404,7 +404,7 @@
     <div class="mtitle">Create Workspace</div>
     <div class="msub">Organize files and context per project</div>
     <label class="flbl">Workspace Name</label>
-    <input id="newProjectName" class="finput" placeholder="e.g. RealTradePro" onkeydown="if(event.key==='Enter')createNewProject()">
+    <input id="newProjectName" class="finput" placeholder="e.g. Project name" onkeydown="if(event.key==='Enter')createNewProject()">
     <button class="mbtn prim" onclick="createNewProject()">Initialize Workspace</button>
   </div>
 </div>
@@ -812,19 +812,26 @@ function delMsg(id){
 // ── જૂની ચેટ લોડ કરવાનું ફંક્શન ──
 function loadArchivedChat(id){
   const archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
-  const archive = archives.find(a => a.id === id);
-  if(!archive) return;
-  if(window.AppState) AppState._tabChatHistory = archive.chat || [];
-  localStorage.setItem('niviTabChat', JSON.stringify(archive.chat || []));
+  const archive = archives.find(a => String(a.id) === String(id));
+  if(!archive) {
+    console.log("Archive not found!");
+    return;
+  }
+  if(!archive.chat || archive.chat.length === 0) {
+    alert("No data in this chat");
+    return;
+  }
+  if(window.AppState) AppState._tabChatHistory = JSON.parse(JSON.stringify(archive.chat));
+  localStorage.setItem('niviTabChat', JSON.stringify(archive.chat));
   const win = document.getElementById('chatWindow');
   const bubbles = win.querySelectorAll('.msg-row');
   bubbles.forEach(b => b.remove());
   const hero = document.getElementById('heroSection');
   if(hero) hero.style.display = 'none';
-  (archive.chat || []).forEach(msg => {
-  appendMsg(msg.role, msg.text);
+  archive.chat.forEach(msg => {
+    appendMsg(msg.role, msg.text);
   });
-renderSidebarData();
+  renderSidebarData();
 }
   
 // ── નવા ડીલીટ (Trash) ફંક્શન્સ ──
