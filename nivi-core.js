@@ -40,7 +40,7 @@ window.onload=async()=>{
 };
 
 // ── UI HELPERS ──
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSend();}}
+window.handleKey = function(e) {if (e.key === 'Enter' && !e.shiftKey) {e.preventDefault(); document.getElementById('sendBtn').click();}};
 function qp(t){document.getElementById('mainInput').value=t;document.getElementById('mainInput').focus();}
 function toggleGen(g){document.getElementById('stopBtn').style.display=g?'flex':'none';document.getElementById('sendBtn').style.display=g?'none':'flex';if(window.AppState)window.AppState._isGenerating=g;}
 function stopGeneration(){toggleGen(false);if(window.AppState)window.AppState._abortController=true;}
