@@ -875,12 +875,24 @@ async function handleSend(){
     }
   }catch(err){
     if(!window.AppState||!AppState._abortController)updateMsg(resId,'⚠ Connection Error: '+err.message);
-  }finally{
+} finally {
     toggleGen(false);
-    if(!window.AppState||!AppState._abortController){
-      if(window.AppState){AppState._tabChatHistory.push({role:'nivi',text:document.getElementById(resId)?.innerText||''});localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
+    if(!window.AppState || !AppState._abortController) {
+      if(window.AppState) {
+        const el = document.getElementById(resId);
+        
+        // 🐛 ફિક્સ: innerText ના બદલે ઓરિજિનલ માર્કડાઉન કોડ (data-raw) સેવ કરો
+        let rawText = '';
+        if (el && el.getAttribute('data-raw')) {
+          rawText = el.getAttribute('data-raw').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        } else if (el) {
+          rawText = el.innerText;
+        }
+        AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
+        localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+      }
     }
-    if(typeof saveUserData==='function')saveUserData('history');
+    if(typeof saveUserData === 'function') saveUserData('history');
     renderSidebarData();
   }
 }
@@ -988,7 +1000,6 @@ function saveSettings(){
     if(key   && def.keyLS) localStorage.setItem(def.keyLS, key);
     if(url   && def.urlLS) localStorage.setItem(def.urlLS, url);
     if(model) localStorage.setItem(`nivi_model_${provider}`, model);
-
     chain.push({provider, model, key, url});
   });
   localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
