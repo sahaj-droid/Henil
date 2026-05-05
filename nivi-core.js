@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════
 //  CORE LOGIC (nivi-core.js)
 // ═══════════════════════════════════════════════════
-
 // ── FILE HANDLER ──
 function handleFileSelectNew(inp){
   if(!inp.files||!inp.files.length)return;
@@ -21,6 +20,7 @@ function clearFile(){
 window.onload=async()=>{
   renderProjectsUI();
   renderSidebarData();
+  updateActiveModelUI()
   // Firebase thi chat load karo, nai to localStorage fallback
   let restored = false;
   if(typeof loadNiviChat === 'function'){
@@ -47,6 +47,17 @@ function stopGeneration(){toggleGen(false);if(window.AppState)window.AppState._a
 function toggleSidebar(){const s=document.getElementById('sidebar');if(window.innerWidth<=768)s.classList.toggle('mob-open');else s.classList.toggle('collapsed');}
 function openProjectModal(){document.getElementById('projectModal').classList.add('open');setTimeout(()=>document.getElementById('newProjectName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+function updateActiveModelUI() {
+    let models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
+    const el = document.getElementById('activeModelDisplay');
+    if (el) {
+        if (models.length > 0) {
+            el.innerHTML = `Active: <span style="color:var(--accent);">${models[0].model || models[0].provider}</span>`;
+        } else {
+            el.textContent = "No Model Configured";
+        }
+    }
+}
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
 
 // ── WORKSPACE (PROJECTS) ──
@@ -108,7 +119,6 @@ function _fmt(text){
   }
   return cleanText.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
 }
-
 function appendMsg(role,text,id){
   const win=document.getElementById('chatWindow');
   const hero=document.getElementById('heroSection');if(hero)hero.style.display='none';
@@ -116,17 +126,14 @@ function appendMsg(role,text,id){
   const row=document.createElement('div');
   row.className=`msg-row ${role==='user'?'ur':'nr'}`;row.id='row-'+msgId;
   const av=role==='nivi'?`<div class="avatar nav">✦</div>`:'';
-  
   const uiText = text.replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, '').trim();
   const safeUserText = uiText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const fmt = role==='nivi' ? _fmt(uiText) : safeUserText.replace(/\n/g,'<br>');
   const esc=text.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
-  
   const acts=`<div class="msg-actions"><div class="abt" onclick="cpMsg('${msgId}')" title="Copy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><div class="abt del" onclick="delMsg('${msgId}')" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div></div>`;
   const align=role==='user'?'flex-end':'flex-start';const mw=role==='user'?'max-width:80%;':'width:100%;';
   row.innerHTML=`${av}<div style="display:flex;flex-direction:column;align-items:${align};${mw}"><div class="bubble" id="${msgId}" data-raw="${esc}">${fmt}</div>${acts}</div>`;
   win.appendChild(row);
-  
   if(role==='nivi' && typeof addArtifactButtons === 'function') addArtifactButtons(row);
   const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
 }
@@ -172,17 +179,13 @@ function loadArchivedChat(id){
   const archive = archives.find(a => String(a.id) === String(id));
   if(!archive) { console.log("Archive not found!"); return; }
   if(!archive.chat || archive.chat.length === 0) { alert("No data in this chat"); return; }
-  
   if(window.AppState) AppState._tabChatHistory = JSON.parse(JSON.stringify(archive.chat));
   localStorage.setItem('niviTabChat', JSON.stringify(archive.chat));
-  
   const win = document.getElementById('chatWindow');
   const bubbles = win.querySelectorAll('.msg-row');
   bubbles.forEach(b => b.remove());
-  
   const hero = document.getElementById('heroSection');
   if(hero) hero.style.display = 'none';
-  
   archive.chat.forEach(msg => { appendMsg(msg.role, msg.text); });
   renderSidebarData();
 }
@@ -214,7 +217,6 @@ function deleteArchivedChat(id){
   localStorage.setItem('nivi_chat_archives', JSON.stringify(archives));
   renderSidebarData();
 }
-
 // ── SIDEBAR DATA RENDERER ──
 function renderSidebarData(){
   let models=[];try{models=JSON.parse(localStorage.getItem('nivi_model_chain')||'[]');}catch(e){}
@@ -222,7 +224,6 @@ function renderSidebarData(){
   const clr={gemini:'var(--accent)',openrouter:'var(--purple)',nvidia:'var(--amber)',custom:'var(--green)'};
   const ml=document.getElementById('modelList');
   if(ml)ml.innerHTML=models.map((m,i)=>`<div class="si" title="${m.provider}: ${m.model}"><span style="color:${clr[m.provider]||'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.model||m.provider}</span>${i===0?'<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>':''}</div>`).join('');
-  
   const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
   const fl=document.getElementById('fileList');
   if(fl){
@@ -241,7 +242,6 @@ function renderSidebarData(){
       fl.innerHTML=`<div class="si" style="opacity:.4;cursor:default;font-size:10px;">No files yet</div>`;
     }
   }
-  
   const history=JSON.parse(localStorage.getItem('niviTabChat')||'[]');
   const archives=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
   const ch=document.getElementById('chatHistory');
@@ -291,7 +291,21 @@ function deleteFile(name){
   }
   renderSidebarData();
 }
-
+// ── AUTO TITLE GENERATION ──
+async function generateChatTitle(firstMessage) {
+    const history = window.AppState ? AppState._tabChatHistory : [];
+    if (history.length > 2) return null; // જો ચેટ લાંબી હોય તો ટાઇટલ ના બદલો
+    const prompt = `Please provide a very short, maximum 3-word title for this chat based on the following text. Do not use quotes or any other formatting. Text: "${firstMessage}"`;
+    try {
+        if(typeof directGeminiCallWithFile === 'function') {
+            const response = await directGeminiCallWithFile(prompt, "", ""); 
+            return response.answer.trim().replace(/["']/g, ''); // કોટ્સ કાઢી નાખશે
+        }
+    } catch (e) {
+        console.error("Title Gen Failed:", e);
+    }
+    return "New Chat";
+}
 // ── SEND MESSAGE LOGIC ──
 async function handleSend(){
   if(window.AppState&&AppState._isGenerating)return;
@@ -352,8 +366,9 @@ async function handleSend(){
     }
   }catch(err){
     if(!window.AppState||!AppState._abortController)updateMsg(resId,'⚠ Connection Error: '+err.message);
-  } finally {
+} finally {
     toggleGen(false);
+    let chatTitle = "Current Session"; // ડિફોલ્ટ ટાઇટલ
     if(!window.AppState || !AppState._abortController) {
       if(window.AppState) {
         const el = document.getElementById(resId);
@@ -364,13 +379,16 @@ async function handleSend(){
           rawText = el.innerText;
         }
         AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
+        if (AppState._tabChatHistory.length === 2) {
+        chatTitle = await generateChatTitle(AppState._tabChatHistory[0].text) || "Current Session";
+        localStorage.setItem('nivi_current_title', chatTitle); 
+        }
         localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
       }
     }
     if(typeof saveUserData === 'function') saveUserData('history');
-    renderSidebarData();
+    renderSidebarData(); // આ ફરીથી સાઇડબાર બનાવશે
   }
-}
 
 // ── SETTINGS MODAL ──
 function openSettings(){
