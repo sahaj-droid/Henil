@@ -109,6 +109,7 @@ function clearChat(){
   }
   if(window.AppState) AppState._tabChatHistory=[];
   localStorage.setItem('niviTabChat','[]');
+  localStorage.setItem('nivi_current_session_id', 'session_' + Date.now()); // navi ID
   if(typeof closeArt === 'function') closeArt(); 
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML=HERO_HTML;
@@ -299,13 +300,16 @@ function deleteFile(name){
 // ── AUTO TITLE GENERATION ──
 async function generateChatTitle(firstMessage) {
     const history = window.AppState ? AppState._tabChatHistory : [];
-    if (history.length > 2) return null; // જો ચેટ લાંબી હોય તો ટાઇટલ ના બદલો
-    const prompt = `Please provide a very short, maximum 3-word title for this chat based on the following text. Do not use quotes or any other formatting. Text: "${firstMessage}"`;
+    if (history.length > 2) return null;
+    const prompt = `Give a very short 2-3 word title for this chat. No quotes, no punctuation, just the title words. Text: "${firstMessage.slice(0, 200)}"`;
     try {
-        if(typeof directGeminiCallWithFile === 'function') {
-        directGeminiCallStreamMultiTurn([], prompt, cb)
-            return response.answer.trim().replace(/["']/g, '');
-        }
+        // directGeminiCallWithFile nahi — streamMultiTurn use karo
+        let title = '';
+        await directGeminiCallStreamMultiTurn([], prompt, (chunk) => {
+            title = chunk;
+        });
+        title = title.trim().replace(/[\"'`*#\n]/g, '').slice(0, 30);
+        return title || 'New Chat';
     } catch (e) {
         console.error("Title Gen Failed:", e);
     }
