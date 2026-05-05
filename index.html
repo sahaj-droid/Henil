@@ -338,6 +338,7 @@
       <div id="viewPdf" class="art-pdf-wrap" style="display:none;">
         <embed id="pdfEl" type="application/pdf">
       </div>
+<!-- ડેસ્કટોપ ટૂલબાર -->
       <div class="art-toolbar">
         <button class="tbtn prim" id="copyArtBtn" onclick="copyArt()">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
@@ -345,10 +346,15 @@
         <button class="tbtn" onclick="dlArt()">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download
         </button>
-        <button class="tbtn" id="openTabBtn" onclick="openArtTab()" style="display:none;">
+        <!-- નવા ACTION બટન્સ ⚡ -->
+        <span style="width:1px;height:14px;background:var(--border);margin:0 5px;"></span>
+        <button class="tbtn" onclick="artAction('explain')" title="Explain Code">💡 Explain</button>
+        <button class="tbtn" onclick="artAction('fix')" title="Find & Fix Bugs">🐛 Fix</button>
+        <button class="tbtn" onclick="artAction('optimize')" title="Optimize Code">⚡ Optimize</button>
+        <button class="tbtn" id="openTabBtn" onclick="openArtTab()" style="display:none;margin-left:5px;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open
         </button>
-        <button class="tbtn" style="color:var(--red);border-color:rgba(248,113,113,.25);" onclick="ART.cur&&deleteFile(ART.cur.name)" title="Delete from memory">
+        <button class="tbtn" style="color:var(--red);border-color:rgba(248,113,113,.25);margin-left:5px;" onclick="ART.cur&&deleteFile(ART.cur.name)" title="Delete from memory">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2"/></svg>Delete
         </button>
         <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-muted);" id="artMeta"></span>
@@ -375,6 +381,7 @@
     </button>
   </div>
   <div class="sh-content" id="shContent"></div>
+  <!-- મોબાઈલ ટૂલબાર -->
   <div class="sh-toolbar">
     <button class="tbtn prim" onclick="copyArt()">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
@@ -382,6 +389,11 @@
     <button class="tbtn" onclick="dlArt()">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download
     </button>
+    <!-- નવા ACTION બટન્સ ⚡ -->
+    <span style="width:1px;height:14px;background:var(--border);margin:0 5px;"></span>
+    <button class="tbtn" onclick="artAction('explain')">💡 Explain</button>
+    <button class="tbtn" onclick="artAction('fix')">🐛 Fix</button>
+    <button class="tbtn" onclick="artAction('optimize')">⚡ Optimize</button>
   </div>
 </div>
 
@@ -680,7 +692,26 @@ function addArtifactButtons(el) {
     }
   });
 }
-
+// ── PROMPT-TO-ACTION SHORTCUTS ──
+function artAction(action) {
+  if (!ART.cur || !ART.cur.txt) return;
+  const code = ART.cur.txt;
+  const lang = ART.cur.cfg.hl || 'code';
+  let prompt = "";
+  if(action === 'explain') {
+    prompt = `Please explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+  } else if(action === 'fix') {
+    prompt = `Please review this code for any bugs or errors, and provide the fixed version:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+  } else if(action === 'optimize') {
+    prompt = `Please optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+  }
+  const inp = document.getElementById('mainInput');
+  inp.value = prompt;
+  
+  closeArt();
+  closeSheet();
+  handleSend();
+}
 // ૨. ── સુધારેલું APPEND MSG ──
 function appendMsg(role,text,id){
   const win=document.getElementById('chatWindow');
@@ -880,7 +911,6 @@ function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
   const resolvedKey   = config.key   || localStorage.getItem(def.keyLS) || '';
   const resolvedUrl   = config.url   || (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
   const resolvedModel = config.model || localStorage.getItem(`nivi_model_${config.provider}`) || def.modelHint || '';
-
   const row=document.createElement('div');row.className='mrow';
   row.innerHTML=`
     <button class="mrow-rm" onclick="this.closest('.mrow').remove()">✕</button>
@@ -934,7 +964,6 @@ function switchProviderInRow(btn, provider) {
   const modelField = row.querySelector('.conf-model');
   const urlField   = row.querySelector('.conf-url');
   const urlRow     = row.querySelector('[id^="urlRow_"]');
-
   // Only auto-fill if field is empty
   if (!keyField.value)   keyField.value   = localStorage.getItem(def.keyLS) || '';
   if (!modelField.value) modelField.value = localStorage.getItem(`nivi_model_${provider}`) || def.modelHint || '';
@@ -953,9 +982,7 @@ function saveSettings(){
     const model    = row.querySelector('.conf-model').value.trim();
     const key      = row.querySelector('.conf-key').value.trim();
     const url      = row.querySelector('.conf-url')?.value.trim() || '';
-
     if(!model && !key) return; // skip empty rows
-
     // Also persist key + url to localStorage per-provider for auto-fill next time
     const def = _providerDefaults(provider);
     if(key   && def.keyLS) localStorage.setItem(def.keyLS, key);
