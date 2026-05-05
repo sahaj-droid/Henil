@@ -345,6 +345,9 @@
         <button class="tbtn" id="openTabBtn" onclick="openArtTab()" style="display:none;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open
         </button>
+        <button class="tbtn" style="color:var(--red);border-color:rgba(248,113,113,.25);" onclick="ART.cur&&deleteFile(ART.cur.name)" title="Delete from memory">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2"/></svg>Delete
+        </button>
         <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-muted);" id="artMeta"></span>
       </div>
     </div>
@@ -664,7 +667,22 @@ function renderSidebarData(){
   if(ml)ml.innerHTML=models.map((m,i)=>`<div class="si" title="${m.provider}: ${m.model}"><span style="color:${clr[m.provider]||'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.model||m.provider}</span>${i===0?'<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>':''}</div>`).join('');
   const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
   const fl=document.getElementById('fileList');
-  if(fl)fl.innerHTML=files.length?files.map(f=>`<div class="si" onclick="openSavedFile('${f.name}')" title="${f.name}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span></div>`).join(''):`<div class="si" style="opacity:.4;cursor:default;font-size:10px;">No files yet</div>`;
+  if(fl){
+    if(files.length){
+      fl.innerHTML=files.map(f=>{
+        const sn=encodeURIComponent(f.name);
+        return `<div class="si" style="position:relative;" onmouseenter="this.querySelector('.fdel').style.opacity='1'" onmouseleave="this.querySelector('.fdel').style.opacity='0'">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent);cursor:pointer;" onclick="openSavedFile(decodeURIComponent('${sn}'))"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer;" onclick="openSavedFile(decodeURIComponent('${sn}'))">${f.name}</span>
+          <button class="fdel" onclick="event.stopPropagation();deleteFile(decodeURIComponent('${sn}'))" title="Delete file" style="opacity:0;width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;padding:0;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>`;
+      }).join('');
+    } else {
+      fl.innerHTML=`<div class="si" style="opacity:.4;cursor:default;font-size:10px;">No files yet</div>`;
+    }
+  }
   const history=JSON.parse(localStorage.getItem('niviTabChat')||'[]');
   const ch=document.getElementById('chatHistory');
   if(ch)ch.innerHTML=history.length?`<div class="si active"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Current Session<span class="bdg">${history.length}</span></div>`:`<div class="si" style="opacity:.4;cursor:default;font-size:10px;">Empty</div>`;
@@ -674,6 +692,17 @@ function openSavedFile(name){
   const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
   const f=files.find(x=>x.name===name);
   if(f?.data)openArt({name:f.name,type:f.mimeType||'text/plain'},f.data);
+  else alert('File data not found. Re-attach the file.');
+}
+
+function deleteFile(name){
+  if(!confirm(`"${name}" delete karvu che?`))return;
+  let files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
+  files=files.filter(f=>f.name!==name);
+  localStorage.setItem('nivi_file_memory',JSON.stringify(files));
+  // Artifact panel open hoy ane same file hoy to close karo
+  if(ART.cur?.name===name){closeArt();closeSheet();}
+  renderSidebarData();
 }
 
 // ═══════════════════════════════════════════════════
@@ -716,7 +745,7 @@ async function handleSend(){
       const r=await directGeminiCallWithFile(text||'Analyze this file.',b64,mime);
       if(!window.AppState||!AppState._abortController){
         updateMsg(resId,r.answer||'No answer received.');
-        if(typeof saveFileToMemory==='function')saveFileToMemory(file.name);
+        if(typeof saveFileToMemory==='function')saveFileToMemory(file.name, b64, mime);
         // ── ATTACH CARD + OPEN PANEL ──
         const el=document.getElementById(resId);
         if(el){
