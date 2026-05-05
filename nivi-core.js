@@ -113,6 +113,7 @@ function clearChat(){
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML=HERO_HTML;
   renderSidebarData();
+  if(typeof saveNiviChat === 'function') saveNiviChat([]);
   if(typeof saveUserData === 'function') saveUserData('history');
 }
 
@@ -223,6 +224,7 @@ function deleteCurrentChat(){
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML = HERO_HTML;
   renderSidebarData();
+  if(typeof saveNiviChat === 'function') saveNiviChat([]);
   if(typeof saveUserData === 'function') saveUserData('history');
 }
 
