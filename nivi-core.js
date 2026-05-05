@@ -227,60 +227,45 @@ function deleteArchivedChat(id){
   renderSidebarData();
 }
 // ── SIDEBAR DATA RENDERER ──
-function renderSidebarData(){
-  let models=[];try{models=JSON.parse(localStorage.getItem('nivi_model_chain')||'[]');}catch(e){}
-  if(!models.length)models=[{provider:'—',model:'Not Configured'}];
-  const clr={gemini:'var(--accent)',openrouter:'var(--purple)',nvidia:'var(--amber)',custom:'var(--green)'};
-  const ml=document.getElementById('modelList');
-  if(ml)ml.innerHTML=models.map((m,i)=>`<div class="si" title="${m.provider}: ${m.model}"><span style="color:${clr[m.provider]||'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.model||m.provider}</span>${i===0?'<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>':''}</div>`).join('');
-  const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
-  const fl=document.getElementById('fileList');
-  if(fl){
-    if(files.length){
-      fl.innerHTML=files.map(f=>{
-        const sn=encodeURIComponent(f.name);
+window.renderSidebarData = function() {
+  let models = []; 
+  try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+  const ml = document.getElementById('modelList');
+  if (ml) {
+    if (!models.length) models = [{provider: '—', model: 'Not Configured'}];
+    const clr = {gemini: 'var(--accent)', openrouter: 'var(--purple)', nvidia: 'var(--amber)', custom: 'var(--green)'};
+    ml.innerHTML = models.map((m, i) => `<div class="si" title="${m.provider}: ${m.model}"><span style="color:${clr[m.provider] || 'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.model || m.provider}</span>${i === 0 ? '<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>' : ''}</div>`).join('');
+  }
+  const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+  const fl = document.getElementById('fileList');
+  if (fl) {
+    if (files.length) {
+      fl.innerHTML = files.map(f => {
+        const sn = encodeURIComponent(f.name);
         return `<div class="si" style="position:relative;" onmouseenter="this.querySelector('.fdel').style.opacity='1'" onmouseleave="this.querySelector('.fdel').style.opacity='0'">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent);cursor:pointer;" onclick="openSavedFile(decodeURIComponent('${sn}'))"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer;" onclick="openSavedFile(decodeURIComponent('${sn}'))">${f.name}</span>
-          <button class="fdel" onclick="event.stopPropagation();deleteFile(decodeURIComponent('${sn}'))" title="Delete file" style="opacity:0;width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;padding:0;">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
+          <button class="fdel" onclick="event.stopPropagation();deleteFile(decodeURIComponent('${sn}'))" title="Delete file" style="opacity:0;width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;padding:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </div>`;
       }).join('');
     } else {
-      fl.innerHTML=`<div class="si" style="opacity:.4;cursor:default;font-size:10px;">No files yet</div>`;
+      fl.innerHTML = `<div class="si" style="opacity:.4;cursor:default;font-size:10px;">No files yet</div>`;
     }
   }
-  const history=JSON.parse(localStorage.getItem('niviTabChat')||'[]');
-  const archives=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
-  const ch=document.getElementById('chatHistory');
-  if(ch){
+  const ch = document.getElementById('chatHistory');
+  if (ch) {
+    const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+    const archives = JSON.parse(localStorage.getItem('nivi_chat_archives') || '[]');
     let html = '';
-    if(history.length){
-      html += `<div class="si active" style="position:relative;" onmouseenter="this.querySelector('.cdel').style.opacity='1'" onmouseleave="this.querySelector('.cdel').style.opacity='0'">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span style="flex:1;">Current Session</span><span class="bdg">${history.length}</span>
-        <button class="cdel" onclick="event.stopPropagation();deleteCurrentChat()" title="Delete Current Chat" style="opacity:0;position:absolute;right:4px;width:18px;height:18px;border-radius:4px;background:var(--bg-hover);border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;padding:0;">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-      </div>`;
+    if (history.length) {
+      html += `<div class="si active">Current Session <span class="bdg">${history.length}</span></div>`;
     }
-    if(archives.length){
-      html += archives.map((a) => {
-        let d = new Date(a.id);
-        let dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-         return `<div class="si" style="position:relative;cursor:pointer;" onclick="loadArchivedChat(${a.id})" onmouseenter="this.querySelector('.adel').style.opacity='1'" onmouseleave="this.querySelector('.adel').style.opacity='0'">
-          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;">${dateStr}</span><span class="bdg">${a.msgCount}</span>
-          <button class="adel" onclick="event.stopPropagation();deleteArchivedChat(${a.id})" title="Delete Saved Chat" style="opacity:0;position:absolute;right:4px;width:18px;height:18px;border-radius:4px;background:var(--bg-hover);border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;padding:0;">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
-        </div>`;
-      }).join('');
+    if (archives.length) {
+      html += archives.map(a => `<div class="si" onclick="loadArchivedChat(${a.id})">${new Date(a.id).toLocaleDateString()} <span class="bdg">${a.msgCount}</span></div>`).join('');
     }
-    if(!html) html = `<div class="si" style="opacity:.4;cursor:default;font-size:10px;">Empty</div>`;
-    ch.innerHTML = html;
+    ch.innerHTML = html || `<div class="si" style="opacity:.4;">Empty</div>`;
   }
-}
+};
 
 function openSavedFile(name){
   const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
