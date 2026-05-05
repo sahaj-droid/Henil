@@ -299,8 +299,8 @@ async function generateChatTitle(firstMessage) {
     const prompt = `Please provide a very short, maximum 3-word title for this chat based on the following text. Do not use quotes or any other formatting. Text: "${firstMessage}"`;
     try {
         if(typeof directGeminiCallWithFile === 'function') {
-            const response = await directGeminiCallWithFile(prompt, "", ""); 
-            return response.answer.trim().replace(/["']/g, ''); // કોટ્સ કાઢી નાખશે
+        directGeminiCallStreamMultiTurn([], prompt, cb)
+            return response.answer.trim().replace(/["']/g, '');
         }
     } catch (e) {
         console.error("Title Gen Failed:", e);
