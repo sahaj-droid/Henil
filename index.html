@@ -613,11 +613,19 @@ function toggleSidebar(){const s=document.getElementById('sidebar');if(window.in
 function openProjectModal(){document.getElementById('projectModal').classList.add('open');setTimeout(()=>document.getElementById('newProjectName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
-
 function renderProjectsUI(){
   const projs=JSON.parse(localStorage.getItem('nivi_projects')||'[]');
   const sb=document.getElementById('projectList'),dd=document.getElementById('activeProjectSelect'),aId=dd?dd.value:'default';
-  if(sb){sb.innerHTML=`<div class="si ${aId==='default'?'active':''}" onclick="setProj('default')">/default</div>`+projs.map(p=>`<div class="si ${aId===p.id?'active':''}" onclick="setProj('${p.id}')" title="${p.name}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/${p.name}</span></div>`).join('');}
+  if(sb){sb.innerHTML=`<div class="si ${aId==='default'?'active':''}" onclick="setProj('default')"><span style="flex:1;">/default</span></div>` + 
+    projs.map(p=>`
+      <div class="si ${aId===p.id?'active':''}" onclick="setProj('${p.id}')" title="${p.name}" style="position:relative;" onmouseenter="this.querySelector('.pdel').style.opacity='1'" onmouseleave="this.querySelector('.pdel').style.opacity='0'">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">/${p.name}</span>
+        <button class="pdel" onclick="event.stopPropagation();deleteProject('${p.id}', '${p.name}')" title="Delete Workspace" style="opacity:0;width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;padding:0;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+    `).join('');
+  }
   if(dd){dd.innerHTML=`<option value="default">default</option>`+projs.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');}
 }
 function setProj(id){document.getElementById('activeProjectSelect').value=id;changeActiveProject();renderProjectsUI();}
@@ -697,9 +705,7 @@ async function artAction(action) {
   if (!ART.cur || !ART.cur.txt) return;
   const code = ART.cur.txt;
   const lang = ART.cur.cfg.hl || 'code';
-  
   let apiPrompt = "";
-  
   // અહીંયા આપણે <nivi-hidden> નામનો જાદુઈ ટેગ વાપરીશું
   if(action === 'explain') {
     apiPrompt = `💡 Please explain this ${lang} code.\n<nivi-hidden>\nPlease explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
@@ -720,7 +726,6 @@ async function artAction(action) {
     AppState._tabChatHistory.push({role:'user', text: apiPrompt});
     localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
   }
-
   // ૩. નીચે સ્ક્રોલ કરો
   setTimeout(() => {
     const wrap = document.getElementById('chatWrap');
@@ -728,41 +733,6 @@ async function artAction(action) {
   }, 50);
 
   // ૪. API કોલ ચાલુ કરો
-  toggleGen(true);
-  if(window.AppState) AppState._abortController = false;
-  const resId = 'nivi-' + Date.now();
-  appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
-
-  try {
-    const hist = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user', parts:[{text:m.text}]})) : [];
-    if(typeof directGeminiCallStreamMultiTurn === 'function') {
-      await directGeminiCallStreamMultiTurn(hist, apiPrompt, (chunk) => {
-        if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
-      });
-    }
-  } catch(err) {
-    if(!window.AppState || !AppState._abortController) updateMsg(resId, '⚠ Error: ' + err.message);
-  } finally {
-    toggleGen(false);
-    if(!window.AppState || !AppState._abortController) {
-      if(window.AppState) {
-        const el = document.getElementById(resId);
-        let rawText = el?.getAttribute('data-raw')?.replace(/&#39;/g, "'").replace(/&quot;/g, '"') || el?.innerText || '';
-        AppState._tabChatHistory.push({role:'nivi', text: rawText});
-        localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
-      }
-    }
-    if(typeof saveUserData === 'function') saveUserData('history');
-    renderSidebarData();
-  }
-}
-
-  // ૩. તરત જ નીચે સ્ક્રોલ કરો (Scroll Fix)
-  setTimeout(() => {
-    const wrap = document.getElementById('chatWrap');
-    if(wrap) wrap.scrollTop = wrap.scrollHeight;
-  }, 50);
-  // ૪. જાતે જ API Call કરો (Silent Backend Magic)
   toggleGen(true);
   if(window.AppState) AppState._abortController = false;
   const resId = 'nivi-' + Date.now();
@@ -850,6 +820,38 @@ function delMsg(id){
     if(typeof saveUserData==='function') saveUserData('history'); 
   }
 }
+// ── નવા ડીલીટ (Trash) ફંક્શન્સ ──
+
+function deleteProject(id, name){
+  if(!confirm(`"${name}" વર્કસ્પેસ ડીલીટ કરવું છે?`)) return;
+  let projs = JSON.parse(localStorage.getItem('nivi_projects')||'[]');
+  projs = projs.filter(p => p.id !== id);
+  localStorage.setItem('nivi_projects', JSON.stringify(projs));
+  
+  // જો કરન્ટ પ્રોજેક્ટ ડીલીટ કર્યો હોય તો default માં જતા રહો
+  if(document.getElementById('activeProjectSelect').value === id){
+    setProj('default');
+  } else {
+    renderProjectsUI();
+  }
+}
+
+function deleteCurrentChat(){
+  if(!confirm('આખી ચેટ ડીલીટ કરવી છે? (આર્કાઇવમાં પણ સેવ નહિ થાય)')) return;
+  if(window.AppState) AppState._tabChatHistory = [];
+  localStorage.setItem('niviTabChat', '[]');
+  closeArt(); closeSheet();
+  document.getElementById('chatWindow').innerHTML = HERO_HTML;
+  renderSidebarData();
+}
+
+function deleteArchivedChat(id){
+  if(!confirm('આ જૂની સેવ કરેલી ચેટ ડીલીટ કરવી છે?')) return;
+  let archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
+  archives = archives.filter(a => a.id !== id);
+  localStorage.setItem('nivi_chat_archives', JSON.stringify(archives));
+  renderSidebarData();
+}
 
 function renderSidebarData(){
   let models=[];try{models=JSON.parse(localStorage.getItem('nivi_model_chain')||'[]');}catch(e){}
@@ -875,9 +877,38 @@ function renderSidebarData(){
       fl.innerHTML=`<div class="si" style="opacity:.4;cursor:default;font-size:10px;">No files yet</div>`;
     }
   }
+  // ચેટ હિસ્ટ્રી અને આર્કાઇવ્સ
   const history=JSON.parse(localStorage.getItem('niviTabChat')||'[]');
+  const archives=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
   const ch=document.getElementById('chatHistory');
-  if(ch)ch.innerHTML=history.length?`<div class="si active"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Current Session<span class="bdg">${history.length}</span></div>`:`<div class="si" style="opacity:.4;cursor:default;font-size:10px;">Empty</div>`;
+  if(ch){
+    let html = '';
+    // કરન્ટ સેશન
+    if(history.length){
+      html += `<div class="si active" style="position:relative;" onmouseenter="this.querySelector('.cdel').style.opacity='1'" onmouseleave="this.querySelector('.cdel').style.opacity='0'">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span style="flex:1;">Current Session</span><span class="bdg">${history.length}</span>
+        <button class="cdel" onclick="event.stopPropagation();deleteCurrentChat()" title="Delete Current Chat" style="opacity:0;position:absolute;right:4px;width:18px;height:18px;border-radius:4px;background:var(--bg-hover);border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;padding:0;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>`;
+    }
+    // જૂની આર્કાઇવ કરેલી ચેટ્સ
+    if(archives.length){
+      html += archives.map((a) => {
+        let d = new Date(a.id);
+        let dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        return `<div class="si" style="position:relative;" onmouseenter="this.querySelector('.adel').style.opacity='1'" onmouseleave="this.querySelector('.adel').style.opacity='0'">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;">${dateStr}</span><span class="bdg">${a.msgCount}</span>
+          <button class="adel" onclick="event.stopPropagation();deleteArchivedChat(${a.id})" title="Delete Saved Chat" style="opacity:0;position:absolute;right:4px;width:18px;height:18px;border-radius:4px;background:var(--bg-hover);border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;padding:0;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>`;
+      }).join('');
+    }
+    if(!html) html = `<div class="si" style="opacity:.4;cursor:default;font-size:10px;">Empty</div>`;
+    ch.innerHTML = html;
+  }
 }
 
 function openSavedFile(name){
