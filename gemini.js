@@ -115,7 +115,7 @@ async function _openaiCall(cfg, messages, onChunk) {
 
 // ── Gemini streaming call ──
 async function _geminiStreamCall(cfg, history, prompt, onChunk) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${cfg.key}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
