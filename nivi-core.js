@@ -35,6 +35,10 @@ function clearFile(){
 
 // ── INITIALIZATION ──
 window.onload=async()=>{
+  // Session ID ensure karo — exist kare to reuse, nahi to navi banao
+  if(!localStorage.getItem('nivi_current_session_id')){
+    localStorage.setItem('nivi_current_session_id', 'session_' + Date.now());
+  }
   renderProjectsUI();
   renderSidebarData();
   updateActiveModelUI();
