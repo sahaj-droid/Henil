@@ -573,23 +573,24 @@ function appendMsg(role, text, id) {
     }
   }
 
-  function updateMsg(id, text) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.innerHTML = typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text;
-      
-      // લાઈવ હાઈલાઈટિંગ
+function updateMsg(id, text) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.innerHTML = typeof _formatNiviResponse === 'function' ? _formatNiviResponse(text) : text;
+    const escapedText = text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+    el.setAttribute('data-raw', escapedText);
+    clearTimeout(window.niviHlTimer);
+    window.niviHlTimer = setTimeout(() => {
       el.querySelectorAll('pre code').forEach((block) => {
         if (typeof hljs !== 'undefined') hljs.highlightElement(block);
       });
-      const escapedText = text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-      el.setAttribute('data-raw', escapedText);
-      const wrap = document.getElementById('chatWrap');
-      if (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 150) {
-        wrap.scrollTop = wrap.scrollHeight;
-      }
+    }, 150); // જ્યારે ટાઈપિંગ અટકશે ત્યારે જ કલર કરશે
+    const wrap = document.getElementById('chatWrap');
+    if (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 150) {
+      wrap.scrollTop = wrap.scrollHeight;
     }
   }
+}
 
   function restoreChat() {
     try {
