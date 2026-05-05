@@ -85,7 +85,7 @@
     .msg-row.nr{justify-content:flex-start;align-items:flex-start;gap:9px;}
     .avatar{width:25px;height:25px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:2px;}
     .nav{background:linear-gradient(135deg,var(--accent),var(--purple));}
-    .bubble{font-size:14px;line-height:1.7;font-family:var(--mono);}
+    .bubble{font-size:14px;line-height:1.7;font-family:var(--mono);word-wrap:break-word;word-break:break-word;overflow-wrap:break-word;max-width:100%;}
     .ur .bubble{background:var(--bg-bubble);border:1px solid rgba(99,179,237,.1);padding:9px 15px;border-radius:12px 3px 12px 12px;color:var(--text);max-width:80%;}
     .nr .bubble{padding:2px 0;color:var(--text);flex:1;}
     .nr .bubble p{margin-bottom:7px;}
@@ -655,10 +655,8 @@ function clearChat(){
 function _fmt(text){
   if(!text)return'';
   if(text.includes('<img')&&text.includes('pollinations'))return text;
-  
   // ડબલ ટોકન ના થાય એના માટે જૂના ટોકન કાઢી નાખો
   let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
-  
   if(typeof marked!=='undefined'){
     marked.setOptions({ breaks: true }); // ગીતોની લાઈનો પ્રોપર આવે તે માટે
     const h=marked.parse(cleanText);
@@ -673,13 +671,11 @@ function addArtifactButtons(el) {
   el.querySelectorAll('pre').forEach((pre, idx) => {
     const codeEl = pre.querySelector('code');
     if(codeEl && typeof hljs!=='undefined') hljs.highlightElement(codeEl);
-
     // જો બટન ના હોય તો બનાવો
     if(!pre.querySelector('.run-art-btn') && codeEl){
       const langMatch = codeEl.className.match(/language-(\w+)/);
       let ext = langMatch ? langMatch[1] : 'txt';
       if(ext==='javascript') ext='js'; if(ext==='python') ext='py';
-
       const btn = document.createElement('button');
       btn.className = 'tbtn prim run-art-btn';
       btn.innerHTML = '⚡ Run / View';
@@ -692,25 +688,69 @@ function addArtifactButtons(el) {
     }
   });
 }
-// ── PROMPT-TO-ACTION SHORTCUTS ──
-function artAction(action) {
+// ── PROMPT-TO-ACTION SHORTCUTS (SILENT & AUTO-SCROLL FIX) ──
+async function artAction(action) {
   if (!ART.cur || !ART.cur.txt) return;
   const code = ART.cur.txt;
   const lang = ART.cur.cfg.hl || 'code';
-  let prompt = "";
-  if(action === 'explain') {
-    prompt = `Please explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
-  } else if(action === 'fix') {
-    prompt = `Please review this code for any bugs or errors, and provide the fixed version:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
-  } else if(action === 'optimize') {
-    prompt = `Please optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
-  }
-  const inp = document.getElementById('mainInput');
-  inp.value = prompt;
+  let displayMsg = "";
+  let apiPrompt = "";
   
+  // UI માટે નાનો મેસેજ અને API માટે મોટો પ્રોમ્પ્ટ
+  if(action === 'explain') {
+    displayMsg = `💡 Please explain this ${lang} code.`;
+    apiPrompt = `Please explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+  } else if(action === 'fix') {
+    displayMsg = `🐛 Please find and fix bugs in this ${lang} code.`;
+    apiPrompt = `Please review this code for any bugs or errors, and provide the fixed version:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+  } else if(action === 'optimize') {
+    displayMsg = `⚡ Please optimize this ${lang} code.`;
+    apiPrompt = `Please optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+  }
   closeArt();
   closeSheet();
-  handleSend();
+  // ૧. UI માં માત્ર નાનકડો મેસેજ બતાવો
+  appendMsg('user', displayMsg);
+  // ૨. હિસ્ટ્રીમાં આખો લાંબો કોડ સેવ કરો (જેથી API ને પ્રોપર ડેટા મળે)
+  if(window.AppState) {
+    AppState._tabChatHistory.push({role:'user', text: apiPrompt});
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+  }
+
+  // ૩. તરત જ નીચે સ્ક્રોલ કરો (Scroll Fix)
+  setTimeout(() => {
+    const wrap = document.getElementById('chatWrap');
+    if(wrap) wrap.scrollTop = wrap.scrollHeight;
+  }, 50);
+
+  // ૪. જાતે જ API Call કરો (Silent Backend Magic)
+  toggleGen(true);
+  if(window.AppState) AppState._abortController = false;
+  const resId = 'nivi-' + Date.now();
+  appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
+
+  try {
+    const hist = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user', parts:[{text:m.text}]})) : [];
+    if(typeof directGeminiCallStreamMultiTurn === 'function') {
+      await directGeminiCallStreamMultiTurn(hist, apiPrompt, (chunk) => {
+        if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
+      });
+    }
+  } catch(err) {
+    if(!window.AppState || !AppState._abortController) updateMsg(resId, '⚠ Error: ' + err.message);
+  } finally {
+    toggleGen(false);
+    if(!window.AppState || !AppState._abortController) {
+      if(window.AppState) {
+        const el = document.getElementById(resId);
+        let rawText = el?.getAttribute('data-raw')?.replace(/&#39;/g, "'").replace(/&quot;/g, '"') || el?.innerText || '';
+        AppState._tabChatHistory.push({role:'nivi', text: rawText});
+        localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+      }
+    }
+    if(typeof saveUserData === 'function') saveUserData('history');
+    renderSidebarData();
+  }
 }
 // ૨. ── સુધારેલું APPEND MSG ──
 function appendMsg(role,text,id){
@@ -762,7 +802,11 @@ function delMsg(id){
   const row=document.getElementById('row-'+id),el=document.getElementById(id);if(!el)return;
   const raw=el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
   if(row)row.remove();
-  if(window.AppState?._tabChatHistory){AppState._tabChatHistory=AppState._tabChatHistory.filter(m=>m.text!==raw);localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
+  if(window.AppState?._tabChatHistory){
+    AppState._tabChatHistory=AppState._tabChatHistory.filter(m=>m.text!==raw);
+    localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));
+    if(typeof saveUserData==='function') saveUserData('history'); 
+  }
 }
 
 function renderSidebarData(){
@@ -810,7 +854,6 @@ function deleteFile(name){
   if(ART.cur?.name===name){closeArt();closeSheet();}
   renderSidebarData();
 }
-
 // ═══════════════════════════════════════════════════
 //  SEND
 // ═══════════════════════════════════════════════════
@@ -821,7 +864,6 @@ async function handleSend(){
   const files=window.AppState?._pendingFiles||[];
   const file=files[0]||null;
   if(!text&&!files.length)return;
-
   // /image
   if(text.toLowerCase().startsWith('/image ')){
     const prompt=text.substring(7).trim();
@@ -880,7 +922,6 @@ async function handleSend(){
     if(!window.AppState || !AppState._abortController) {
       if(window.AppState) {
         const el = document.getElementById(resId);
-        
         // 🐛 ફિક્સ: innerText ના બદલે ઓરિજિનલ માર્કડાઉન કોડ (data-raw) સેવ કરો
         let rawText = '';
         if (el && el.getAttribute('data-raw')) {
