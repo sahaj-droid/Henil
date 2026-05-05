@@ -385,19 +385,22 @@ async function handleSend(){
     let chatTitle = "Current Session"; // ડિફોલ્ટ ટાઇટલ
     if(!window.AppState || !AppState._abortController) {
       if(window.AppState) {
-        const el = document.getElementById(resId);
+      const el = document.getElementById(resId);
         let rawText = '';
         if (el && el.getAttribute('data-raw')) {
           rawText = el.getAttribute('data-raw').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
         } else if (el) {
-          rawText = el.innerText;
+          rawText = el.innerText || '';
         }
-        AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
-        if (AppState._tabChatHistory.length === 2) {
-        chatTitle = await generateChatTitle(AppState._tabChatHistory[0].text) || "Current Session";
-        localStorage.setItem('nivi_current_title', chatTitle); 
+        // rawText empty hoy to save na karo — streaming incomplete
+        if (rawText.trim()) {
+          AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
+          if (AppState._tabChatHistory.length === 2) {
+            chatTitle = await generateChatTitle(AppState._tabChatHistory[0].text) || "Current Session";
+            localStorage.setItem('nivi_current_title', chatTitle); 
+          }
+          localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
         }
-        localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
       }
     }
     // Firebase sync — await saathe (debounce remove, direct save)
