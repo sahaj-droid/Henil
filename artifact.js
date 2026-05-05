@@ -156,7 +156,15 @@ function addArtifactButtons(el) {
     }
   });
 }
-
+// ── MANUAL ARTIFACT (Fix Code) ──
+window.openManualArt = function() {
+    const code = prompt("Paste your code for review / Fix / Optimize:");
+    if (code && code.trim() !== "") {
+    const b64 = btoa(unescape(encodeURIComponent(code)));
+    openArt({ name: 'manual_fix.js', type: 'text/plain' }, b64);
+    // setTimeout(() => { artAction('fix'); }, 500);
+    }
+}
 // ── PROMPT-TO-ACTION SHORTCUTS (MAGIC MASK FIX) ──
 async function artAction(action) {
   if (!ART.cur || !ART.cur.txt) return;
