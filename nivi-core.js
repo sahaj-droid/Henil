@@ -400,8 +400,9 @@ async function handleSend(){
         localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
       }
     }
-    if(typeof saveUserData === 'function') saveUserData('history');
-    renderSidebarData(); // આ ફરીથી સાઇડબાર બનાવશે
+    // Firebase sync — await saathe (debounce remove, direct save)
+    if(typeof saveUserData === 'function') await saveUserData('history');
+    renderSidebarData();
   }
 }
 // ── SETTINGS MODAL ──
