@@ -570,7 +570,26 @@ function clearFile(){if(window.AppState)AppState._pendingFiles=[];document.getEl
 // ═══════════════════════════════════════════════════
 //  CORE
 // ═══════════════════════════════════════════════════
-window.onload=()=>{renderProjectsUI();renderSidebarData();restoreChat();};
+window.onload=async()=>{
+  renderProjectsUI();
+  renderSidebarData();
+  // Firebase thi chat load karo, nai to localStorage fallback
+  let restored = false;
+  if(typeof loadNiviChat === 'function'){
+    try {
+      const fbChat = await loadNiviChat();
+      if(fbChat && fbChat.length > 0){
+        if(window.AppState) AppState._tabChatHistory = [];
+        localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
+        fbChat.forEach(msg => appendMsg(msg.role, msg.text));
+        if(window.AppState) AppState._tabChatHistory = fbChat;
+        restored = true;
+        console.log('✅ Chat restored from Firebase');
+      }
+    } catch(e){ console.warn('Firebase restore failed, using localStorage'); }
+  }
+  if(!restored) restoreChat(); // localStorage fallback
+};
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSend();}}
 function qp(t){document.getElementById('mainInput').value=t;document.getElementById('mainInput').focus();}
 function toggleGen(g){document.getElementById('stopBtn').style.display=g?'flex':'none';document.getElementById('sendBtn').style.display=g?'none':'flex';if(window.AppState)window.AppState._isGenerating=g;}
@@ -599,8 +618,18 @@ function createNewProject(){
 const HERO_HTML=`<div id="heroSection"><div class="hero-icon">✦</div><h1 class="hero-title">Nivi Workspace</h1><p class="hero-sub">Multi-model AI · Live file preview · Firebase sync</p><div class="hero-chips"><div class="hchip" onclick="qp('Explain my codebase structure')">Analyze codebase</div><div class="hchip" onclick="qp('Summarize the uploaded document')">Summarize doc</div><div class="hchip" onclick="qp('Debug this error and suggest fixes')">Debug code</div><div class="hchip" onclick="qp('/image futuristic city at night, neon lights')">Generate image</div></div></div>`;
 
 function clearChat(){
-  if(window.AppState&&AppState._tabChatHistory?.length>0){let a=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');a.push({id:Date.now(),chat:AppState._tabChatHistory});localStorage.setItem('nivi_chat_archives',JSON.stringify(a));}
-  if(window.AppState)AppState._tabChatHistory=[];
+  const history = window.AppState?._tabChatHistory || [];
+  if(history.length > 0){
+    // 1. Firebase ma archive karo (async — background ma thase)
+    if(typeof archiveNiviChat === 'function') archiveNiviChat(history);
+    // 2. LocalStorage ma pan rakho
+    let a=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
+    a.unshift({id:Date.now(), msgCount: history.length, chat: history});
+    if(a.length > 20) a = a.slice(0,20); // max 20 archives
+    localStorage.setItem('nivi_chat_archives', JSON.stringify(a));
+  }
+  // 3. Current chat clear karo
+  if(window.AppState) AppState._tabChatHistory=[];
   localStorage.setItem('niviTabChat','[]');
   closeArt();closeSheet();
   document.getElementById('chatWindow').innerHTML=HERO_HTML;
@@ -790,7 +819,7 @@ function openSettings(){
 function _providerDefaults(provider) {
   // Per-provider: default URL + model hint — all overridable via localStorage
   const defs = {
-    gemini:     { url: '',  modelHint: 'gemini-2.0-flash-lite', keyLS: 'nivi_key_gemini',     urlLS: '' },
+    gemini:     { url: '',  modelHint: 'gemini-2.0-flash', keyLS: 'nivi_key_gemini',     urlLS: '' },
     openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions',           modelHint: 'openai/gpt-4o-mini',             keyLS: 'nivi_key_openrouter', urlLS: 'nivi_url_openrouter' },
     nvidia:     { url: 'https://integrate.api.nvidia.com/v1/chat/completions',    modelHint: 'nvidia/llama-3.1-nemotron-70b-instruct', keyLS: 'nivi_key_nvidia', urlLS: 'nivi_url_nvidia' },
     custom:     { url: '',  modelHint: '',                       keyLS: '',                    urlLS: '' },
