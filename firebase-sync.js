@@ -326,3 +326,95 @@ window.saveProjectChatLocal = saveProjectChatLocal;
 window.loadProjectChatLocal = loadProjectChatLocal;
 
 console.log('✅ Project Chat Module v2.1 loaded');
+
+// ========================================
+// INDEXEDDB MODULE — Nivi Pro v2.2
+// File storage — no 5MB limit, fast local
+// ========================================
+
+const NiviDB = {
+  _db: null,
+  DB_NAME: 'NiviProDB',
+  DB_VERSION: 1,
+  STORE_FILES: 'projectFiles',
+
+  // ── Open / Init DB ──
+  async open() {
+    if (this._db) return this._db;
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(this.STORE_FILES)) {
+          const store = db.createObjectStore(this.STORE_FILES, { keyPath: 'id' });
+          store.createIndex('byProject', 'projId', { unique: false });
+        }
+      };
+      req.onsuccess = (e) => { this._db = e.target.result; resolve(this._db); };
+      req.onerror  = (e) => reject(e.target.error);
+    });
+  },
+
+  // ── Save file to IndexedDB ──
+  async saveFile(projId, fileName, mimeType, base64Data) {
+    const db = await this.open();
+    const id = projId + '::' + fileName; // unique per project+filename
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(this.STORE_FILES, 'readwrite');
+      tx.objectStore(this.STORE_FILES).put({
+        id, projId, name: fileName, mimeType,
+        data: base64Data, savedAt: Date.now()
+      });
+      tx.oncomplete = () => resolve(true);
+      tx.onerror    = (e) => reject(e.target.error);
+    });
+  },
+
+  // ── Get all files for a project ──
+  async getProjectFiles(projId) {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(this.STORE_FILES, 'readonly');
+      const idx = tx.objectStore(this.STORE_FILES).index('byProject');
+      const req = idx.getAll(projId);
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  },
+
+  // ── Delete one file ──
+  async deleteFile(projId, fileName) {
+    const db = await this.open();
+    const id = projId + '::' + fileName;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(this.STORE_FILES, 'readwrite');
+      tx.objectStore(this.STORE_FILES).delete(id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror    = (e) => reject(e.target.error);
+    });
+  },
+
+  // ── Delete all files for a project ──
+  async deleteProjectFiles(projId) {
+    const files = await this.getProjectFiles(projId);
+    for (const f of files) await this.deleteFile(projId, f.name);
+  },
+
+  // ── Load project files into localStorage (Nivi context mate) ──
+  async syncToLocalMemory(projId) {
+    try {
+      const files = await this.getProjectFiles(projId);
+      localStorage.setItem('nivi_file_memory', JSON.stringify(files));
+      if (typeof renderSidebarData === 'function') renderSidebarData();
+      console.log(`✅ IndexedDB → LocalMemory synced: ${files.length} files for ${projId}`);
+      return files;
+    } catch(e) {
+      console.error('syncToLocalMemory error:', e);
+      return [];
+    }
+  }
+};
+
+// ── Export ──
+window.NiviDB = NiviDB;
+console.log('✅ NiviDB IndexedDB module loaded');
