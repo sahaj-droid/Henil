@@ -520,7 +520,8 @@ async function handleSend(){
           const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
           fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
             textFiles.slice(0, 5).map(f => {
-              const content = atob(f.data).slice(0, 3000); // 3000 chars per file
+              const bytes = Uint8Array.from(atob(f.data), c => c.charCodeAt(0));
+              const content = new TextDecoder('utf-8').decode(bytes).slice(0, 2000);
               return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
             }).join('\n\n');
         }
