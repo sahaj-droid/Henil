@@ -38,6 +38,8 @@ window.onload=async()=>{
   if(!localStorage.getItem('nivi_current_session_id')){
     localStorage.setItem('nivi_current_session_id', 'session_' + Date.now());
   }
+  // Init active project tracker
+  window._activeProjectId = document.getElementById('activeProjectSelect')?.value || 'default';
   renderProjectsUI();
   renderSidebarData();
   updateActiveModelUI();
@@ -112,7 +114,61 @@ function renderProjectsUI(){
   if(dd){dd.innerHTML=`<option value="default">default</option>`+projs.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');}
 }
 function setProj(id){document.getElementById('activeProjectSelect').value=id;changeActiveProject();renderProjectsUI();}
-function changeActiveProject(){const s=document.getElementById('activeProjectSelect').value;if(typeof syncWorkspaceFiles==='function')syncWorkspaceFiles(s);}
+async function changeActiveProject(){
+  const newProj = document.getElementById('activeProjectSelect').value;
+  const prevProj = window._activeProjectId || 'default';
+
+  // Step 1: Current chat save & clear
+  const currentHistory = window.AppState?._tabChatHistory || [];
+  if (currentHistory.length > 0) {
+    if (prevProj === 'default') {
+      if (typeof archiveNiviChat === 'function') await archiveNiviChat(currentHistory);
+    } else {
+      if (typeof saveProjectChat === 'function') await saveProjectChat(prevProj, currentHistory);
+    }
+  }
+
+  // Step 2: Screen clear
+  if (window.AppState) AppState._tabChatHistory = [];
+  localStorage.setItem('niviTabChat', '[]');
+  document.getElementById('chatWindow').innerHTML = HERO_HTML;
+  if (typeof closeArt === 'function') closeArt();
+  if (typeof closeSheet === 'function') closeSheet();
+
+  // Step 3: Track new active project
+  window._activeProjectId = newProj;
+
+  // Step 4: Sync workspace files
+  if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(newProj);
+
+  // Step 5: Load project chat
+  if (newProj !== 'default') {
+    try {
+      let projChat = await loadProjectChat(newProj);
+      if (!projChat || projChat.length === 0) {
+        projChat = loadProjectChatLocal(newProj);
+      }
+      if (projChat && projChat.length > 0) {
+        AppState._tabChatHistory = projChat;
+        localStorage.setItem('niviTabChat', JSON.stringify(projChat));
+        projChat.forEach(msg => appendMsg(msg.role, msg.text));
+        console.log('✅ Project chat restored:', newProj);
+      }
+    } catch(e) {
+      console.warn('Project chat load failed:', e);
+    }
+  } else {
+    // Default: load default Nivi chat
+    try {
+      const fbChat = await loadNiviChat();
+      if (fbChat && fbChat.length > 0) {
+        AppState._tabChatHistory = fbChat;
+        localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
+        fbChat.forEach(msg => appendMsg(msg.role, msg.text));
+      }
+    } catch(e) {}
+  }
+}
 function createNewProject(){
   const n=document.getElementById('newProjectName').value.trim();if(!n)return;
   const id='proj_'+Date.now();
@@ -126,12 +182,21 @@ const HERO_HTML=`<div id="heroSection"><div class="hero-icon">✦</div><h1 class
 
 function clearChat(){
   const history = window.AppState?._tabChatHistory || [];
+  const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+
   if(history.length > 0){
-    if(typeof archiveNiviChat === 'function') archiveNiviChat(history);
-    let a=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
-    a.unshift({id:Date.now(), msgCount: history.length, chat: history});
-    if(a.length > 20) a = a.slice(0,20);
-    localStorage.setItem('nivi_chat_archives', JSON.stringify(a));
+    if (activeProj !== 'default') {
+      // Project chat archive
+      if(typeof archiveProjectChat === 'function') archiveProjectChat(activeProj, history);
+      if(typeof clearProjectSession === 'function') clearProjectSession(activeProj);
+    } else {
+      // Default chat archive (existing logic)
+      if(typeof archiveNiviChat === 'function') archiveNiviChat(history);
+      let a=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
+      a.unshift({id:Date.now(), msgCount: history.length, chat: history});
+      if(a.length > 20) a = a.slice(0,20);
+      localStorage.setItem('nivi_chat_archives', JSON.stringify(a));
+    }
   }
   if(window.AppState) AppState._tabChatHistory=[];
   localStorage.setItem('niviTabChat','[]');
@@ -139,6 +204,7 @@ function clearChat(){
   if(typeof closeArt === 'function') closeArt(); 
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML=HERO_HTML;
+  
   renderSidebarData();
   if(typeof saveNiviChat === 'function') saveNiviChat([]);
   if(typeof saveUserData === 'function') saveUserData('history');
@@ -440,8 +506,14 @@ async function handleSend(){
         }
       }
     }
-    // Firebase sync — await saathe (debounce remove, direct save)
-    if(typeof saveUserData === 'function') await saveUserData('history');
+// Firebase sync — project-aware
+    const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+    if (_activeProj !== 'default') {
+      if (typeof saveProjectChat === 'function') await saveProjectChat(_activeProj, AppState._tabChatHistory);
+      if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(_activeProj, AppState._tabChatHistory);
+    } else {
+      if(typeof saveUserData === 'function') await saveUserData('history');
+    }
     renderSidebarData();
   }
 }
