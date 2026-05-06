@@ -596,19 +596,32 @@ function switchProviderInRow(btn, provider) {
 }
 function saveSettings(){
   const rows=document.querySelectorAll('.mrow'),chain=[];
+  // Track which providers are PRESENT in current rows
+  const presentProviders = new Set();
   rows.forEach(row=>{
     const provider = row.querySelector('.conf-provider').value;
     const model    = row.querySelector('.conf-model').value.trim();
     const key      = row.querySelector('.conf-key').value.trim();
     const url      = row.querySelector('.conf-url')?.value.trim() || '';
-    if(!model && !key) return; 
+    presentProviders.add(provider);
+    if(!model && !key) return;
     const def = _providerDefaults(provider);
     if(key    && def.keyLS) localStorage.setItem(def.keyLS, key);
     if(url    && def.urlLS) localStorage.setItem(def.urlLS, url);
     if(model) localStorage.setItem(`nivi_model_${provider}`, model);
     chain.push({provider, model, key, url});
   });
+  // Deleted providers — localStorage clear karo
+  ['gemini','openrouter','nvidia','custom'].forEach(p => {
+    if(!presentProviders.has(p)){
+      const def = _providerDefaults(p);
+      if(def.keyLS)   localStorage.removeItem(def.keyLS);
+      if(def.urlLS)   localStorage.removeItem(def.urlLS);
+      localStorage.removeItem(`nivi_model_${p}`);
+    }
+  });
   localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
   closeModal('settingsModal');
+  updateActiveModelUI();
   renderSidebarData();
 }
