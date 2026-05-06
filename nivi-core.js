@@ -443,108 +443,126 @@ async function generateChatTitle(firstMessage) {
 }
 // ── SEND MESSAGE LOGIC ──
 async function handleSend(){
-  if(window.AppState&&AppState._isGenerating)return;
-  const inp=document.getElementById('mainInput');
-  const text=inp.value.trim();
-  const files=window.AppState?._pendingFiles||[];
-  const file=files[0]||null;
-  if(!text&&!files.length)return;
-
-  if(text.toLowerCase().startsWith('/image ')){
-    const prompt=text.substring(7).trim();
-    appendMsg('user',text);
-    if(window.AppState){AppState._tabChatHistory.push({role:'user',text});localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
-    inp.value='';inp.style.height='auto';
-    const resId='nivi-'+Date.now();
-    const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
-    const imgHtml=`<div style="margin-top:7px;"><img src="${url}" style="max-width:100%;border-radius:10px;border:1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop=99999;"><div style="margin-top:6px;display:flex;gap:7px;"><a href="${url}" target="_blank" download class="tbtn prim" style="text-decoration:none;display:inline-flex;">⬇ Download</a></div></div>`;
-    appendMsg('nivi',imgHtml,resId);
-    if(window.AppState){AppState._tabChatHistory.push({role:'nivi',text:imgHtml});localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
-    renderSidebarData();return;
+  if(window.AppState && AppState._isGenerating) return;
+  const inp = document.getElementById('mainInput');
+  const text = inp.value.trim();
+  const files = window.AppState?._pendingFiles || [];
+  const file = files[0] || null;
+  if(!text && !files.length) return;
+  // ── 1. COMMAND ROUTER (સ્માર્ટ સ્વિચબોર્ડ) ──
+  let command = 'chat';
+  let prompt = text;
+  if (text.toLowerCase().startsWith('/image ')) {
+    command = 'image';
+    prompt = text.substring(7).trim();
+  } else if (text.toLowerCase().startsWith('/video ')) {
+    command = 'video';
+    prompt = text.substring(7).trim();
+  } else if (text.toLowerCase().startsWith('/song ')) {
+    command = 'audio';
+    prompt = text.substring(6).trim();
+  } else if (file) {
+    command = 'file';
   }
-
-  const userText=files.length>0?`📎 ${files.map(f=>f.name).join(', ')}\n${text}`:text;
-  appendMsg('user',userText);
-  if(window.AppState){AppState._tabChatHistory.push({role:'user',text:userText});localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
-  inp.value='';inp.style.height='auto';clearFile();
-  toggleGen(true);if(window.AppState)AppState._abortController=false;
-  const resId='nivi-'+Date.now();
-  appendMsg('nivi',`<div class="thinking"><span></span><span></span><span></span></div>`,resId);
-
-  try{
-    if(file&&typeof directGeminiCallWithFile==='function'){
-      const b64=await window.readFileAsBase64(file);
-      const mime=window.getFileMimeType?window.getFileMimeType(file.name):file.type;
-      const r=await directGeminiCallWithFile(text||'Analyze this file.',b64,mime);
-      if(!window.AppState||!AppState._abortController){
-        updateMsg(resId,r.answer||'No answer received.');
-        if(typeof saveFileToMemory==='function')saveFileToMemory(file.name, b64, mime);
-        const el=document.getElementById(resId);
+  // ── 2. UI UPDATE (યુઝરનો મેસેજ) ──
+  const userText = files.length > 0 ? `📎 ${files.map(f=>f.name).join(', ')}\n${text}` : text;
+  appendMsg('user', userText);
+  if(window.AppState){
+    AppState._tabChatHistory.push({role:'user', text: userText});
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+  }
+  inp.value = ''; inp.style.height = 'auto'; clearFile();
+  toggleGen(true); if(window.AppState) AppState._abortController = false;
+  const resId = 'nivi-' + Date.now();
+  appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
+  // ── 3. ROUTING EXECUTION (કમાન્ડ મુજબ પ્રોસેસ) ──
+  try {
+    if (command === 'image') {
+      // અત્યારે Pollinations ચાલે છે, ભવિષ્યમાં અહી Nano Banana 2 આવશે
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
+      const imgHtml = `<div style="margin-top:7px;"><img src="${url}" style="max-width:100%;border-radius:10px;border:1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop=99999;"><div style="margin-top:6px;display:flex;gap:7px;"><a href="${url}" target="_blank" download class="tbtn prim" style="text-decoration:none;display:inline-flex;">⬇ Download</a></div></div>`;
+      updateMsg(resId, imgHtml);
+    } else if (command === 'video') {
+      // Placeholder for Veo 3.1
+      const vHtml = `🎬 <b>Video Request:</b> "${prompt}"<br><span style="color:var(--text-sub);font-size:11px;">(Veo 3.1 Long-Running API logic will be implemented here.)</span>`;
+      updateMsg(resId, vHtml);
+    } else if (command === 'audio') {
+      // Placeholder for Lyria 3
+      const aHtml = `🎵 <b>Audio Request:</b> "${prompt}"<br><span style="color:var(--text-sub);font-size:11px;">(Lyria 3 Long-Running API logic will be implemented here.)</span>`;
+      updateMsg(resId, aHtml);
+    } else if (command === 'file' && typeof directGeminiCallWithFile === 'function') {
+      // જૂનો File Analysis કોડ (અકબંધ)
+      const b64 = await window.readFileAsBase64(file);
+      const mime = window.getFileMimeType ? window.getFileMimeType(file.name) : file.type;
+      const r = await directGeminiCallWithFile(text || 'Analyze this file.', b64, mime);
+      if(!window.AppState || !AppState._abortController){
+        updateMsg(resId, r.answer || 'No answer received.');
+        if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name, b64, mime);
+        const el = document.getElementById(resId);
         if(el && typeof makeArtCard === 'function'){
-          const ext=file.name.split('.').pop().toLowerCase();
-          el.parentElement.appendChild(makeArtCard(file.name,ext,b64,file));
+          const ext = file.name.split('.').pop().toLowerCase();
+          el.parentElement.appendChild(makeArtCard(file.name, ext, b64, file));
         }
-        if(typeof openArt === 'function') openArt(file,b64);
-        const proj=document.getElementById('activeProjectSelect').value;
-        if(typeof saveFileToCloudWorkspace==='function'){
-          for(const f of files){const b=await window.readFileAsBase64(f);const m=window.getFileMimeType?window.getFileMimeType(f.name):f.type;saveFileToCloudWorkspace(proj,f.name,m,b);}
-        }
-      }
-      if(window.AppState)AppState._pendingFiles=[];document.getElementById('fileInp').value='';
-    }else if(typeof directGeminiCallStreamMultiTurn==='function'){
-      let apiText=text;
-      if(text.toLowerCase().startsWith('/song ')){
-        apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
-      }
-      const hist=window.AppState?AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user',parts:[{text:m.text}]})):[];
-      
-      // Active project files — Nivi context ma aapvo
-// Active project files — IndexedDB first, localStorage fallback
-      let files = [];
-      const _ctxProj = window._activeProjectId ||
-                       document.getElementById('activeProjectSelect')?.value || 'default';
-      if (_ctxProj !== 'default' && window.NiviDB) {
-        try {
-          files = await NiviDB.getProjectFiles(_ctxProj);
-        } catch(e) {
-          files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
-        }
-      } else {
-        files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
-      }
-      let fileContext = '';
-      if (files.length > 0) {
-        const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-        const textFiles = files.filter(f => f.data && TEXT_MIMES.includes(f.mimeType));
-        if (textFiles.length > 0) {
-          const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
-          fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
-            textFiles.slice(0, 5).map(f => {
-              const bytes = Uint8Array.from(atob(f.data), c => c.charCodeAt(0));
-              const content = new TextDecoder('utf-8').decode(bytes).slice(0, 2000);
-              return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
-            }).join('\n\n');
+        if(typeof openArt === 'function') openArt(file, b64);
+        const proj = document.getElementById('activeProjectSelect').value;
+        if(typeof saveFileToCloudWorkspace === 'function'){
+          for(const f of files){
+            const b = await window.readFileAsBase64(f);
+            const m = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
+            saveFileToCloudWorkspace(proj, f.name, m, b);
+          }
         }
       }
-      const finalPrompt = fileContext ? apiText + fileContext : apiText;
-      
-      await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!window.AppState||!AppState._abortController)updateMsg(resId,chunk);});
+      if(window.AppState) AppState._pendingFiles = [];
+      document.getElementById('fileInp').value = '';
+    } else {
+      // ડિફોલ્ટ: Text / Code Generation (જૂનો કોડ અકબંધ)
+      if(typeof directGeminiCallStreamMultiTurn === 'function') {
+        const hist = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user',parts:[{text:m.text}]})) : [];
+        // Active project files context
+        let projFiles = [];
+        const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+        if (_ctxProj !== 'default' && window.NiviDB) {
+          try { projFiles = await NiviDB.getProjectFiles(_ctxProj); } 
+          catch(e) { projFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]'); }
+        } else {
+          projFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+        }
+        let fileContext = '';
+        if (projFiles.length > 0) {
+          const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+          const textFiles = projFiles.filter(f => f.data && TEXT_MIMES.includes(f.mimeType));
+          if (textFiles.length > 0) {
+            const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
+            fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
+              textFiles.slice(0, 5).map(f => {
+                const bytes = Uint8Array.from(atob(f.data), c => c.charCodeAt(0));
+                const content = new TextDecoder('utf-8').decode(bytes).slice(0, 2000);
+                return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
+              }).join('\n\n');
+          }
+        }
+        const finalPrompt = fileContext ? text + fileContext : text;
+        await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk) => {
+          if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
+        });
+      }
     }
-  }catch(err){
-    if(!window.AppState||!AppState._abortController)updateMsg(resId,'⚠ Connection Error: '+err.message);
-} finally {
+  } catch(err) {
+    if(!window.AppState || !AppState._abortController) updateMsg(resId, '⚠ Connection Error: ' + err.message);
+  } finally {
+    // ── 4. CLEANUP & FIREBASE SAVE (અકબંધ) ──
     toggleGen(false);
-    let chatTitle = "Current Session"; // ડિફોલ્ટ ટાઇટલ
+    let chatTitle = "Current Session"; 
     if(!window.AppState || !AppState._abortController) {
       if(window.AppState) {
-      const el = document.getElementById(resId);
+        const el = document.getElementById(resId);
         let rawText = '';
         if (el && el.getAttribute('data-raw')) {
           rawText = el.getAttribute('data-raw').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
         } else if (el) {
           rawText = el.innerText || '';
         }
-        // rawText empty hoy to save na karo — streaming incomplete
         if (rawText.trim()) {
           AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
           if (AppState._tabChatHistory.length === 2) {
@@ -555,7 +573,7 @@ async function handleSend(){
         }
       }
     }
-// Firebase sync — project-aware
+    // Firebase sync
     const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
     if (_activeProj !== 'default') {
       if (typeof saveProjectChat === 'function') await saveProjectChat(_activeProj, AppState._tabChatHistory);
