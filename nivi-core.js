@@ -1,11 +1,28 @@
-// ── SAVE FILE TO MEMORY ──
-function saveFileToMemory(filename, base64Data, mimeType) {
+// ── INDEXEDDB ──
+async function saveFileToMemory(filename, base64Data, mimeType) {
+  const projId = window._activeProjectId || 
+                 document.getElementById('activeProjectSelect')?.value || 'default';
+  const entry = { name: filename, ts: Date.now(), data: base64Data || null, 
+                  mimeType: mimeType || 'text/plain', projId };
+  // IndexedDB ma save (primary)
+  if (window.NiviDB) {
+    try {
+      await NiviDB.saveFile(projId, filename, mimeType, base64Data);
+      console.log(`✅ File saved to IndexedDB: ${filename} [${projId}]`);
+    } catch(e) {
+      console.warn('IndexedDB save failed, localStorage fallback:', e);
+    }
+  }
+  // localStorage ma pan update (Nivi context mate fast read)
   let files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
   const idx = files.findIndex(f => f.name === filename);
-  const entry = { name: filename, ts: Date.now(), data: base64Data || null, mimeType: mimeType || 'text/plain' };
   if (idx >= 0) files[idx] = entry;
   else files.push(entry);
   localStorage.setItem('nivi_file_memory', JSON.stringify(files));
+  // Firebase cloud backup (project only)
+  if (projId !== 'default' && typeof saveFileToCloudWorkspace === 'function') {
+    saveFileToCloudWorkspace(projId, filename, mimeType, base64Data);
+  }
   if(typeof renderSidebarData === 'function') renderSidebarData();
 }
 // ── GLOBAL APP STATE ──
@@ -138,8 +155,17 @@ async function changeActiveProject(){
   // Step 3: Track new active project
   window._activeProjectId = newProj;
 
-  // Step 4: Sync workspace files
-  if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(newProj);
+    // Step 4: Sync workspace files — IndexedDB first, Firebase fallback
+  if (newProj !== 'default' && window.NiviDB) {
+    try {
+      await NiviDB.syncToLocalMemory(newProj);
+    } catch(e) {
+      // IndexedDB fail — Firebase fallback
+      if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(newProj);
+    }
+  } else {
+    if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(newProj);
+  }
 
   // Step 5: Load project chat
   if (newProj !== 'default') {
@@ -378,8 +404,15 @@ function openSavedFile(name){
   else alert('File data not found. Re-attach the file.');
 }
 
-function deleteFile(name){
+async function deleteFile(name){
   if(!confirm(`"${name}" delete karvu che?`))return;
+  const projId = window._activeProjectId ||
+                 document.getElementById('activeProjectSelect')?.value || 'default';
+  // IndexedDB thi delete
+  if (window.NiviDB) {
+    try { await NiviDB.deleteFile(projId, name); } catch(e) {}
+  }
+  // localStorage thi delete
   let files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
   files=files.filter(f=>f.name!==name);
   localStorage.setItem('nivi_file_memory',JSON.stringify(files));
@@ -389,6 +422,7 @@ function deleteFile(name){
   }
   renderSidebarData();
 }
+
 // ── AUTO TITLE GENERATION ──
 async function generateChatTitle(firstMessage) {
     const history = window.AppState ? AppState._tabChatHistory : [];
@@ -465,14 +499,28 @@ async function handleSend(){
       const hist=window.AppState?AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user',parts:[{text:m.text}]})):[];
       
       // Active project files — Nivi context ma aapvo
-      const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+// Active project files — IndexedDB first, localStorage fallback
+      let files = [];
+      const _ctxProj = window._activeProjectId ||
+                       document.getElementById('activeProjectSelect')?.value || 'default';
+      if (_ctxProj !== 'default' && window.NiviDB) {
+        try {
+          files = await NiviDB.getProjectFiles(_ctxProj);
+        } catch(e) {
+          files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+        }
+      } else {
+        files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+      }
       let fileContext = '';
       if (files.length > 0) {
-        const textFiles = files.filter(f => f.data && ['text/javascript','text/html','text/css','text/plain','application/json'].includes(f.mimeType));
+        const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+        const textFiles = files.filter(f => f.data && TEXT_MIMES.includes(f.mimeType));
         if (textFiles.length > 0) {
-          fileContext = '\n\n---\n[Project Files in Memory]\n' + 
-            textFiles.slice(0, 3).map(f => {
-              const content = atob(f.data).slice(0, 2000); // max 2000 chars per file
+          const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
+          fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
+            textFiles.slice(0, 5).map(f => {
+              const content = atob(f.data).slice(0, 3000); // 3000 chars per file
               return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
             }).join('\n\n');
         }
