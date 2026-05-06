@@ -158,9 +158,22 @@ async function changeActiveProject(){
     // Step 4: Sync workspace files — IndexedDB first, Firebase fallback
   if (newProj !== 'default' && window.NiviDB) {
     try {
-      await NiviDB.syncToLocalMemory(newProj);
+      const idbFiles = await NiviDB.getProjectFiles(newProj);
+      if (idbFiles && idbFiles.length > 0) {
+        await NiviDB.syncToLocalMemory(newProj);
+      } else {
+        // IndexedDB empty — Firebase thi load karo (cross-device / fresh browser)
+        console.log('IndexedDB empty for project, falling back to Firebase...');
+        if (typeof syncWorkspaceFiles === 'function') await syncWorkspaceFiles(newProj);
+        // Firebase files ne IndexedDB ma pan mirror karo
+        const fbFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+        for (const f of fbFiles) {
+          if (f.data) {
+            try { await NiviDB.saveFile(newProj, f.name, f.mimeType, f.data); } catch(e) {}
+          }
+        }
+      }
     } catch(e) {
-      // IndexedDB fail — Firebase fallback
       if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(newProj);
     }
   } else {
@@ -411,6 +424,18 @@ async function deleteFile(name){
   // IndexedDB thi delete
   if (window.NiviDB) {
     try { await NiviDB.deleteFile(projId, name); } catch(e) {}
+  }
+ // Firebase thi pan delete karo (cloud sync)
+  if (projId !== 'default' && typeof db !== 'undefined') {
+    try {
+      const userId = typeof _getNiviUserId === 'function' ? 
+        (localStorage.getItem('nivi_user_id') || 'user_1774995803095') : 'user_1774995803095';
+      const snap = await db.collection('users').doc(userId)
+        .collection('workspaces').doc(projId)
+        .collection('files').where('name', '==', name).get();
+      snap.forEach(doc => doc.ref.delete());
+      console.log('✅ File deleted from Firebase:', name);
+    } catch(e) { console.warn('Firebase file delete failed:', e); }
   }
   // localStorage thi delete
   let files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
