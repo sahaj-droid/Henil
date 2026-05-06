@@ -478,17 +478,23 @@ async function handleSend(){
       const r=await directGeminiCallWithFile(text||'Analyze this file.',b64,mime);
       if(!window.AppState||!AppState._abortController){
         updateMsg(resId,r.answer||'No answer received.');
-        if(typeof saveFileToMemory==='function')saveFileToMemory(file.name, b64, mime);
-        const el=document.getElementById(resId);
-        if(el && typeof makeArtCard === 'function'){
-          const ext=file.name.split('.').pop().toLowerCase();
-          el.parentElement.appendChild(makeArtCard(file.name,ext,b64,file));
+        const el = document.getElementById(resId);
+        const proj = document.getElementById('activeProjectSelect').value;
+        for (const f of files) {
+          const fileB64 = await window.readFileAsBase64(f);
+          const fileMime = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
+          if (typeof saveFileToMemory === 'function') {
+            saveFileToMemory(f.name, fileB64, fileMime);
+          }
+          if (typeof saveFileToCloudWorkspace === 'function') {
+            saveFileToCloudWorkspace(proj, f.name, fileMime, fileB64);
+          }
+          if (el && typeof makeArtCard === 'function') {
+            const ext = f.name.split('.').pop().toLowerCase();
+            el.parentElement.appendChild(makeArtCard(f.name, ext, fileB64, f));
+          }
         }
-        if(typeof openArt === 'function') openArt(file,b64);
-        const proj=document.getElementById('activeProjectSelect').value;
-        if(typeof saveFileToCloudWorkspace==='function'){
-          for(const f of files){const b=await window.readFileAsBase64(f);const m=window.getFileMimeType?window.getFileMimeType(f.name):f.type;saveFileToCloudWorkspace(proj,f.name,m,b);}
-        }
+        if (typeof openArt === 'function') openArt(file, b64);
       }
       if(window.AppState)AppState._pendingFiles=[];document.getElementById('fileInp').value='';
     }else if(typeof directGeminiCallStreamMultiTurn==='function'){
