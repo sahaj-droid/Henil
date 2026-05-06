@@ -247,3 +247,86 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
 };
 
 console.log('✅ Nivi AI Engine v2.0 loaded — Universal provider support');
+// ═══════════════════════════════════════════════════════════
+//  MEDIA GENERATION ENGINE (Veo Video & Lyria Audio)
+// ═══════════════════════════════════════════════════════════
+
+// Helper: Long Running Operations માટે Polling (કારણ કે વિડીયો બનતા સમય લાગે)
+async function _pollOperation(operationName, apiKey, onProgress) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`;
+  let isDone = false;
+  let result = null;
+
+  while (!isDone) {
+    if (window.AppState?._abortController) throw new Error('Operation cancelled by user.');
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.error) throw new Error(data.error.message || 'Polling failed');
+
+    if (data.done) {
+      isDone = true;
+      result = data.response; 
+    } else {
+      if (onProgress) onProgress('⏳ Generating media... Please wait (Polling API)');
+      await new Promise(r => setTimeout(r, 5000)); // દર 5 સેકન્ડે ચેક કરશે
+    }
+  }
+  return result;
+}
+
+// Main Media Call Function
+window.directGeminiMediaCall = async function(prompt, mediaType, onProgress) {
+  const chain = window.getModelChain();
+  const cfg = chain.find(c => c.provider === 'gemini');
+
+  if (!cfg || !cfg.key) {
+    return { ok: false, error: 'Gemini API Key is missing. Please check settings.' };
+  }
+
+  try {
+    if (mediaType === 'video') {
+      // ── VEO 3.1 (Video) - Long Running Operation ──
+      const model = 'veo-3.1-generate-preview';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predictLongRunning?key=${cfg.key}`;
+
+      if(onProgress) onProgress('🎬 Initiating Veo 3.1 Video generation...');
+
+      const req = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instances: [{ prompt: prompt }] })
+      });
+
+      const data = await req.json();
+      if (data.error) throw new Error(data.error.message);
+      if (!data.name) throw new Error('No operation ID returned from Veo.');
+
+      // Polling ચાલુ કરો જ્યાં સુધી વિડીયો રેડી ના થાય
+      const finalResponse = await _pollOperation(data.name, cfg.key, onProgress);
+      return { ok: true, data: finalResponse, type: 'video' };
+
+    } else if (mediaType === 'audio') {
+      // ── LYRIA 3 (Audio) - Standard Generation ──
+      const model = 'lyria-3-pro-preview';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cfg.key}`;
+
+      if(onProgress) onProgress('🎵 Composing track with Lyria 3...');
+
+      const req = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }]
+        })
+      });
+
+      const data = await req.json();
+      if (data.error) throw new Error(data.error.message);
+      return { ok: true, data: data.candidates[0].content.parts[0], type: 'audio' };
+    }
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+};
