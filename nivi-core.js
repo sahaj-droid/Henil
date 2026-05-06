@@ -475,43 +475,40 @@ async function handleSend(){
   toggleGen(true); if(window.AppState) AppState._abortController = false;
   const resId = 'nivi-' + Date.now();
   appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
-  // ── 3. ROUTING EXECUTION (કમાન્ડ મુજબ પ્રોસેસ) ──
   try {
     if (command === 'image') {
-      // અત્યારે Pollinations ચાલે છે, ભવિષ્યમાં અહી Nano Banana 2 આવશે
       const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
       const imgHtml = `<div style="margin-top:7px;"><img src="${url}" style="max-width:100%;border-radius:10px;border:1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop=99999;"><div style="margin-top:6px;display:flex;gap:7px;"><a href="${url}" target="_blank" download class="tbtn prim" style="text-decoration:none;display:inline-flex;">⬇ Download</a></div></div>`;
       updateMsg(resId, imgHtml);
     } else if (command === 'video') {
-      // Placeholder for Veo 3.1
       const vHtml = `🎬 <b>Video Request:</b> "${prompt}"<br><span style="color:var(--text-sub);font-size:11px;">(Veo 3.1 Long-Running API logic will be implemented here.)</span>`;
       updateMsg(resId, vHtml);
     } else if (command === 'audio') {
-      // Placeholder for Lyria 3
       const aHtml = `🎵 <b>Audio Request:</b> "${prompt}"<br><span style="color:var(--text-sub);font-size:11px;">(Lyria 3 Long-Running API logic will be implemented here.)</span>`;
       updateMsg(resId, aHtml);
     } else if (command === 'file' && typeof directGeminiCallWithFile === 'function') {
-      // જૂનો File Analysis કોડ (અકબંધ)
       const b64 = await window.readFileAsBase64(file);
       const mime = window.getFileMimeType ? window.getFileMimeType(file.name) : file.type;
       const r = await directGeminiCallWithFile(text || 'Analyze this file.', b64, mime);
-      if(!window.AppState || !AppState._abortController){
-        updateMsg(resId, r.answer || 'No answer received.');
-        if(typeof saveFileToMemory === 'function') saveFileToMemory(file.name, b64, mime);
+if(!window.AppState||!AppState._abortController){
+        updateMsg(resId,r.answer||'No answer received.');
         const el = document.getElementById(resId);
-        if(el && typeof makeArtCard === 'function'){
-          const ext = file.name.split('.').pop().toLowerCase();
-          el.parentElement.appendChild(makeArtCard(file.name, ext, b64, file));
-        }
-        if(typeof openArt === 'function') openArt(file, b64);
         const proj = document.getElementById('activeProjectSelect').value;
-        if(typeof saveFileToCloudWorkspace === 'function'){
-          for(const f of files){
-            const b = await window.readFileAsBase64(f);
-            const m = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
-            saveFileToCloudWorkspace(proj, f.name, m, b);
+        for (const f of files) {
+          const fileB64 = await window.readFileAsBase64(f);
+          const fileMime = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
+          if (typeof saveFileToMemory === 'function') {
+            saveFileToMemory(f.name, fileB64, fileMime);
+          }
+          if (typeof saveFileToCloudWorkspace === 'function') {
+            saveFileToCloudWorkspace(proj, f.name, fileMime, fileB64);
+          }
+          if (el && typeof makeArtCard === 'function') {
+            const ext = f.name.split('.').pop().toLowerCase();
+            el.parentElement.appendChild(makeArtCard(f.name, ext, fileB64, f));
           }
         }
+       if (typeof openArt === 'function') openArt(file, b64);
       }
       if(window.AppState) AppState._pendingFiles = [];
       document.getElementById('fileInp').value = '';
