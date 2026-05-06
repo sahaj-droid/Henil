@@ -586,13 +586,14 @@ function switchProviderInRow(btn, provider) {
   const modelField = row.querySelector('.conf-model');
   const urlField   = row.querySelector('.conf-url');
   const urlRow     = row.querySelector('[id^="urlRow_"]');
-  if (!keyField.value)   keyField.value   = localStorage.getItem(def.keyLS) || '';
-  if (!modelField.value) modelField.value = localStorage.getItem(`nivi_model_${provider}`) || def.modelHint || '';
+  // Provider switch = fields ALWAYS clear & refill from localStorage
+  keyField.value   = localStorage.getItem(def.keyLS) || '';
+  modelField.value = localStorage.getItem(`nivi_model_${provider}`) || '';
+  modelField.placeholder = def.modelHint || 'model name';
   if (urlField) {
-    if (!urlField.value) urlField.value = (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
+    urlField.value = (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
   }
   if (urlRow) urlRow.style.display = provider === 'gemini' ? 'none' : '';
-  modelField.placeholder = def.modelHint || 'model name';
 }
 function saveSettings(){
   const rows=document.querySelectorAll('.mrow'),chain=[];
