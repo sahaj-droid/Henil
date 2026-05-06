@@ -480,12 +480,35 @@ async function handleSend(){
       const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
       const imgHtml = `<div style="margin-top:7px;"><img src="${url}" style="max-width:100%;border-radius:10px;border:1px solid var(--border);" onload="document.getElementById('chatWrap').scrollTop=99999;"><div style="margin-top:6px;display:flex;gap:7px;"><a href="${url}" target="_blank" download class="tbtn prim" style="text-decoration:none;display:inline-flex;">⬇ Download</a></div></div>`;
       updateMsg(resId, imgHtml);
-    } else if (command === 'video') {
-      const vHtml = `🎬 <b>Video Request:</b> "${prompt}"<br><span style="color:var(--text-sub);font-size:11px;">(Veo 3.1 Long-Running API logic will be implemented here.)</span>`;
-      updateMsg(resId, vHtml);
-    } else if (command === 'audio') {
-      const aHtml = `🎵 <b>Audio Request:</b> "${prompt}"<br><span style="color:var(--text-sub);font-size:11px;">(Lyria 3 Long-Running API logic will be implemented here.)</span>`;
-      updateMsg(resId, aHtml);
+} else if (command === 'video' || command === 'audio') {
+      // ── અસલી Media Generation API Call ──
+      if (typeof directGeminiMediaCall === 'function') {
+        const mediaType = command;
+        
+        // લાઈવ પ્રોગ્રેસ બતાવવા માટે
+        const r = await directGeminiMediaCall(prompt, mediaType, (progressText) => {
+          if(!window.AppState || !AppState._abortController) {
+             updateMsg(resId, `<div class="thinking"><span></span><span></span><span></span></div><div style="margin-top:8px;font-size:12px;color:var(--accent);">${progressText}</div>`);
+          }
+        });
+
+        if (!window.AppState || !AppState._abortController) {
+          if (r.ok) {
+            // Success: ગૂગલના રિસ્પોન્સમાંથી ડેટા કાઢીને બતાવશે
+            let mediaHtml = `<div style="padding:10px; border:1px solid var(--border-a); border-radius:8px; background:var(--bg-sub); margin-top:8px;">`;
+            if (mediaType === 'video') {
+               mediaHtml += `🎬 <b>Video Ready!</b><br><span style="font-size:11px;color:var(--text-sub);">Response Data: ${JSON.stringify(r.data).substring(0, 100)}...</span>`;
+            } else {
+               mediaHtml += `🎵 <b>Audio Ready!</b><br><span style="font-size:11px;color:var(--text-sub);">Response Data: ${JSON.stringify(r.data).substring(0, 100)}...</span>`;
+            }
+            mediaHtml += `</div>`;
+            updateMsg(resId, mediaHtml);
+          } else {
+            // Error
+            updateMsg(resId, `⚠️ <b>Generation Failed:</b> ${r.error}`);
+          }
+        }
+      }
     } else if (command === 'file' && typeof directGeminiCallWithFile === 'function') {
       const b64 = await window.readFileAsBase64(file);
       const mime = window.getFileMimeType ? window.getFileMimeType(file.name) : file.type;
