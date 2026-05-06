@@ -204,3 +204,165 @@
     pre { position: relative; }
     .run-art-btn {position: absolute; top: 8px; right: 8px; z-index: 10; opacity: 0; transition: opacity 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);}
     pre:hover .run-art-btn { opacity: 1; }
+
+/* ═══════════════════════════════════════════
+   NIVI PRO — UI Glow-Up v2.1 (additive only)
+   ═══════════════════════════════════════════ */
+
+/* SIDEBAR — better section labels */
+.sb-lbl {
+  font-size: 9px;
+  letter-spacing: .15em;
+  color: rgba(100,116,139,.6);
+  margin-bottom: 6px;
+  margin-top: 2px;
+}
+
+/* Sidebar items — refined */
+.si {
+  padding: 7px 9px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  transition: all .18s cubic-bezier(.4,0,.2,1);
+  margin-bottom: 1px;
+}
+.si:hover {
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  border-color: rgba(255,255,255,.06);
+  transform: translateX(1px);
+}
+.si.active {
+  background: rgba(99,179,237,.08);
+  border-color: rgba(99,179,237,.2);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* Sidebar bottom action buttons */
+.sb-action-btn {
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 10px 14px;
+  transition: all .18s;
+}
+.sb-action-btn:hover {
+  background: rgba(255,255,255,.04);
+  transform: translateX(1px);
+}
+
+/* NEW CHAT button glow */
+.new-btn {
+  background: linear-gradient(135deg, rgba(99,179,237,.1), rgba(167,139,250,.08));
+  border: 1px solid rgba(99,179,237,.15);
+  border-radius: 10px;
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.new-btn:hover {
+  background: linear-gradient(135deg, rgba(99,179,237,.16), rgba(167,139,250,.12));
+  border-color: rgba(99,179,237,.3);
+  box-shadow: 0 0 12px rgba(99,179,237,.08);
+  transform: translateY(-1px);
+}
+
+/* TOPBAR — subtle glass feel */
+.topbar {
+  background: rgba(19,21,26,.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+/* Workspace pill — cleaner */
+.ws-pill {
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+  border-color: rgba(255,255,255,.06);
+  transition: border-color .2s;
+}
+.ws-pill:hover { border-color: rgba(99,179,237,.25); }
+
+/* Status chip — pulsing dot */
+.status-chip.on {
+  box-shadow: 0 0 8px rgba(74,222,128,.15);
+}
+
+/* CHAT BUBBLES — user */
+.ur .bubble {
+  background: linear-gradient(135deg, rgba(30,33,48,.95), rgba(22,25,36,.95));
+  border: 1px solid rgba(99,179,237,.12);
+  border-radius: 14px 3px 14px 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+  padding: 10px 15px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* Nivi bubble — more breathing room */
+.nr .bubble {
+  font-size: 14px;
+  line-height: 1.85;
+  letter-spacing: .01em;
+}
+.nr .bubble p { margin-bottom: 9px; }
+
+/* Avatar glow */
+.nav {
+  box-shadow: 0 0 10px rgba(99,179,237,.25);
+}
+
+/* Code blocks — tighter, cleaner */
+pre {
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,.06) !important;
+  background: #0a0b0d !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3) inset;
+}
+
+/* Input pill — focus glow */
+.input-pill:focus-within {
+  border-color: rgba(99,179,237,.4);
+  box-shadow: 0 0 0 3px rgba(99,179,237,.07), 0 4px 16px rgba(0,0,0,.15);
+}
+
+/* Art panel header — subtle */
+.art-hdr {
+  background: rgba(19,21,26,.95);
+}
+
+/* File badge chips — softer */
+.ftbdg {
+  border-radius: 4px;
+  letter-spacing: .03em;
+}
+
+/* Scrollbar — slightly visible */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { 
+  background: rgba(255,255,255,.08); 
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.15); }
+
+/* Message row — smoother animation */
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); filter: blur(1px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
+/* Thinking dots — accent colored */
+.thinking span { background: var(--accent); }
+
+/* Hero title — slightly bigger */
+.hero-title { font-size: 32px; }
+.hero-icon { 
+  box-shadow: 0 0 24px rgba(99,179,237,.12), 0 0 48px rgba(167,139,250,.06);
+}
+
+/* hchip hover — smooth */
+.hchip {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.hchip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99,179,237,.1);
+}
