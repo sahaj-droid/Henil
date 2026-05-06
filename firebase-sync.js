@@ -213,3 +213,116 @@ window.saveFileToCloudWorkspace = saveFileToCloudWorkspace;
 window.syncWorkspaceFiles    = syncWorkspaceFiles;
 
 console.log('✅ firebase-sync.js v2.0 loaded — Nivi Pro chat sync ready');
+
+// ========================================
+// PROJECT CHAT MODULE — Nivi Pro v2.1
+// Isolated chat per project workspace
+// ========================================
+
+// ── Project-specific session ID ──
+function _getProjectSessionId(projId) {
+  const key = 'nivi_proj_session_' + projId;
+  let sid = localStorage.getItem(key);
+  if (!sid) {
+    sid = 'psession_' + projId + '_' + Date.now();
+    localStorage.setItem(key, sid);
+  }
+  return sid;
+}
+
+function _newProjectSessionId(projId) {
+  const sid = 'psession_' + projId + '_' + Date.now();
+  localStorage.setItem('nivi_proj_session_' + projId, sid);
+  return sid;
+}
+
+// ── Save project chat ──
+async function saveProjectChat(projId, chatHistory) {
+  if (!projId || projId === 'default') return;
+  if (!chatHistory || chatHistory.length === 0) return;
+  const userId = _getNiviUserId();
+  const sessionId = _getProjectSessionId(projId);
+  try {
+    _updateSyncUI('syncing');
+    await db.collection('projectChats').doc(projId)
+            .collection('sessions').doc(sessionId).set({
+      userId,
+      messages: chatHistory,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      msgCount: chatHistory.length
+    });
+    _updateSyncUI('connected');
+    console.log('✅ Project chat saved:', projId, '|', sessionId);
+  } catch(e) {
+    console.error('saveProjectChat error:', e);
+    _updateSyncUI('error');
+  }
+}
+
+// ── Load project chat (latest session) ──
+async function loadProjectChat(projId) {
+  if (!projId || projId === 'default') return null;
+  const userId = _getNiviUserId();
+  const sessionId = _getProjectSessionId(projId);
+  try {
+    const doc = await db.collection('projectChats').doc(projId)
+                        .collection('sessions').doc(sessionId).get();
+    if (doc.exists && doc.data().messages && doc.data().messages.length > 0) {
+      console.log('✅ Project chat loaded:', projId);
+      return doc.data().messages;
+    }
+  } catch(e) {
+    console.error('loadProjectChat error:', e);
+  }
+  return null;
+}
+
+// ── Archive project chat (before new chat in project) ──
+async function archiveProjectChat(projId, chatHistory) {
+  if (!projId || projId === 'default') return;
+  if (!chatHistory || chatHistory.length === 0) return;
+  const userId = _getNiviUserId();
+  const archiveId = 'parc_' + projId + '_' + Date.now();
+  try {
+    await db.collection('projectChats').doc(projId)
+            .collection('sessions').doc(archiveId).set({
+      userId,
+      messages: chatHistory,
+      archivedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      msgCount: chatHistory.length,
+      type: 'archive'
+    });
+    console.log('✅ Project chat archived:', archiveId);
+  } catch(e) {
+    console.error('archiveProjectChat error:', e);
+  }
+}
+
+// ── Clear project session (New Chat inside project) ──
+function clearProjectSession(projId) {
+  _newProjectSessionId(projId);
+  localStorage.setItem('nivi_proj_chat_' + projId, '[]');
+}
+
+// ── Save project chat to localStorage (fast local backup) ──
+function saveProjectChatLocal(projId, chatHistory) {
+  if (!projId || projId === 'default') return;
+  localStorage.setItem('nivi_proj_chat_' + projId, JSON.stringify(chatHistory));
+}
+
+function loadProjectChatLocal(projId) {
+  if (!projId || projId === 'default') return [];
+  try {
+    return JSON.parse(localStorage.getItem('nivi_proj_chat_' + projId) || '[]');
+  } catch(e) { return []; }
+}
+
+// ── Exports ──
+window.saveProjectChat      = saveProjectChat;
+window.loadProjectChat      = loadProjectChat;
+window.archiveProjectChat   = archiveProjectChat;
+window.clearProjectSession  = clearProjectSession;
+window.saveProjectChatLocal = saveProjectChatLocal;
+window.loadProjectChatLocal = loadProjectChatLocal;
+
+console.log('✅ Project Chat Module v2.1 loaded');
