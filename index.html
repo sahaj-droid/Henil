@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
@@ -16,7 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
-  <title>Nivi Pro — AI Workspace</title>
+  <title>Nivi Pro - AI Workspace</title>
   
   <!-- તમારી અલગ કરેલી CSS ફાઈલ -->
   <link rel="stylesheet" href="style.css">
@@ -104,7 +104,7 @@
       <div class="chat-wrap" id="chatWrap">
         <div class="chat-inner" id="chatWindow">
           <div id="heroSection">
-            <div class="hero-icon">✦</div>
+            <div class="hero-icon">N</div>
             <h1 class="hero-title">Nivi Workspace</h1>
             <p class="hero-sub">Multi-model AI · Live file preview · Firebase sync</p>
             <div class="hero-chips">
@@ -122,7 +122,7 @@
           <div class="file-prev" id="filePreview">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             <span id="filePreviewName"></span>
-            <span style="margin-left:auto;cursor:pointer;opacity:.6;" onclick="clearFile()">✕</span>
+            <span style="margin-left:auto;cursor:pointer;opacity:.6;" onclick="clearFile()">x</span>
           </div>
           <div class="input-pill">
             <button class="pbtn" onclick="document.getElementById('fileInp').click()" title="Attach File">
@@ -138,7 +138,7 @@
             </button>
           </div>
           <div class="inp-foot">
-            <span>↵ Send · ⇧↵ New line · /image [prompt] · /song [topic]</span>
+            <span>Enter Send · Shift Enter New line · /image [prompt] · /song [topic]</span>
           </div>
         </div>
       </div>
@@ -149,7 +149,7 @@
       <div class="art-hdr">
         <span id="artBadge"></span>
         <span class="art-title" id="artTitle">Artifact</span>
-        <button class="art-close" onclick="closeArt()">✕</button>
+        <button class="art-close" onclick="closeArt()">x</button>
       </div>
       <div class="art-tabs" id="artTabs">
         <button class="art-tab active" id="tabCode" onclick="switchTab('code')">
@@ -190,9 +190,9 @@
         </button>
         <!-- ACTION બટન્સ ⚡ -->
         <span style="width:1px;height:14px;background:var(--border);margin:0 5px;"></span>
-        <button class="tbtn" onclick="artAction('explain')" title="Explain Code">💡 Explain</button>
-        <button class="tbtn" onclick="artAction('fix')" title="Find & Fix Bugs">🐛 Fix</button>
-        <button class="tbtn" onclick="artAction('optimize')" title="Optimize Code">⚡ Optimize</button>
+        <button class="tbtn" onclick="artAction('explain')" title="Explain Code">Explain</button>
+        <button class="tbtn" onclick="artAction('fix')" title="Find & Fix Bugs">Fix</button>
+        <button class="tbtn" onclick="artAction('optimize')" title="Optimize Code">Optimize</button>
         <button class="tbtn" id="openTabBtn" onclick="openArtTab()" style="display:none;margin-left:5px;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open
         </button>
@@ -212,7 +212,7 @@
   <div class="sh-hdr">
     <span id="shBadge"></span>
     <span class="sh-title" id="shTitle">Artifact</span>
-    <button class="sh-close" onclick="closeSheet()">✕</button>
+    <button class="sh-close" onclick="closeSheet()">x</button>
   </div>
   <div class="sh-tabs">
     <button class="art-tab active" id="shTabCode" onclick="switchSheetTab('code')">
@@ -233,16 +233,16 @@
     </button>
     <!-- ACTION બટન્સ ⚡ -->
     <span style="width:1px;height:14px;background:var(--border);margin:0 5px;"></span>
-    <button class="tbtn" onclick="artAction('explain')">💡 Explain</button>
-    <button class="tbtn" onclick="artAction('fix')">🐛 Fix</button>
-    <button class="tbtn" onclick="artAction('optimize')">⚡ Optimize</button>
+    <button class="tbtn" onclick="artAction('explain')">Explain</button>
+    <button class="tbtn" onclick="artAction('fix')">Fix</button>
+    <button class="tbtn" onclick="artAction('optimize')">Optimize</button>
   </div>
 </div>
 
 <!-- MODALS -->
 <div class="modal" id="projectModal">
   <div class="mbox" style="width:360px;">
-    <button class="mclose" onclick="closeModal('projectModal')">✕</button>
+    <button class="mclose" onclick="closeModal('projectModal')">x</button>
     <div class="mtitle">Create Workspace</div>
     <div class="msub">Organize files and context per project</div>
     <label class="flbl">Workspace Name</label>
@@ -252,9 +252,9 @@
 </div>
 <div class="modal" id="settingsModal">
   <div class="mbox" style="width:530px;">
-    <button class="mclose" onclick="closeModal('settingsModal')">✕</button>
-    <div class="mtitle">⚙ AI Providers & Chain</div>
-    <div class="msub">Nivi tries models in order — first success wins</div>
+    <button class="mclose" onclick="closeModal('settingsModal')">x</button>
+    <div class="mtitle">AI Providers & Chain</div>
+    <div class="msub">Nivi tries models in order - first success wins</div>
     <div id="modelChainContainer" style="max-height:44vh;overflow-y:auto;margin-bottom:11px;padding-right:3px;"></div>
     <button onclick="addModelRow()" style="width:100%;padding:7px;background:transparent;border:1px dashed var(--border);border-radius:6px;color:var(--text-muted);font-family:var(--mono);font-size:10px;cursor:pointer;margin-bottom:11px;transition:all .2s;" onmouseover="this.style.color='var(--text-sub)';this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'">+ Add Model to Chain</button>
     <button class="mbtn prim" onclick="saveSettings()">Save Configuration</button>

@@ -5,7 +5,10 @@
 
 // ── Nivi User ID — localStorage thi fetch, fallback fixed ID ──
 function _getNiviUserId() {
-  return localStorage.getItem('nivi_user_id') || 'user_1774995803095';
+  const saved = localStorage.getItem('nivi_user_id');
+  if (saved && !/^user_\d+_[a-z0-9]{6}$/i.test(saved)) return saved;
+  localStorage.setItem('nivi_user_id', 'user_1774995803095');
+  return 'user_1774995803095';
 }
 
 // ── NIVI CHAT SAVE TO FIREBASE (PRO FIX APPLIED 🛠️) ──
@@ -141,8 +144,23 @@ async function createCloudWorkspace(projId, projName) {
       name: projName,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    fetchCloudWorkspaces();
+    await fetchCloudWorkspaces();
   } catch(e) { console.error('createCloudWorkspace error:', e); }
+}
+
+async function deleteCloudWorkspace(projId) {
+  if (!projId || projId === 'default') return;
+  const userId = _getNiviUserId();
+  try {
+    const files = await db.collection('users').doc(userId)
+      .collection('workspaces').doc(projId)
+      .collection('files').get();
+    const batch = db.batch();
+    files.forEach(doc => batch.delete(doc.ref));
+    batch.delete(db.collection('users').doc(userId).collection('workspaces').doc(projId));
+    await batch.commit();
+    await fetchCloudWorkspaces();
+  } catch(e) { console.error('deleteCloudWorkspace error:', e); }
 }
 
 async function saveFileToCloudWorkspace(projId, fileName, mimeType, base64Data) {
@@ -209,10 +227,11 @@ window.loadNiviChatArchives  = loadNiviChatArchives;
 window.triggerChatSync       = triggerChatSync;
 window.fetchCloudWorkspaces  = fetchCloudWorkspaces;
 window.createCloudWorkspace  = createCloudWorkspace;
+window.deleteCloudWorkspace  = deleteCloudWorkspace;
 window.saveFileToCloudWorkspace = saveFileToCloudWorkspace;
 window.syncWorkspaceFiles    = syncWorkspaceFiles;
 
-console.log('✅ firebase-sync.js v2.0 loaded — Nivi Pro chat sync ready');
+console.log('firebase-sync.js v2.0 loaded - Nivi Pro chat sync ready');
 
 // ========================================
 // PROJECT CHAT MODULE — Nivi Pro v2.1
@@ -325,7 +344,7 @@ window.clearProjectSession  = clearProjectSession;
 window.saveProjectChatLocal = saveProjectChatLocal;
 window.loadProjectChatLocal = loadProjectChatLocal;
 
-console.log('✅ Project Chat Module v2.1 loaded');
+console.log('Project Chat Module v2.1 loaded');
 
 // ========================================
 // INDEXEDDB MODULE — Nivi Pro v2.2
@@ -417,4 +436,4 @@ const NiviDB = {
 
 // ── Export ──
 window.NiviDB = NiviDB;
-console.log('✅ NiviDB IndexedDB module loaded');
+console.log('NiviDB IndexedDB module loaded');

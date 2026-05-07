@@ -2,22 +2,41 @@
 //  ARTIFACT ENGINE (artifact.js)
 // ═══════════════════════════════════════════════════
 const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<=768};
+function artEscapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+function artDecodeB64Text(b64) {
+  try {
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch(e) {
+    try { return atob(b64); } catch(_) { return ''; }
+  }
+}
+function artEncodeB64Text(text) {
+  const bytes = new TextEncoder().encode(text);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
 
 const FT_CFG={
-  html:{badge:'HTML',cls:'b-html',icon:'🌐',canPrev:true,hl:'html'},
-  js:  {badge:'JS',  cls:'b-js',  icon:'⚡',canPrev:false,hl:'javascript'},
-  css: {badge:'CSS', cls:'b-css', icon:'🎨',canPrev:false,hl:'css'},
+  html:{badge:'HTML',cls:'b-html',icon:'HTML',canPrev:true,hl:'html'},
+  js:  {badge:'JS',  cls:'b-js',  icon:'JS',canPrev:false,hl:'javascript'},
+  css: {badge:'CSS', cls:'b-css', icon:'CSS',canPrev:false,hl:'css'},
   json:{badge:'JSON',cls:'b-json',icon:'{}',canPrev:false,hl:'json'},
-  py:  {badge:'PY',  cls:'b-py',  icon:'🐍',canPrev:false,hl:'python'},
-  txt: {badge:'TXT', cls:'b-txt', icon:'📄',canPrev:false,hl:'plaintext'},
-  md:  {badge:'MD',  cls:'b-txt', icon:'📝',canPrev:false,hl:'markdown'},
-  csv: {badge:'CSV', cls:'b-txt', icon:'📊',canPrev:false,hl:'csv'},
-  png: {badge:'IMG', cls:'b-img', icon:'🖼',canPrev:true, isImg:true},
-  jpg: {badge:'IMG', cls:'b-img', icon:'🖼',canPrev:true, isImg:true},
-  jpeg:{badge:'IMG', cls:'b-img', icon:'🖼',canPrev:true, isImg:true},
-  webp:{badge:'IMG', cls:'b-img', icon:'🖼',canPrev:true, isImg:true},
-  gif: {badge:'GIF', cls:'b-img', icon:'🎞',canPrev:true, isImg:true},
-  pdf: {badge:'PDF', cls:'b-pdf', icon:'📕',canPrev:true, isPdf:true},
+  py:  {badge:'PY',  cls:'b-py',  icon:'PY',canPrev:false,hl:'python'},
+  txt: {badge:'TXT', cls:'b-txt', icon:'FILE',canPrev:false,hl:'plaintext'},
+  md:  {badge:'MD',  cls:'b-txt', icon:'MD',canPrev:false,hl:'markdown'},
+  csv: {badge:'CSV', cls:'b-txt', icon:'CSV',canPrev:false,hl:'csv'},
+  png: {badge:'IMG', cls:'b-img', icon:'IMG',canPrev:true, isImg:true},
+  jpg: {badge:'IMG', cls:'b-img', icon:'IMG',canPrev:true, isImg:true},
+  jpeg:{badge:'IMG', cls:'b-img', icon:'IMG',canPrev:true, isImg:true},
+  webp:{badge:'IMG', cls:'b-img', icon:'IMG',canPrev:true, isImg:true},
+  gif: {badge:'GIF', cls:'b-img', icon:'GIF',canPrev:true, isImg:true},
+  pdf: {badge:'PDF', cls:'b-pdf', icon:'PDF',canPrev:true, isPdf:true},
 };
 function ftCfg(ext){return FT_CFG[ext]||{badge:ext.toUpperCase(),cls:'b-txt',icon:'📄',canPrev:false,hl:'plaintext'};}
 
@@ -33,7 +52,7 @@ function openArt(file,b64){
     objUrl=URL.createObjectURL(blob);
   }
   let txt=null;
-  if(!cfg.isImg&&!cfg.isPdf){try{txt=atob(b64);}catch(e){txt='';}}
+  if(!cfg.isImg&&!cfg.isPdf){txt=artDecodeB64Text(b64);}
   ART.cur={name:file.name,ext,b64,mime:file.type,objUrl,cfg,txt};
   if(ART.isMob())_openSheet();else _openPanel();
 }
@@ -108,7 +127,7 @@ function copyArt(){
   const t=ART.cur.txt||'';
   navigator.clipboard.writeText(t).then(()=>{
     const b=document.getElementById('copyArtBtn');
-    if(b){const o=b.innerHTML;b.textContent='✓ Copied!';setTimeout(()=>b.innerHTML=o,2000);}
+    if(b){const o=b.innerHTML;b.textContent='Copied';setTimeout(()=>b.innerHTML=o,2000);}
   });
 }
 
@@ -130,7 +149,22 @@ function makeArtCard(name,ext,b64,fileMeta){
   const cfg=ftCfg(ext);
   const card=document.createElement('div');
   card.className='art-card';
-  card.innerHTML=`<div class="art-card-icon">${cfg.icon}</div><div class="art-card-info"><div class="art-card-name">${name}</div><div class="art-card-meta"><span class="ftbdg ${cfg.cls}" style="font-size:9px;padding:1px 5px;">${cfg.badge}</span> · Click to view</div></div><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>`;
+  const icon=document.createElement('div');
+  icon.className='art-card-icon';
+  icon.textContent=cfg.icon;
+  const info=document.createElement('div');
+  info.className='art-card-info';
+  const title=document.createElement('div');
+  title.className='art-card-name';
+  title.textContent=name;
+  const meta=document.createElement('div');
+  meta.className='art-card-meta';
+  meta.innerHTML=`<span class="ftbdg ${cfg.cls}" style="font-size:9px;padding:1px 5px;">${cfg.badge}</span> · Click to view`;
+  info.appendChild(title); info.appendChild(meta);
+  const arrow=document.createElement('span');
+  arrow.style.cssText='color:var(--text-muted);flex-shrink:0;font-size:18px;line-height:1;';
+  arrow.textContent='>';
+  card.appendChild(icon); card.appendChild(info); card.appendChild(arrow);
   card.onclick=()=>openArt(fileMeta,b64);
   return card;
 }
@@ -146,10 +180,10 @@ function addArtifactButtons(el) {
       if(ext==='javascript') ext='js'; if(ext==='python') ext='py';
       const btn = document.createElement('button');
       btn.className = 'tbtn prim run-art-btn';
-      btn.innerHTML = '⚡ Run / View';
+      btn.textContent = 'Run / View';
       btn.onclick = () => {
         const codeTxt = codeEl.innerText;
-        const b64 = btoa(unescape(encodeURIComponent(codeTxt)));
+        const b64 = artEncodeB64Text(codeTxt);
         openArt({name: `Nivi_Code_${idx+1}.${ext}`, type: 'text/plain'}, b64);
       };
       pre.appendChild(btn);
@@ -160,7 +194,7 @@ function addArtifactButtons(el) {
 window.openManualArt = function() {
     const code = prompt("Paste your code for review / Fix / Optimize:");
     if (code && code.trim() !== "") {
-    const b64 = btoa(unescape(encodeURIComponent(code)));
+    const b64 = artEncodeB64Text(code);
     openArt({ name: 'manual_fix.js', type: 'text/plain' }, b64);
     // setTimeout(() => { artAction('fix'); }, 500);
     }
@@ -172,11 +206,11 @@ async function artAction(action) {
   const lang = ART.cur.cfg.hl || 'code';
   let apiPrompt = "";
   if(action === 'explain') {
-    apiPrompt = `💡 Please explain this ${lang} code.\n<nivi-hidden>\nPlease explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
+    apiPrompt = `Please explain this ${lang} code.\n<nivi-hidden>\nPlease explain how this code works step-by-step in Gujarati:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   } else if(action === 'fix') {
-    apiPrompt = `🐛 Please find and fix bugs in this ${lang} code.\n<nivi-hidden>\nPlease review this code for any bugs or errors, and provide the fixed version:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
+    apiPrompt = `Please find and fix bugs in this ${lang} code.\n<nivi-hidden>\nPlease review this code for any bugs or errors, and provide the fixed version:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   } else if(action === 'optimize') {
-    apiPrompt = `⚡ Please optimize this ${lang} code.\n<nivi-hidden>\nPlease optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
+    apiPrompt = `Please optimize this ${lang} code.\n<nivi-hidden>\nPlease optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   }
   closeArt();
   closeSheet();
@@ -204,7 +238,7 @@ async function artAction(action) {
       });
     }
   } catch(err) {
-    if(!window.AppState || !AppState._abortController) updateMsg(resId, '⚠ Error: ' + err.message);
+    if(!window.AppState || !AppState._abortController) updateMsg(resId, 'Error: ' + err.message);
   } finally {
     toggleGen(false);
     if(!window.AppState || !AppState._abortController) {
@@ -264,7 +298,7 @@ function saveArtEdit() {
 
   // ART.cur update karo
   ART.cur.txt = newCode;
-  const b64 = btoa(unescape(encodeURIComponent(newCode)));
+  const b64 = artEncodeB64Text(newCode);
   ART.cur.b64 = b64;
 
   // Firebase ma save karo
@@ -297,7 +331,7 @@ function saveArtEdit() {
 
   // Success feedback
   const sb = document.getElementById('saveArtBtn');
-  if (sb) { sb.textContent = '✓ Saved!'; setTimeout(() => { sb.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Save'; }, 2000); }
+  if (sb) { sb.textContent = 'Saved'; setTimeout(() => { sb.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Save'; }, 2000); }
 }
 
 // ── CLOSE ART — editor pan reset karo ──

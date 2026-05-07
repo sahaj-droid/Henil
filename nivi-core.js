@@ -32,6 +32,49 @@ window.AppState = window.AppState || {
   _isGenerating: false,
   _abortController: false
 };
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+function safeAttr(value) {
+  return encodeURIComponent(String(value ?? ''));
+}
+function decodeB64Text(b64) {
+  try {
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch(e) {
+    try { return atob(b64); } catch(_) { return ''; }
+  }
+}
+function sanitizeHTML(html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  const allowedTags = new Set(['P','BR','STRONG','B','EM','I','U','S','CODE','PRE','BLOCKQUOTE','UL','OL','LI','A','IMG','DIV','SPAN','TABLE','THEAD','TBODY','TR','TH','TD','HR','H1','H2','H3','H4']);
+  const allowedAttrs = new Set(['href','src','alt','title','class','target','rel']);
+  tpl.content.querySelectorAll('*').forEach(node => {
+    if (!allowedTags.has(node.tagName)) {
+      node.replaceWith(document.createTextNode(node.textContent || ''));
+      return;
+    }
+    [...node.attributes].forEach(attr => {
+      const name = attr.name.toLowerCase();
+      const value = attr.value || '';
+      if (!allowedAttrs.has(name) || name.startsWith('on')) node.removeAttribute(attr.name);
+      if ((name === 'href' || name === 'src') && /^(javascript|data):/i.test(value)) node.removeAttribute(attr.name);
+    });
+    if (node.tagName === 'A') {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener noreferrer');
+    }
+    if (node.tagName === 'IMG') {
+      const src = node.getAttribute('src') || '';
+      if (!/^https:\/\/image\.pollinations\.ai\//i.test(src) && !src.startsWith('blob:')) node.remove();
+    }
+  });
+  return tpl.innerHTML;
+}
 // ═══════════════════════════════════════════════════
 //  CORE LOGIC (nivi-core.js)
 // ═══════════════════════════════════════════════════
@@ -121,7 +164,7 @@ function updateActiveModelUI() {
     const el = document.getElementById('activeModelDisplay');
     if (el) {
         if (models.length > 0) {
-            el.innerHTML = `Active: <span style="color:var(--accent);">${models[0].model || models[0].provider}</span>`;
+            el.textContent = `Active: ${models[0].model || models[0].provider}`;
         } else {
             el.textContent = "No Model Configured";
         }
@@ -135,15 +178,15 @@ function renderProjectsUI(){
   const sb=document.getElementById('projectList'),dd=document.getElementById('activeProjectSelect'),aId=dd?dd.value:'default';
   if(sb){sb.innerHTML=`<div class="si ${aId==='default'?'active':''}" onclick="setProj('default')"><span style="flex:1;">/default</span></div>` + 
     projs.map(p=>`
-      <div class="si ${aId===p.id?'active':''}" onclick="setProj('${p.id}')" title="${p.name}" style="position:relative;" onmouseenter="this.querySelector('.pdel').style.opacity='1'" onmouseleave="this.querySelector('.pdel').style.opacity='0'">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">/${p.name}</span>
-        <button class="pdel" onclick="event.stopPropagation();deleteProject('${p.id}', '${p.name}')" title="Delete Workspace" style="opacity:0;width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;padding:0;">
+      <div class="si ${aId===p.id?'active':''}" onclick="setProj(decodeURIComponent('${safeAttr(p.id)}'))" title="${escapeHTML(p.name)}" style="position:relative;" onmouseenter="this.querySelector('.pdel').style.opacity='1'" onmouseleave="this.querySelector('.pdel').style.opacity='0'">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">/${escapeHTML(p.name)}</span>
+        <button class="pdel" onclick="event.stopPropagation();deleteProject(decodeURIComponent('${safeAttr(p.id)}'), decodeURIComponent('${safeAttr(p.name)}'))" title="Delete Workspace" style="opacity:0;width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;padding:0;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
       </div>
     `).join('');
   }
-  if(dd){dd.innerHTML=`<option value="default">default</option>`+projs.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');}
+  if(dd){dd.innerHTML=`<option value="default">default</option>`+projs.map(p=>`<option value="${escapeHTML(p.id)}">${escapeHTML(p.name)}</option>`).join('');}
 }
 function setProj(id){document.getElementById('activeProjectSelect').value=id;changeActiveProject();renderProjectsUI();}
 async function changeActiveProject(){
@@ -232,7 +275,7 @@ function createNewProject(){
 }
 
 // ── CHAT ENGINE ──
-const HERO_HTML=`<div id="heroSection"><div class="hero-icon">✦</div><h1 class="hero-title">Nivi Workspace</h1><p class="hero-sub">Multi-model AI · Live file preview · Firebase sync</p><div class="hero-chips"><div class="hchip" onclick="qp('Explain my codebase structure')">Analyze codebase</div><div class="hchip" onclick="qp('Summarize the uploaded document')">Summarize doc</div><div class="hchip" onclick="qp('Debug this error and suggest fixes')">Debug code</div><div class="hchip" onclick="qp('/image futuristic city at night, neon lights')">Generate image</div></div></div>`;
+const HERO_HTML=`<div id="heroSection"><div class="hero-icon">N</div><h1 class="hero-title">Nivi Workspace</h1><p class="hero-sub">Multi-model AI · Live file preview · Firebase sync</p><div class="hero-chips"><div class="hchip" onclick="qp('Explain my codebase structure')">Analyze codebase</div><div class="hchip" onclick="qp('Summarize the uploaded document')">Summarize doc</div><div class="hchip" onclick="qp('Debug this error and suggest fixes')">Debug code</div><div class="hchip" onclick="qp('/image futuristic city at night, neon lights')">Generate image</div></div></div>`;
 
 function clearChat(){
   const history = window.AppState?._tabChatHistory || [];
@@ -273,7 +316,7 @@ function _fmt(text) {
     const renderer = new marked.Renderer();
     renderer.html = function(token) {
       const raw = typeof token === 'string' ? token : (token.raw || token.text || '');
-      return raw; // HTML escape nahi — as-is return karo
+      return escapeHTML(raw);
     };
     marked.setOptions({ 
         breaks: true,
@@ -281,9 +324,9 @@ function _fmt(text) {
     });
     const h = marked.parse(cleanText);
     const w = cleanText.trim().split(/\s+/).length;
-    return h + `<div class="tbdg" style="margin-top:10px;">~${Math.ceil(w*1.3)} tokens</div>`;
+    return sanitizeHTML(h) + `<div class="tbdg" style="margin-top:10px;">~${Math.ceil(w*1.3)} tokens</div>`;
   }
-  return cleanText.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  return escapeHTML(cleanText).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
 }
 function appendMsg(role,text,id){
   const win=document.getElementById('chatWindow');
@@ -291,11 +334,11 @@ function appendMsg(role,text,id){
   const msgId=id||'msg-'+Date.now()+Math.random().toString(36).substr(2,5);
   const row=document.createElement('div');
   row.className=`msg-row ${role==='user'?'ur':'nr'}`;row.id='row-'+msgId;
-  const av=role==='nivi'?`<div class="avatar nav">✦</div>`:'';
+  const av=role==='nivi'?`<div class="avatar nav">N</div>`:'';
   const uiText = text.replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, '').trim();
-  const safeUserText = uiText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const safeUserText = escapeHTML(uiText);
   const fmt = role==='nivi' ? _fmt(uiText) : safeUserText.replace(/\n/g,'<br>');
-  const esc=text.replace(/'/g,"&#39;").replace(/"/g,"&quot;");
+  const esc=escapeHTML(text);
   const acts=`<div class="msg-actions"><div class="abt" onclick="cpMsg('${msgId}')" title="Copy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><div class="abt del" onclick="delMsg('${msgId}')" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div></div>`;
   const align=role==='user'?'flex-end':'flex-start';const mw=role==='user'?'max-width:80%;':'width:100%;';
   row.innerHTML=`${av}<div style="display:flex;flex-direction:column;align-items:${align};${mw}"><div class="bubble" id="${msgId}" data-raw="${esc}">${fmt}</div>${acts}</div>`;
@@ -356,17 +399,21 @@ function loadArchivedChat(id){
   renderSidebarData();
 }
 
-function deleteProject(id, name){
-  if(!confirm(`"${name}" વર્કસ્પેસ ડીલીટ કરવું છે?`)) return;
+async function deleteProject(id, name){
+  if(!confirm(`Delete workspace "${name}"? This removes its local files and chat backup.`)) return;
   let projs = JSON.parse(localStorage.getItem('nivi_projects')||'[]');
   projs = projs.filter(p => p.id !== id);
   localStorage.setItem('nivi_projects', JSON.stringify(projs));
+  localStorage.removeItem('nivi_proj_chat_' + id);
+  localStorage.removeItem('nivi_proj_session_' + id);
+  if (window.NiviDB) { try { await NiviDB.deleteProjectFiles(id); } catch(e) { console.warn('Project file cleanup failed:', e); } }
+  if (typeof deleteCloudWorkspace === 'function') { try { await deleteCloudWorkspace(id); } catch(e) { console.warn('Cloud workspace cleanup failed:', e); } }
   if(document.getElementById('activeProjectSelect').value === id){ setProj('default'); } 
   else { renderProjectsUI(); }
 }
 
 function deleteCurrentChat(){
-  if(!confirm('Are you sure ?)')) return;
+  if(!confirm('Delete current chat?')) return;
   if(window.AppState) AppState._tabChatHistory = [];
   localStorage.setItem('niviTabChat', '[]');
   if(typeof closeArt === 'function') closeArt(); 
@@ -378,7 +425,7 @@ function deleteCurrentChat(){
 }
 
 function deleteArchivedChat(id){
-  if(!confirm('આ જૂની સેવ કરેલી ચેટ ડીલીટ કરવી છે?')) return;
+  if(!confirm('Delete this archived chat?')) return;
   let archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
   archives = archives.filter(a => a.id !== id);
   localStorage.setItem('nivi_chat_archives', JSON.stringify(archives));
@@ -390,9 +437,9 @@ window.renderSidebarData = function() {
   try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
   const ml = document.getElementById('modelList');
   if (ml) {
-    if (!models.length) models = [{provider: '—', model: 'Not Configured'}];
+    if (!models.length) models = [{provider: '-', model: 'Not Configured'}];
     const clr = {gemini: 'var(--accent)', openrouter: 'var(--purple)', nvidia: 'var(--amber)', custom: 'var(--green)'};
-    ml.innerHTML = models.map((m, i) => `<div class="si" title="${m.provider}: ${m.model}"><span style="color:${clr[m.provider] || 'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.model || m.provider}</span>${i === 0 ? '<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>' : ''}</div>`).join('');
+    ml.innerHTML = models.map((m, i) => `<div class="si" title="${escapeHTML(m.provider)}: ${escapeHTML(m.model)}"><span style="color:${clr[m.provider] || 'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(m.model || m.provider)}</span>${i === 0 ? '<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>' : ''}</div>`).join('');
   }
   const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
   const fl = document.getElementById('fileList');
@@ -433,7 +480,7 @@ function openSavedFile(name){
 }
 
 async function deleteFile(name){
-  if(!confirm(`"${name}" delete karvu che?`))return;
+  if(!confirm(`Delete "${name}"?`))return;
   const projId = window._activeProjectId ||
                  document.getElementById('activeProjectSelect')?.value || 'default';
   // IndexedDB thi delete
@@ -566,8 +613,7 @@ async function handleSend(){
           const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
           fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
             textFiles.slice(0, 5).map(f => {
-              const bytes = Uint8Array.from(atob(f.data), c => c.charCodeAt(0));
-              const content = new TextDecoder('utf-8').decode(bytes).slice(0, 2000);
+              const content = decodeB64Text(f.data).slice(0, 2000);
               return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
             }).join('\n\n');
         }
@@ -637,7 +683,7 @@ function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
   const resolvedModel = config.model || localStorage.getItem(`nivi_model_${config.provider}`) || def.modelHint || '';
   const row=document.createElement('div');row.className='mrow';
   row.innerHTML=`
-    <button class="mrow-rm" onclick="this.closest('.mrow').remove()">✕</button>
+    <button class="mrow-rm" onclick="this.closest('.mrow').remove()">x</button>
     <div style="margin-bottom:10px;">
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em;">Provider</div>
       <div style="display:flex;gap:6px;">
@@ -645,7 +691,7 @@ function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
           <button onclick="switchProviderInRow(this,'${p}')"
             style="flex:1;padding:6px 4px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;border:1px solid ${config.provider===p?'var(--border-a)':'var(--border)'};background:${config.provider===p?'var(--accent-dim)':'transparent'};color:${config.provider===p?'var(--accent)':'var(--text-sub)'};"
             data-provider="${p}">
-            ${{gemini:'✦ Gemini',openrouter:'⭕ OpenRouter',nvidia:'⚡ Nvidia',custom:'🔧 Custom'}[p]}
+            ${{gemini:'Gemini',openrouter:'OpenRouter',nvidia:'Nvidia',custom:'Custom'}[p]}
           </button>`).join('')}
       </div>
       <input type="hidden" class="conf-provider" value="${config.provider}">

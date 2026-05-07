@@ -62,7 +62,16 @@ window.getFileMimeType = function(filename) {
 };
 
 // ── OpenAI-compatible call (OpenRouter, Nvidia, custom) ──
+function _isValidHttpUrl(url) {
+  try { const u = new URL(url); return u.protocol === 'https:' || u.protocol === 'http:'; }
+  catch(e) { return false; }
+}
+function _emitChunk(onChunk, text) {
+  if (typeof onChunk === 'function') onChunk(text);
+}
 async function _openaiCall(cfg, messages, onChunk) {
+  if (!_isValidHttpUrl(cfg.url)) throw new Error('Invalid API URL for ' + cfg.provider);
+
   const response = await fetch(cfg.url, {
     method: 'POST',
     headers: {
@@ -100,7 +109,7 @@ async function _openaiCall(cfg, messages, onChunk) {
         try {
           const data = JSON.parse(line.replace('data: ', ''));
           const delta = data.choices?.[0]?.delta?.content || '';
-          if (delta) { fullText += delta; onChunk(fullText); }
+          if (delta) { fullText += delta; _emitChunk(onChunk, fullText); }
         } catch(e) {}
       }
     }
@@ -139,7 +148,7 @@ async function _geminiStreamCall(cfg, history, prompt, onChunk) {
         const data = JSON.parse(line.replace('data: ', ''));
         if (data.candidates?.[0]?.content) {
           fullText += data.candidates[0].content.parts[0].text;
-          onChunk(fullText);
+          _emitChunk(onChunk, fullText);
         }
       } catch(e) {}
     }
@@ -170,7 +179,7 @@ async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
 // ═══════════════════════════════════════════════════════════
 window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk) {
   const chain = window.getModelChain();
-  if (chain.length === 0) { onChunk('⚠️ No models configured. Open Settings to add a model.'); return; }
+  if (chain.length === 0) { _emitChunk(onChunk, 'No models configured. Open Settings to add a model.'); return { ok: false }; }
 
   let lastError = '';
   for (const rawItem of chain) {
@@ -198,7 +207,7 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
     }
   }
 
-  onChunk(`⚠️ All models failed. Last error: ${lastError}`);
+  _emitChunk(onChunk, `All models failed. Last error: ${lastError}`);
   return { ok: false };
 };
 
@@ -229,7 +238,7 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
       const cfg = _resolveProvider(fallbackRaw);
       if (cfg.key && cfg.url) {
         try {
-          const textContent = atob(fileBase64).slice(0, 10000);
+          const textContent = new TextDecoder('utf-8').decode(Uint8Array.from(atob(fileBase64), c => c.charCodeAt(0))).slice(0, 10000);
           const messages = [{
             role: 'user',
             content: `File: ${mimeType}\n\`\`\`\n${textContent}\n\`\`\`\n\nQuery: ${prompt}`
@@ -243,7 +252,7 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
     }
   }
 
-  return { ok: false, answer: '⚠️ File analysis failed. Ensure Gemini is configured with a valid API key.' };
+  return { ok: false, answer: 'File analysis failed. Ensure Gemini is configured with a valid API key.' };
 };
 
-console.log('✅ Nivi AI Engine v2.0 loaded — Universal provider support');
+console.log('Nivi AI Engine v2.0 loaded - Universal provider support');
