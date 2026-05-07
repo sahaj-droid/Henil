@@ -290,7 +290,7 @@ function clearChat(){
       // Default chat archive (existing logic)
       if(typeof archiveNiviChat === 'function') archiveNiviChat(history);
       let a=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
-      a.unshift({id:Date.now(), msgCount: history.length, chat: history});
+      a.unshift({id:Date.now(), msgCount: history.length, chat: history, title: localStorage.getItem('nivi_current_title') || 'New Chat'});
       if(a.length > 20) a = a.slice(0,20);
       localStorage.setItem('nivi_chat_archives', JSON.stringify(a));
     }
@@ -463,10 +463,17 @@ window.renderSidebarData = function() {
     const archives = JSON.parse(localStorage.getItem('nivi_chat_archives') || '[]');
     let html = '';
     if (history.length) {
-      html += `<div class="si active">Current Session <span class="bdg">${history.length}</span></div>`;
+      const curTitle = localStorage.getItem('nivi_current_title') || 'Current Session';
+html += `<div class="si active" style="display:flex;align-items:center;gap:4px;">
+  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(curTitle)}</span>
+  <span class="bdg">${history.length}</span>
+  <button onclick="event.stopPropagation();deleteCurrentChat()" title="Delete" style="opacity:0.6;background:none;border:none;color:var(--red);cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0;">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+  </button>
+</div>`;
     }
     if (archives.length) {
-      html += archives.map(a => `<div class="si" onclick="loadArchivedChat(${a.id})">${new Date(a.id).toLocaleDateString()} <span class="bdg">${a.msgCount}</span></div>`).join('');
+      html += archives.map(a => `<div class="si" onclick="loadArchivedChat(${a.id})" style="display:flex;align-items:center;gap:4px;"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(a.title || new Date(a.id).toLocaleDateString())}</span><span class="bdg">${a.msgCount}</span><button onclick="event.stopPropagation();deleteArchivedChat(${a.id})" style="opacity:0.6;background:none;border:none;color:var(--red);cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>`).join('');
     }
     ch.innerHTML = html || `<div class="si" style="opacity:.4;">Empty</div>`;
   }
@@ -678,7 +685,7 @@ function _providerDefaults(provider) {
 function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
   const c=document.getElementById('modelChainContainer');if(!c)return;
   const def = _providerDefaults(config.provider);
-  const resolvedKey   = config.key   || localStorage.getItem(def.keyLS) || '';
+  const resolvedKey = config.key || '';
   const resolvedUrl   = config.url   || (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
   const resolvedModel = config.model || localStorage.getItem(`nivi_model_${config.provider}`) || def.modelHint || '';
   const row=document.createElement('div');row.className='mrow';
