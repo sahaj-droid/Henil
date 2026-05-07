@@ -60,7 +60,22 @@ window.onload=async()=>{
   renderProjectsUI();
   renderSidebarData();
   updateActiveModelUI();
-
+  const _initProj = window._activeProjectId;
+  if (_initProj !== 'default' && window.NiviDB) {
+    try {
+      const idbFiles = await NiviDB.getProjectFiles(_initProj);
+      if (idbFiles && idbFiles.length > 0) {
+        localStorage.setItem('nivi_file_memory', JSON.stringify(idbFiles));
+        renderSidebarData();
+        console.log(`✅ Files restored from IndexedDB on load: ${idbFiles.length}`);
+      } else {
+        // IndexedDB empty — Firebase fallback
+        if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
+      }
+    } catch(e) {
+      if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
+    }
+  }
   if(typeof loadNiviChat === 'function'){
     try {
       const fbChat = await loadNiviChat();
