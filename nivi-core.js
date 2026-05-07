@@ -667,119 +667,60 @@ async function handleSend(){
 }
 // ── SETTINGS MODAL ──
 window.openSettings = function() {
-  const c=document.getElementById('modelChainContainer');if(!c)return;
-  c.innerHTML='';let chain=[];try{chain=JSON.parse(localStorage.getItem('nivi_model_chain')||'[]');}catch(e){}
-  if(!chain.length)addModelRow({provider:'gemini',model:'',key:'',url:''});
-  else chain.forEach(cfg=>addModelRow(cfg));
+  const c = document.getElementById('modelChainContainer');
+  if(!c) return;
+  c.innerHTML = '';
+  let chain = [];
+  try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+  if(!chain.length) {
+    addModelRow({ model: '', key: '', url: '' }); // Pehli vaar khali row aapse
+  } else {
+    chain.forEach(cfg => addModelRow(cfg));
+  }
   document.getElementById('settingsModal').classList.add('open');
 }
-
-function _providerDefaults(provider) {
-  const defs = {
-    gemini:     { url: '',  modelHint: 'gemini-2.0-flash', keyLS: 'nivi_key_gemini',     urlLS: '' },
-    openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions',            modelHint: 'openai/gpt-4o-mini',              keyLS: 'nivi_key_openrouter', urlLS: 'nivi_url_openrouter' },
-    nvidia:     { url: 'https://integrate.api.nvidia.com/v1/chat/completions',    modelHint: 'nvidia/llama-3.1-nemotron-70b-instruct', keyLS: 'nivi_key_nvidia', urlLS: 'nivi_url_nvidia' },
-    custom:     { url: '',  modelHint: '',                       keyLS: '',                    urlLS: '' },
-  };
-  return defs[provider] || defs.custom;
-}
-
-function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
-  const c=document.getElementById('modelChainContainer');if(!c)return;
-  const def = _providerDefaults(config.provider);
-  
-  // FIX: Config mathi j direct data leshe
-  const resolvedKey   = config.key || '';
-  const resolvedUrl   = config.url || def.url || '';
-  const resolvedModel = config.model || def.modelHint || '';
-  
-  const row=document.createElement('div');row.className='mrow';
-  row.innerHTML=`
-    <button class="mrow-rm" onclick="this.closest('.mrow').remove()">x</button>
-    <div style="margin-bottom:10px;">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em;">Provider</div>
-      <div style="display:flex;gap:6px;">
-        ${['gemini','openrouter','nvidia','custom'].map(p=>`
-          <button onclick="switchProviderInRow(this,'${p}')"
-            style="flex:1;padding:6px 4px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;border:1px solid ${config.provider===p?'var(--border-a)':'var(--border)'};background:${config.provider===p?'var(--accent-dim)':'transparent'};color:${config.provider===p?'var(--accent)':'var(--text-sub)'};"
-            data-provider="${p}">
-            ${{gemini:'Gemini',openrouter:'OpenRouter',nvidia:'Nvidia',custom:'Custom'}[p]}
-          </button>`).join('')}
-      </div>
-      <input type="hidden" class="conf-provider" value="${config.provider}">
-    </div>
-    <div class="mrow-grid" style="margin-bottom:8px;">
+window.addModelRow = function(config = { model: '', key: '', url: '' }) {
+  const c = document.getElementById('modelChainContainer');
+  if(!c) return;
+  const row = document.createElement('div');
+  row.className = 'mrow'; // Tamaro modal row no class
+  row.innerHTML = `
+    <button class="mrow-rm" onclick="this.closest('.mrow').remove()" title="Delete">x</button>
+    <div class="mrow-grid">
       <div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">Model</div>
-        <input type="text" class="conf-model fsel" placeholder="${def.modelHint||'model name'}" value="${resolvedModel}" style="width:100%;">
+        <label class="flbl">Model Name</label>
+        <input type="text" class="finput conf-model" placeholder="e.g. gemini-2.5-flash" value="${config.model || ''}" style="margin-bottom:0;">
       </div>
       <div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API Key</div>
-        <input type="password" class="conf-key fsel" placeholder="Paste API key..." value="${resolvedKey}" style="width:100%;">
+        <label class="flbl">API Key</label>
+        <input type="password" class="finput conf-key" placeholder="Paste API key..." value="${config.key || ''}" style="margin-bottom:0;">
       </div>
     </div>
-    <div id="urlRow_${Date.now()}" style="${config.provider==='gemini'?'display:none;':''}">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API URL <span style="opacity:.5;">(override if needed)</span></div>
-      <input type="text" class="conf-url fsel" value="${resolvedUrl}" placeholder="https://..." style="width:100%;font-size:10px;color:var(--text-sub);">
+    <div style="margin-top: 8px;">
+      <label class="flbl">API URL (Optional)</label>
+      <input type="text" class="finput conf-url" placeholder="https://..." value="${config.url || ''}" style="margin-bottom:0;">
     </div>
   `;
   c.appendChild(row);
 }
 
-function switchProviderInRow(btn, provider) {
-  const row = btn.closest('.mrow');
-  row.querySelector('.conf-provider').value = provider;
-  row.querySelectorAll('[data-provider]').forEach(b => {
-    const active = b.dataset.provider === provider;
-    b.style.borderColor = active ? 'var(--border-a)' : 'var(--border)';
-    b.style.background  = active ? 'var(--accent-dim)' : 'transparent';
-    b.style.color       = active ? 'var(--accent)' : 'var(--text-sub)';
-  });
-  const def = _providerDefaults(provider);
-  const keyField   = row.querySelector('.conf-key');
-  const modelField = row.querySelector('.conf-model');
-  const urlField   = row.querySelector('.conf-url');
-  const urlRow     = row.querySelector('[id^="urlRow_"]');
-  // FIX: Tab switch par fields blank karo
-  keyField.value   = '';
-  modelField.value = '';
-  modelField.placeholder = def.modelHint || 'model name';
-  
-  if (urlField) {
-    urlField.value = def.url || '';
-  }
-  if (urlRow) urlRow.style.display = provider === 'gemini' ? 'none' : '';
-}
-function saveSettings(){
+window.saveSettings = function() {
   const rows = document.querySelectorAll('.mrow');
   const chain = [];
-  const seenProviders = new Set();
+
   rows.forEach(row => {
-    const provider = row.querySelector('.conf-provider').value;
-    const model    = row.querySelector('.conf-model').value.trim();
-    const key      = row.querySelector('.conf-key').value.trim();
-    const url      = row.querySelector('.conf-url')?.value.trim() || '';
-    if(!model && !key) return; 
-    const def = _providerDefaults(provider);
-    // FIX: First come first serve for global storage
-    if (!seenProviders.has(provider)) {
-      if(key && def.keyLS) localStorage.setItem(def.keyLS, key);
-      if(url && def.urlLS) localStorage.setItem(def.urlLS, url);
-      if(model) localStorage.setItem(`nivi_model_${provider}`, model);
-      seenProviders.add(provider);
-    }
-    chain.push({provider, model, key, url});
-  });
-  ['gemini','openrouter','nvidia','custom'].forEach(p => {
-    if(!seenProviders.has(p)){
-      const def = _providerDefaults(p);
-      if(def.keyLS) localStorage.removeItem(def.keyLS);
-      if(def.urlLS) localStorage.removeItem(def.urlLS);
-      localStorage.removeItem(`nivi_model_${p}`);
+    const model = row.querySelector('.conf-model').value.trim();
+    const key   = row.querySelector('.conf-key').value.trim();
+    const url   = row.querySelector('.conf-url').value.trim();
+    
+    // Jo trane mathi ek pan field bharelu hoy toh save kari levu
+    if(model || key || url) {
+      chain.push({ provider: 'custom', model, key, url }); 
     }
   });
   localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
+  // Modal bandh karo ane UI update karo
   closeModal('settingsModal');
-  updateActiveModelUI();
-  renderSidebarData();
+  if(typeof updateActiveModelUI === 'function') updateActiveModelUI();
+  if(typeof renderSidebarData === 'function') renderSidebarData();
 }
