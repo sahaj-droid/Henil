@@ -2,9 +2,7 @@
 async function saveFileToMemory(filename, base64Data, mimeType) {
   const projId = window._activeProjectId || 
                  document.getElementById('activeProjectSelect')?.value || 'default';
-  const entry = { name: filename, ts: Date.now(), data: base64Data || null, 
-                  mimeType: mimeType || 'text/plain', projId };
-  // IndexedDB ma save (primary)
+  // IndexedDB ma save (primary - WITH full base64 data)
   if (window.NiviDB) {
     try {
       await NiviDB.saveFile(projId, filename, mimeType, base64Data);
@@ -13,9 +11,12 @@ async function saveFileToMemory(filename, base64Data, mimeType) {
       console.warn('IndexedDB save failed, localStorage fallback:', e);
     }
   }
-  // localStorage ma pan update (Nivi context mate fast read)
+  // localStorage ma update (Nivi context mate fast read)
   let files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
   const idx = files.findIndex(f => f.name === filename);
+  // 🛑 MAIN FIX: localStorage ma data 'null' pass karvano che (memory full na thay)
+  const entry = { name: filename, ts: Date.now(), data: null, 
+                  mimeType: mimeType || 'text/plain', projId };  
   if (idx >= 0) files[idx] = entry;
   else files.push(entry);
   localStorage.setItem('nivi_file_memory', JSON.stringify(files));
@@ -93,52 +94,78 @@ function clearFile(){
   document.getElementById('filePreview').classList.remove('show');
 }
 
-// ── INITIALIZATION ──
-window.onload=async()=>{
+// ── INITIALIZATION
+window.onload = async () => {
   if(!localStorage.getItem('nivi_current_session_id')){
     localStorage.setItem('nivi_current_session_id', 'session_' + Date.now());
   }
+  
   // Init active project tracker
   window._activeProjectId = document.getElementById('activeProjectSelect')?.value || 'default';
-  renderProjectsUI();
-  renderSidebarData();
-  updateActiveModelUI();
   const _initProj = window._activeProjectId;
+  
+  renderProjectsUI();
+  updateActiveModelUI();
+
+  // 1. FILES RESTORE (IndexedDB First)
   if (_initProj !== 'default' && window.NiviDB) {
     try {
       const idbFiles = await NiviDB.getProjectFiles(_initProj);
       if (idbFiles && idbFiles.length > 0) {
         localStorage.setItem('nivi_file_memory', JSON.stringify(idbFiles));
-        renderSidebarData();
         console.log(`✅ Files restored from IndexedDB on load: ${idbFiles.length}`);
       } else {
-        // IndexedDB empty — Firebase fallback
         if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
       }
     } catch(e) {
       if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
     }
   }
-  if(typeof loadNiviChat === 'function'){
-    try {
-      const fbChat = await loadNiviChat();
-      if(fbChat && fbChat.length > 0){
-        // Firebase master — localStorage overwrite karo
-        localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
-        if(window.AppState) AppState._tabChatHistory = fbChat;
-        fbChat.forEach(msg => appendMsg(msg.role, msg.text));
-        console.log('✅ Chat restored from Firebase');
-      } else {
-        // Firebase empty — localStorage pan clear karo
-        localStorage.setItem('niviTabChat', '[]');
-        if(window.AppState) AppState._tabChatHistory = [];
-        console.log('✅ Firebase empty — fresh start');
+  renderSidebarData();
+
+  // 2. CHAT RESTORE (Project vs Default)
+  if (_initProj !== 'default') {
+      try {
+          // Project Chat mate pehla IndexedDB / Local check
+          let projChat = loadProjectChatLocal(_initProj); 
+          if (!projChat || projChat.length === 0) {
+              projChat = await loadProjectChat(_initProj); // Fallback to Firebase
+          }
+          if (projChat && projChat.length > 0) {
+              if(window.AppState) AppState._tabChatHistory = projChat;
+              localStorage.setItem('niviTabChat', JSON.stringify(projChat));
+              projChat.forEach(msg => appendMsg(msg.role, msg.text));
+          }
+      } catch(e) { console.warn('Project chat init failed:', e); }
+  } else {
+      // Default Nivi Chat Restore
+      try {
+          // Ahiya aapde check kariye ke local ma already che?
+          const localHistory = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+          
+          if (localHistory && localHistory.length > 0) {
+              // LocalStorage Master (Jethi delete karelo data Firebase thi pacho na aave)
+              if(window.AppState) AppState._tabChatHistory = localHistory;
+              localHistory.forEach(msg => appendMsg(msg.role, msg.text));
+              console.log('✅ Default Chat restored from Local Memory');
+          } else {
+              // Local khali che, toh j Firebase mathi laavo
+              if(typeof loadNiviChat === 'function') {
+                  const fbChat = await loadNiviChat();
+                  if(fbChat && fbChat.length > 0){
+                      localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
+                      if(window.AppState) AppState._tabChatHistory = fbChat;
+                      fbChat.forEach(msg => appendMsg(msg.role, msg.text));
+                      console.log('✅ Default Chat restored from Firebase');
+                  } else {
+                      if(window.AppState) AppState._tabChatHistory = [];
+                  }
+              }
+          }
+      } catch(e){
+          console.warn('Chat init failed, fallback:', e);
+          restoreChat();
       }
-    } catch(e){
-      // Firebase fail — localStorage fallback
-      console.warn('Firebase failed, localStorage fallback');
-      restoreChat();
-    }
   }
 };
 
@@ -371,15 +398,32 @@ function restoreChat(){
 }
 
 function cpMsg(id){const el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"'));}
-function delMsg(id){
-  if(!confirm('Delete this message?'))return;
-  const row=document.getElementById('row-'+id),el=document.getElementById(id);if(!el)return;
-  const raw=el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
-  if(row)row.remove();
+// ── DELETE MESSAGE (nivi-core.js ma replace karo) ──
+async function delMsg(id){
+  if(!confirm('Delete this message?')) return;
+  const row = document.getElementById('row-'+id);
+  const el = document.getElementById(id);
+  if(!el) return;
+  const raw = el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
+  if(row) row.remove();
   if(window.AppState?._tabChatHistory){
-    AppState._tabChatHistory=AppState._tabChatHistory.filter(m=>m.text!==raw);
-    localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));
-    if(typeof saveUserData==='function') saveUserData('history'); 
+    // 1. State Update
+    AppState._tabChatHistory = AppState._tabChatHistory.filter(m => m.text !== raw);
+    // 2. LocalStorage Meta Update
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+    // 3. UNIFIED SYNC (Firebase + IDB)
+    const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+    if (activeProj !== 'default') {
+        // Project Mode Sync
+        if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(activeProj, AppState._tabChatHistory);
+        if (typeof saveProjectChat === 'function') await saveProjectChat(activeProj, AppState._tabChatHistory);
+    } else {
+        // Default Mode Sync (Firebase par overwrite karo jethi delete thayelo message udadi jay)
+        if(typeof saveNiviChat === 'function') {
+            await saveNiviChat(AppState._tabChatHistory);
+        }
+    }
+    console.log("🗑️ Message deleted & synced across all DBs");
   }
 }
 
@@ -516,7 +560,6 @@ async function deleteFile(name){
   }
   renderSidebarData();
 }
-
 // ── AUTO TITLE GENERATION ──
 async function generateChatTitle(firstMessage) {
     const history = window.AppState ? AppState._tabChatHistory : [];
@@ -540,9 +583,9 @@ async function handleSend(){
   if(window.AppState&&AppState._isGenerating)return;
   const inp=document.getElementById('mainInput');
   const text=inp.value.trim();
-  const files=window.AppState?._pendingFiles||[];
-  const file=files[0]||null;
-  if(!text&&!files.length)return;
+  const pendingFiles=window.AppState?._pendingFiles||[];
+  const file=pendingFiles[0]||null;
+  if(!text&&!pendingFiles.length)return;
 
   if(text.toLowerCase().startsWith('/image ')){
     const prompt=text.substring(7).trim();
@@ -557,7 +600,7 @@ async function handleSend(){
     renderSidebarData();return;
   }
 
-  const userText=files.length>0?`📎 ${files.map(f=>f.name).join(', ')}\n${text}`:text;
+  const userText=pendingFiles.length>0?`📎 ${pendingFiles.map(f=>f.name).join(', ')}\n${text}`:text;
   appendMsg('user',userText);
   if(window.AppState){AppState._tabChatHistory.push({role:'user',text:userText});localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
   inp.value='';inp.style.height='auto';clearFile();
@@ -574,7 +617,7 @@ async function handleSend(){
         updateMsg(resId,r.answer||'No answer received.');
         const el = document.getElementById(resId);
         const proj = document.getElementById('activeProjectSelect').value;
-        for (const f of files) {
+        for (const f of pendingFiles) {
           const fileB64 = await window.readFileAsBase64(f);
           const fileMime = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
           if (typeof saveFileToMemory === 'function') {
@@ -597,25 +640,26 @@ async function handleSend(){
         apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
       }
       const hist=window.AppState?AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user',parts:[{text:m.text}]})):[];
-      
-      // Active project files — Nivi context ma aapvo
-// Active project files — IndexedDB first, localStorage fallback
-      let files = [];
-      const _ctxProj = window._activeProjectId ||
-                       document.getElementById('activeProjectSelect')?.value || 'default';
+
+      // Active project files — IndexedDB first, localStorage fallback
+      let memFiles = [];
+      const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
       if (_ctxProj !== 'default' && window.NiviDB) {
         try {
-          files = await NiviDB.getProjectFiles(_ctxProj);
+          memFiles = await NiviDB.getProjectFiles(_ctxProj);
         } catch(e) {
-          files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+          memFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
         }
       } else {
-        files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+        memFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       }
+      
       let fileContext = '';
-      if (files.length > 0) {
+      
+      // 🛑 FIX: Fukt pehli vaar (new chat) OR navi file add thay tyare j context API ne moklavo (Token Save)
+      if (memFiles.length > 0 && (hist.length === 0 || pendingFiles.length > 0)) {
         const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-        const textFiles = files.filter(f => f.data && TEXT_MIMES.includes(f.mimeType));
+        const textFiles = memFiles.filter(f => f.data && TEXT_MIMES.includes(f.mimeType));
         if (textFiles.length > 0) {
           const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
           fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
@@ -625,15 +669,15 @@ async function handleSend(){
             }).join('\n\n');
         }
       }
-      const finalPrompt = fileContext ? apiText + fileContext : apiText;
       
+      const finalPrompt = fileContext ? apiText + fileContext : apiText;
       await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!window.AppState||!AppState._abortController)updateMsg(resId,chunk);});
     }
   }catch(err){
     if(!window.AppState||!AppState._abortController)updateMsg(resId,'⚠ Connection Error: '+err.message);
-} finally {
+  } finally {
     toggleGen(false);
-    let chatTitle = "Current Session"; // ડિફોલ્ટ ટાઇટલ
+    let chatTitle = "Current Session"; 
     if(!window.AppState || !AppState._abortController) {
       if(window.AppState) {
       const el = document.getElementById(resId);
@@ -643,8 +687,11 @@ async function handleSend(){
         } else if (el) {
           rawText = el.innerText || '';
         }
-        // rawText empty hoy to save na karo — streaming incomplete
-        if (rawText.trim()) {
+        
+        // 🛑 FIX: Error text history ma save na thavo joiye
+        const isErrorMsg = rawText.includes('⚠ Connection Error') || rawText.includes('All models failed');
+        
+        if (rawText.trim() && !isErrorMsg) {
           AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
           if (AppState._tabChatHistory.length === 2) {
             chatTitle = await generateChatTitle(AppState._tabChatHistory[0].text) || "Current Session";
@@ -654,13 +701,18 @@ async function handleSend(){
         }
       }
     }
-// Firebase sync — project-aware
-    const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-    if (_activeProj !== 'default') {
-      if (typeof saveProjectChat === 'function') await saveProjectChat(_activeProj, AppState._tabChatHistory);
-      if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(_activeProj, AppState._tabChatHistory);
+    
+    // Unified Sync Call 
+    if (typeof syncNiviChat === 'function') {
+        await syncNiviChat(window.AppState._tabChatHistory);
     } else {
-      if(typeof saveUserData === 'function') await saveUserData('history');
+        const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+        if (_activeProj !== 'default') {
+          if (typeof saveProjectChat === 'function') await saveProjectChat(_activeProj, AppState._tabChatHistory);
+          if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(_activeProj, AppState._tabChatHistory);
+        } else {
+          if(typeof saveUserData === 'function') await saveUserData('history');
+        }
     }
     renderSidebarData();
   }
