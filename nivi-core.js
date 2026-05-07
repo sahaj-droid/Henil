@@ -673,6 +673,7 @@ window.openSettings = function() {
   else chain.forEach(cfg=>addModelRow(cfg));
   document.getElementById('settingsModal').classList.add('open');
 }
+
 function _providerDefaults(provider) {
   const defs = {
     gemini:     { url: '',  modelHint: 'gemini-2.0-flash', keyLS: 'nivi_key_gemini',     urlLS: '' },
@@ -682,12 +683,16 @@ function _providerDefaults(provider) {
   };
   return defs[provider] || defs.custom;
 }
+
 function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
   const c=document.getElementById('modelChainContainer');if(!c)return;
   const def = _providerDefaults(config.provider);
-  const resolvedKey = config.key || '';
-  const resolvedUrl   = config.url   || (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
-  const resolvedModel = config.model || localStorage.getItem(`nivi_model_${config.provider}`) || def.modelHint || '';
+  
+  // FIX: Config mathi j direct data leshe
+  const resolvedKey   = config.key || '';
+  const resolvedUrl   = config.url || def.url || '';
+  const resolvedModel = config.model || def.modelHint || '';
+  
   const row=document.createElement('div');row.className='mrow';
   row.innerHTML=`
     <button class="mrow-rm" onclick="this.closest('.mrow').remove()">x</button>
@@ -714,12 +719,13 @@ function addModelRow(config={provider:'gemini',model:'',key:'',url:''}){
       </div>
     </div>
     <div id="urlRow_${Date.now()}" style="${config.provider==='gemini'?'display:none;':''}">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API URL <span style="opacity:.5;">(auto-filled, override if needed)</span></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;">API URL <span style="opacity:.5;">(override if needed)</span></div>
       <input type="text" class="conf-url fsel" value="${resolvedUrl}" placeholder="https://..." style="width:100%;font-size:10px;color:var(--text-sub);">
     </div>
   `;
   c.appendChild(row);
 }
+
 function switchProviderInRow(btn, provider) {
   const row = btn.closest('.mrow');
   row.querySelector('.conf-provider').value = provider;
@@ -734,38 +740,41 @@ function switchProviderInRow(btn, provider) {
   const modelField = row.querySelector('.conf-model');
   const urlField   = row.querySelector('.conf-url');
   const urlRow     = row.querySelector('[id^="urlRow_"]');
-  // Provider switch = fields ALWAYS clear & refill from localStorage
-  keyField.value   = localStorage.getItem(def.keyLS) || '';
-  modelField.value = localStorage.getItem(`nivi_model_${provider}`) || '';
+  // FIX: Tab switch par fields blank karo
+  keyField.value   = '';
+  modelField.value = '';
   modelField.placeholder = def.modelHint || 'model name';
+  
   if (urlField) {
-    urlField.value = (def.urlLS ? localStorage.getItem(def.urlLS) : '') || def.url || '';
+    urlField.value = def.url || '';
   }
   if (urlRow) urlRow.style.display = provider === 'gemini' ? 'none' : '';
 }
 function saveSettings(){
-  const rows=document.querySelectorAll('.mrow'),chain=[];
-  // Track which providers are PRESENT in current rows
-  const presentProviders = new Set();
-  rows.forEach(row=>{
+  const rows = document.querySelectorAll('.mrow');
+  const chain = [];
+  const seenProviders = new Set();
+  rows.forEach(row => {
     const provider = row.querySelector('.conf-provider').value;
     const model    = row.querySelector('.conf-model').value.trim();
     const key      = row.querySelector('.conf-key').value.trim();
     const url      = row.querySelector('.conf-url')?.value.trim() || '';
-    presentProviders.add(provider);
-    if(!model && !key) return;
+    if(!model && !key) return; 
     const def = _providerDefaults(provider);
-    if(key    && def.keyLS) localStorage.setItem(def.keyLS, key);
-    if(url    && def.urlLS) localStorage.setItem(def.urlLS, url);
-    if(model) localStorage.setItem(`nivi_model_${provider}`, model);
+    // FIX: First come first serve for global storage
+    if (!seenProviders.has(provider)) {
+      if(key && def.keyLS) localStorage.setItem(def.keyLS, key);
+      if(url && def.urlLS) localStorage.setItem(def.urlLS, url);
+      if(model) localStorage.setItem(`nivi_model_${provider}`, model);
+      seenProviders.add(provider);
+    }
     chain.push({provider, model, key, url});
   });
-  // Deleted providers — localStorage clear karo
   ['gemini','openrouter','nvidia','custom'].forEach(p => {
-    if(!presentProviders.has(p)){
+    if(!seenProviders.has(p)){
       const def = _providerDefaults(p);
-      if(def.keyLS)   localStorage.removeItem(def.keyLS);
-      if(def.urlLS)   localStorage.removeItem(def.urlLS);
+      if(def.keyLS) localStorage.removeItem(def.keyLS);
+      if(def.urlLS) localStorage.removeItem(def.urlLS);
       localStorage.removeItem(`nivi_model_${p}`);
     }
   });
