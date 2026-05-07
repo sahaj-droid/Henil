@@ -150,7 +150,7 @@ async function saveFileToCloudWorkspace(projId, fileName, mimeType, base64Data) 
   const userId = _getNiviUserId();
   _updateSyncUI('syncing');
   try {
-    const fileId = 'file_' + Date.now();
+    const fileId = 'file_' + btoa(fileName).replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
     await db.collection('users').doc(userId)
             .collection('workspaces').doc(projId)
             .collection('files').doc(fileId).set({
