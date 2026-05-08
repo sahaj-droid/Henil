@@ -790,10 +790,13 @@ pre,
 
 .inp-foot {
   display: flex;
-  justify-content: flex-end;  /* sirf model indicator right side par */
+  justify-content: flex-end;
 }
-.inp-foot span:first-child {
-  display: none;  /* hint text mobile par hide — jagya bachavva */
+.inp-foot > span:first-child {
+  display: none;
+}
+#activeModelDisplay {
+  margin-left: 0 !important;
 }
 
   .ur .bubble {
