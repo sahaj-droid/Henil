@@ -197,6 +197,10 @@
         <button class="tbtn" onclick="artAction('explain')" title="Explain Code">Explain</button>
         <button class="tbtn" onclick="artAction('fix')" title="Find & Fix Bugs">Fix</button>
         <button class="tbtn" onclick="artAction('optimize')" title="Optimize Code">Optimize</button>
+        <button class="tbtn" id="applyPatchBtn" onclick="triggerPatchUpload()" title="Apply Nivi patch to a file" style="color:#a78bfa;border-color:rgba(167,139,250,.25);">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg>Patch
+        </button>
+        <input type="file" id="patchFileInp" style="display:none" accept=".js,.html,.css,.json,.txt,.py,.csv,.md" onchange="applyPatchFromFile(this)">
         <button class="tbtn" id="openTabBtn" onclick="openArtTab()" style="display:none;margin-left:5px;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open
         </button>
@@ -240,6 +244,7 @@
     <button class="tbtn" onclick="artAction('explain')">Explain</button>
     <button class="tbtn" onclick="artAction('fix')">Fix</button>
     <button class="tbtn" onclick="artAction('optimize')">Optimize</button>
+    <button class="tbtn" onclick="triggerPatchUpload()" style="color:#a78bfa;border-color:rgba(167,139,250,.25);">Patch</button>
   </div>
 </div>
 
