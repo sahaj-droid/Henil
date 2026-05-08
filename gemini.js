@@ -16,21 +16,15 @@ const PROVIDER_DEFAULTS = {
 function _resolveProvider(item) {
   const def = PROVIDER_DEFAULTS[item.provider] || PROVIDER_DEFAULTS.custom;
   
-  // URL: item.url > localStorage override > default
   let urls = {};
   try { urls = JSON.parse(localStorage.getItem('nivi_provider_urls') || '{}'); } catch(e) {}
   
   const resolvedUrl = item.url || urls[item.provider] || def.url || '';
+  const resolvedKey = item.key || localStorage.getItem(`nivi_key_${item.provider}`) || '';
+  const resolvedModel = item.model || localStorage.getItem(`nivi_model_${item.provider}`) || '';
+
   let format = def.format;
   if ((resolvedModel || '').toLowerCase().startsWith('gemini')) format = 'gemini';
-  
-  // Key: item.key > localStorage per-provider key
-  const lsKeyName = `nivi_key_${item.provider}`;
-  const resolvedKey = item.key || localStorage.getItem(lsKeyName) || '';
-  
-  // Model: item.model > localStorage per-provider default model
-  const lsModelName = `nivi_model_${item.provider}`;
-  const resolvedModel = item.model || localStorage.getItem(lsModelName) || '';
 
   return { ...item, url: resolvedUrl, key: resolvedKey, model: resolvedModel, format };
 }
