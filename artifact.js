@@ -387,3 +387,131 @@ closeArt = function() {
   if (viewEditor) viewEditor.style.display = 'none';
   _origCloseArt();
 };
+
+// ═══════════════════════════════════════════════════
+//  PATCH ENGINE — Apply Nivi FILE/FIND/REPLACE diffs
+// ═══════════════════════════════════════════════════
+
+// ── Parse all patch blocks from chat history ──
+function _parsePatchBlocks() {
+  const history = window.AppState?._tabChatHistory || [];
+  const patches = [];
+
+  // Collect all nivi messages
+  const niviMsgs = history.filter(m => m.role === 'nivi');
+
+  for (const msg of niviMsgs) {
+    const text = msg.text || '';
+    // Match FILE / FIND / REPLACE blocks — flexible spacing/newlines
+    const blockRe = /FILE:\s*([^\n]+)\s*\n(?:LINE:[^\n]*\n)?FIND:\s*\n?```(?:\w+)?\n([\s\S]*?)```\s*\nREPLACE:\s*\n?```(?:\w+)?\n([\s\S]*?)```/gi;
+    let match;
+    while ((match = blockRe.exec(text)) !== null) {
+      const file = match[1].trim().replace(/\s*\(.*?\)/, ''); // remove "(approximate)" notes
+      const find = match[2];
+      const replace = match[3];
+      if (file && find !== undefined && replace !== undefined) {
+        patches.push({ file, find, replace });
+      }
+    }
+  }
+  return patches;
+}
+
+// ── Apply patches to file content ──
+function _applyPatches(originalContent, patches, targetFilename) {
+  let content = originalContent;
+  const results = [];
+
+  // Filter patches relevant to this file
+  const relevant = patches.filter(p => {
+    const pFile = p.file.toLowerCase().trim();
+    const tFile = targetFilename.toLowerCase().trim();
+    return tFile.endsWith(pFile) || pFile.endsWith(tFile) || pFile === tFile;
+  });
+
+  if (relevant.length === 0) {
+    return { content, results: [{ ok: false, msg: `No patches found for "${targetFilename}" in chat history.` }] };
+  }
+
+  for (const patch of relevant) {
+    const findText = patch.find;
+    if (content.includes(findText)) {
+      content = content.replace(findText, patch.replace);
+      results.push({ ok: true, msg: `✅ Applied: ${findText.trim().slice(0, 60)}...` });
+    } else {
+      // Fuzzy: try trimmed lines match
+      const findTrimmed = findText.trim();
+      if (content.includes(findTrimmed)) {
+        content = content.replace(findTrimmed, patch.replace.trim());
+        results.push({ ok: true, msg: `✅ Applied (trimmed): ${findTrimmed.slice(0, 60)}...` });
+      } else {
+        results.push({ ok: false, msg: `❌ Not found: ${findText.trim().slice(0, 60)}...` });
+      }
+    }
+  }
+
+  return { content, results };
+}
+
+// ── Show patch result toast ──
+function _showPatchToast(results, filename) {
+  const ok = results.filter(r => r.ok).length;
+  const fail = results.filter(r => !r.ok).length;
+  const msg = `Patch "${filename}": ${ok} applied${fail > 0 ? `, ${fail} not found` : ' ✅'}`;
+
+  // Simple toast
+  const toast = document.createElement('div');
+  toast.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${fail>0?'#7c3aed':'#1D9E75'};color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;font-family:var(--mono);z-index:9999;pointer-events:none;`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// ── Trigger file picker ──
+window.triggerPatchUpload = function() {
+  const patches = _parsePatchBlocks();
+  if (patches.length === 0) {
+    alert('No FILE/FIND/REPLACE patches found in current chat.\n\nAsk Nivi to fix your code first!');
+    return;
+  }
+  document.getElementById('patchFileInp').click();
+};
+
+// ── Main: read file → apply patches → open in artifact ──
+window.applyPatchFromFile = async function(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  input.value = ''; // reset so same file can be re-selected
+
+  try {
+    // Read file as text
+    const originalContent = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = () => rej(new Error('File read failed'));
+      r.readAsText(file, 'utf-8');
+    });
+
+    // Parse patches from chat
+    const patches = _parsePatchBlocks();
+
+    // Apply
+    const { content: patchedContent, results } = _applyPatches(originalContent, patches, file.name);
+
+    // Show result toast
+    _showPatchToast(results, file.name);
+
+    // Open patched file in artifact panel
+    const b64 = artEncodeB64Text(patchedContent);
+    const patchedFile = { name: file.name, type: file.type || 'text/plain' };
+    openArt(patchedFile, b64);
+
+    // Auto-save to IDB
+    if (typeof saveFileToMemory === 'function') {
+      saveFileToMemory(file.name, b64, file.type || 'text/plain');
+    }
+
+  } catch(e) {
+    alert('Patch failed: ' + e.message);
+  }
+};
