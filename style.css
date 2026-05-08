@@ -13,7 +13,7 @@
     html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;}
     ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--text-muted);border-radius:10px}
 
-    .app{display:flex;height:100vh;overflow:hidden;}
+    .app{display:flex;height:100vh;height:100dvh;overflow:hidden;}
 
     /* SIDEBAR */
     .sidebar{width:var(--sw);min-width:var(--sw);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:margin-left .3s ease;flex-shrink:0;}
