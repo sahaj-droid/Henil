@@ -82,21 +82,41 @@ function sanitizeHTML(html) {
 // ── FILE HANDLER ──
 function handleFileSelectNew(inp){
   if(!inp.files||!inp.files.length)return;
-  const files=Array.from(inp.files).slice(0,3);
-  if(window.AppState)window.AppState._pendingFiles=files;
-  // Alag chips banavo
-  document.getElementById('filePreviewName').innerHTML=files.map(f=>
-    `<span style="background:var(--bg);border:1px solid var(--border-a);border-radius:5px;padding:1px 7px;font-size:10px;white-space:nowrap;">${escapeHTML(f.name)}</span>`
-  ).join('');
+  const existing=window.AppState?._pendingFiles||[];
+  const newFiles=Array.from(inp.files);
+  // Existing + new, duplicates skip, max 3
+  const merged=[...existing];
+  for(const f of newFiles){
+    if(merged.length>=3)break;
+    if(!merged.find(e=>e.name===f.name&&e.size===f.size))merged.push(f);
+  }
+  if(window.AppState)window.AppState._pendingFiles=merged;
+  _renderFilePreviews(merged);
   document.getElementById('filePreview').classList.add('show');
+  // Input reset — same file re-select support
+  inp.value='';inp.type='text';inp.type='file';
   document.getElementById('mainInput').focus();
 }
+function _renderFilePreviews(files){
+  document.getElementById('filePreviewName').innerHTML=files.map((f,i)=>
+    `<span style="background:var(--bg);border:1px solid var(--border-a);border-radius:5px;padding:1px 7px;font-size:10px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">
+      ${escapeHTML(f.name)}
+      <span onclick="_removeFile(${i})" style="cursor:pointer;opacity:.6;font-size:11px;line-height:1;">×</span>
+    </span>`
+  ).join('');
+}
+window._removeFile=function(i){
+  if(!window.AppState)return;
+  AppState._pendingFiles=AppState._pendingFiles.filter((_,idx)=>idx!==i);
+  if(AppState._pendingFiles.length===0){clearFile();return;}
+  _renderFilePreviews(AppState._pendingFiles);
+};
 function clearFile(){
   if(window.AppState)AppState._pendingFiles=[];
   const inp=document.getElementById('fileInp');
-  inp.value='';inp.type='text';inp.type='file'; // Reset trick — same files re-select thay
-  document.getElementById('filePreview').classList.remove('show');
+  inp.value='';inp.type='text';inp.type='file';
   document.getElementById('filePreviewName').innerHTML='';
+  document.getElementById('filePreview').classList.remove('show');
 }
 
 // ── INITIALIZATION
