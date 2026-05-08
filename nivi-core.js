@@ -233,15 +233,22 @@ window.closeMobSidebar=function(){
 };
 function openProjectModal(){document.getElementById('projectModal').classList.add('open');setTimeout(()=>document.getElementById('newProjectName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-function updateActiveModelUI() {
+function updateActiveModelUI(respondingModel) {
     let models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
-    const el = document.getElementById('activeModelDisplay');
-    if (el) {
-        if (models.length > 0) {
-            el.textContent = `Active: ${models[0].model || models[0].provider}`;
-        } else {
-            el.textContent = "No Model Configured";
-        }
+    const label = document.getElementById('modelLabel');
+    const dot = document.getElementById('modelDot');
+    if (!label) return;
+
+    const activeModel = respondingModel || (models.length > 0 ? (models[0].model || models[0].provider) : null);
+
+    if (activeModel) {
+        // Short display name — strip redundant prefix
+        const shortName = activeModel.replace('gemini-', 'gemini ').replace('-preview','').replace('-lite',' lite');
+        label.textContent = shortName;
+        if (dot) dot.style.background = respondingModel ? '#1D9E75' : 'var(--text-muted)';
+    } else {
+        label.textContent = 'No model';
+        if (dot) dot.style.background = 'var(--text-muted)';
     }
 }
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
@@ -703,7 +710,8 @@ async function handleSend(){
       }
       
       const finalPrompt = fileContext ? apiText + fileContext : apiText;
-      await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!AppState?._abortController?.signal.aborted)updateMsg(resId,chunk);});
+      const _result = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!AppState?._abortController?.signal.aborted)updateMsg(resId,chunk);});
+      if (_result?.model && typeof updateActiveModelUI === 'function') updateActiveModelUI(_result.model);
     }
   }catch(err){
     if(!AppState?._abortController?.signal.aborted)updateMsg(resId,'⚠ Connection Error: '+err.message);
