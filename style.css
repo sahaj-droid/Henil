@@ -71,19 +71,19 @@
     /* MESSAGES */
     .msg-row{display:flex;margin-bottom:22px;animation:msgIn .25s ease;}
     @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-    .msg-row.ur{justify-content:flex-end;}
+    .msg-row.ur, .msg-row.nr {justify-content: flex-start;align-items: flex-start;gap: 12px;}
     .msg-row.nr{justify-content:flex-start;align-items:flex-start;gap:9px;}
     .avatar{width:25px;height:25px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:2px;}
     .nav{background:linear-gradient(135deg,var(--accent),var(--purple));}
     .bubble{font-size:15px;line-height:1.9;font-family:var(--mono);word-wrap:break-word;word-break:break-word;overflow-wrap:break-word;max-width:100%;letter-spacing: 0.02em;}
-    .ur .bubble{background:var(--bg-bubble);border:1px solid rgba(99,179,237,.1);padding:9px 15px;border-radius:12px 3px 12px 12px;color:var(--text);max-width:80%;width:fit-content;word-break:normal !important;overflow-wrap:anywhere;}
+    .ur .bubble {background: transparent !important;border: none !important;padding: 2px 0 !important;color: var(--text) !important;max-width: 100% !important;width: 100% !important;box-shadow: none !important;}
     .nr .bubble{padding:2px 0;color:var(--text);flex:1;}
     .nr .bubble p{margin-bottom:7px;}
     .nr .bubble p:last-child{margin-bottom:0;}
     pre{background:#000!important;border:1px solid var(--border);border-radius:8px;padding:12px;margin:9px 0;overflow-x:auto;position:relative;}
     code{font-family:var(--mono);font-size:12px;}
     .tbdg{font-family:var(--mono);font-size:10px;background:var(--bg-hover);color:var(--text-sub);padding:2px 6px;border-radius:4px;border:1px solid var(--border);margin-top:5px;display:inline-block;}
-    .msg-actions{display:none;gap:4px;margin-top:7px;}
+    .msg-actions{justify-content: flex-start;}
     .msg-row:hover .msg-actions{display:flex;animation:fadeIn .15s ease;}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     .abt{width:25px;height:25px;display:flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;transition:all .15s;color:var(--text-sub);border:1px solid transparent;background:var(--bg-hover);}
