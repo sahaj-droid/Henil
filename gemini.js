@@ -21,7 +21,8 @@ function _resolveProvider(item) {
   try { urls = JSON.parse(localStorage.getItem('nivi_provider_urls') || '{}'); } catch(e) {}
   
   const resolvedUrl = item.url || urls[item.provider] || def.url || '';
-  const format = def.format;
+  let format = def.format;
+  if ((resolvedModel || '').toLowerCase().startsWith('gemini')) format = 'gemini';
   
   // Key: item.key > localStorage per-provider key
   const lsKeyName = `nivi_key_${item.provider}`;
@@ -221,7 +222,7 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
   const chain = window.getModelChain();
 
   // Gemini first — only provider that supports inline file data natively
-  const geminiRaw = chain.find(c => c.provider === 'gemini');
+  const geminiRaw = chain.find(c => c.provider === 'gemini' || (c.model||'').toLowerCase().startsWith('gemini'));
   if (geminiRaw) {
     const cfg = _resolveProvider(geminiRaw);
     if (cfg.key) {
