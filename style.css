@@ -788,9 +788,13 @@ pre,
     padding-bottom:max(18px, env(safe-area-inset-bottom, 18px));
   }
 
-  .inp-foot {
-    display:none;
-  }
+.inp-foot {
+  display: flex;
+  justify-content: flex-end;  /* sirf model indicator right side par */
+}
+.inp-foot span:first-child {
+  display: none;  /* hint text mobile par hide — jagya bachavva */
+}
 
   .ur .bubble {
     max-width:88%;
