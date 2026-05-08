@@ -193,13 +193,15 @@ code { font-family: var(--mono); font-size: 12px; }
     .fsel:focus{border-color:var(--border-a);}
 
     /* RESPONSIVE */
-    @media(max-width:768px){
+      @media(max-width:768px){
       .sidebar{position:fixed;top:0;bottom:0;left:0;z-index:100;margin-left:calc(var(--sw)*-1);}
       .sidebar.mob-open{margin-left:0;box-shadow:4px 0 20px rgba(0,0,0,.5);}
       .sidebar.collapsed{margin-left:calc(var(--sw)*-1)!important;}
       .art-panel{display:none!important;}
       .chat-inner{padding:0 14px;}
       .input-zone{padding:0 12px 15px;}
+      .mob-overlay{display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);}
+      .mob-overlay.open{display:block;}
     }
     pre { position: relative; }
     .run-art-btn {position: absolute; top: 8px; right: 8px; z-index: 10; opacity: 0; transition: opacity 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);}
