@@ -126,11 +126,8 @@ window.onload = async () => {
   // 2. CHAT RESTORE (Project vs Default)
   if (_initProj !== 'default') {
       try {
-          // Project Chat mate pehla IndexedDB / Local check
-          let projChat = loadProjectChatLocal(_initProj); 
-          if (!projChat || projChat.length === 0) {
-              projChat = await loadProjectChat(_initProj); // Fallback to Firebase
-          }
+          let projChat = loadProjectChatLocal(_initProj);
+          // Firebase fallback bandh — localStorage j master chhe
           if (projChat && projChat.length > 0) {
               if(window.AppState) AppState._tabChatHistory = projChat;
               localStorage.setItem('niviTabChat', JSON.stringify(projChat));
@@ -140,27 +137,15 @@ window.onload = async () => {
   } else {
       // Default Nivi Chat Restore
       try {
-          // Ahiya aapde check kariye ke local ma already che?
+// LocalStorage ONLY — Firebase auto-load bandh (cold storage)
           const localHistory = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
-          
           if (localHistory && localHistory.length > 0) {
-              // LocalStorage Master (Jethi delete karelo data Firebase thi pacho na aave)
               if(window.AppState) AppState._tabChatHistory = localHistory;
               localHistory.forEach(msg => appendMsg(msg.role, msg.text));
-              console.log('✅ Default Chat restored from Local Memory');
+              console.log('✅ Chat restored from localStorage');
           } else {
-              // Local khali che, toh j Firebase mathi laavo
-              if(typeof loadNiviChat === 'function') {
-                  const fbChat = await loadNiviChat();
-                  if(fbChat && fbChat.length > 0){
-                      localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
-                      if(window.AppState) AppState._tabChatHistory = fbChat;
-                      fbChat.forEach(msg => appendMsg(msg.role, msg.text));
-                      console.log('✅ Default Chat restored from Firebase');
-                  } else {
-                      if(window.AppState) AppState._tabChatHistory = [];
-                  }
-              }
+              if(window.AppState) AppState._tabChatHistory = [];
+              // Hero section visible raheshe automatically
           }
       } catch(e){
           console.warn('Chat init failed, fallback:', e);
@@ -266,32 +251,20 @@ async function changeActiveProject(){
   }
 
   // Step 5: Load project chat
-  if (newProj !== 'default') {
+if (newProj !== 'default') {
     try {
-      let projChat = await loadProjectChat(newProj);
-      if (!projChat || projChat.length === 0) {
-        projChat = loadProjectChatLocal(newProj);
-      }
+      // LocalStorage ONLY — Firebase auto-load bandh
+      const projChat = loadProjectChatLocal(newProj);
       if (projChat && projChat.length > 0) {
         AppState._tabChatHistory = projChat;
-        localStorage.setItem('niviTabChat', JSON.stringify(projChat));
         projChat.forEach(msg => appendMsg(msg.role, msg.text));
-        console.log('✅ Project chat restored:', newProj);
+        console.log('✅ Project chat restored from local:', newProj);
       }
     } catch(e) {
       console.warn('Project chat load failed:', e);
     }
-  } else {
-    // Default: load default Nivi chat
-    try {
-      const fbChat = await loadNiviChat();
-      if (fbChat && fbChat.length > 0) {
-        AppState._tabChatHistory = fbChat;
-        localStorage.setItem('niviTabChat', JSON.stringify(fbChat));
-        fbChat.forEach(msg => appendMsg(msg.role, msg.text));
-      }
-    } catch(e) {}
   }
+  // Default project: localStorage already loaded on init — no action needed
 }
 function createNewProject(){
   const n=document.getElementById('newProjectName').value.trim();if(!n)return;
