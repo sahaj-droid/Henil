@@ -264,6 +264,27 @@
   </div>
 </div>
   
+<!-- MANUAL ARTIFACT MODAL -->
+<div class="modal" id="manualArtModal">
+  <div class="mbox" style="width:560px;">
+    <button class="mclose" onclick="closeModal('manualArtModal')">x</button>
+    <div class="mtitle">Paste Code</div>
+    <div class="msub">Review · Fix · Optimize — Nivi will open it in the artifact panel</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="tbtn" id="manArtLangJs"  onclick="setManLang('js')"  style="border-color:rgba(251,191,36,.4);color:var(--amber);">JS</button>
+      <button class="tbtn" id="manArtLangHtml" onclick="setManLang('html')" style="">HTML</button>
+      <button class="tbtn" id="manArtLangPy"   onclick="setManLang('py')"   style="">PY</button>
+      <button class="tbtn" id="manArtLangCss"  onclick="setManLang('css')"  style="">CSS</button>
+      <button class="tbtn" id="manArtLangTxt"  onclick="setManLang('txt')"  style="">TXT</button>
+    </div>
+    <textarea id="manualArtInput" class="finput" rows="12"
+      style="resize:vertical;min-height:220px;font-family:var(--mono);font-size:12px;line-height:1.6;margin-bottom:12px;"
+      placeholder="Paste your code here..."></textarea>
+    <button class="mbtn prim" onclick="submitManualArt()">Open in Artifact</button>
+    <button class="mbtn sec" onclick="closeModal('manualArtModal')">Cancel</button>
+  </div>
+</div>
+
 <!-- MOBILE SIDEBAR OVERLAY -->
 <div class="mob-overlay" id="mobOverlay" onclick="closeMobSidebar()"></div>
 
