@@ -754,7 +754,7 @@ pre,
   }
 
   .chat-wrap {
-    padding:18px 0 138px;
+    padding:18px 0 175px;
   }
 
   #heroSection {
@@ -784,7 +784,8 @@ pre,
   }
 
   .input-zone {
-    padding:0 12px 14px;
+    padding:0 12px 18px;
+    padding-bottom:max(18px, env(safe-area-inset-bottom, 18px));
   }
 
   .inp-foot {
