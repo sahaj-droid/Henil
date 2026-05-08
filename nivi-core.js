@@ -685,7 +685,8 @@ async function handleSend(){
       // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
       const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-      if (_ctxProj !== 'default' && window.NiviDB) {
+      // Always read from IDB (has full base64 data) — all projects including default
+      if (window.NiviDB) {
         try {
           memFiles = await NiviDB.getProjectFiles(_ctxProj);
         } catch(e) {
@@ -695,15 +696,15 @@ async function handleSend(){
         memFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       }
       let fileContext = '';
-      // 🛑 FIX: Fukt pehli vaar (new chat) OR navi file add thay tyare j context API ne moklavo (Token Save)
-      if (memFiles.length > 0 && (hist.length === 0 || pendingFiles.length > 0)) {
+      // Always inject file context if files exist — not just first message
+      if (memFiles.length > 0) {
         const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-        const textFiles = memFiles.filter(f => f.data && TEXT_MIMES.includes(f.mimeType));
+        const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
         if (textFiles.length > 0) {
           const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
           fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
-            textFiles.slice(0, 5).map(f => {
-              const content = decodeB64Text(f.data).slice(0, 2000);
+            textFiles.slice(0, 8).map(f => {
+              const content = decodeB64Text(f.data).slice(0, 3000);
               return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
             }).join('\n\n');
         }
