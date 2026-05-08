@@ -190,15 +190,39 @@ function addArtifactButtons(el) {
     }
   });
 }
-// ── MANUAL ARTIFACT (Fix Code) ──
+// ── MANUAL ARTIFACT — Custom Modal ──
+let _manLang = 'js';
+window.setManLang = function(lang) {
+  _manLang = lang;
+  ['js','html','py','css','txt'].forEach(l => {
+    const btn = document.getElementById('manArtLang' + l.charAt(0).toUpperCase() + l.slice(1));
+    if (btn) btn.style.borderColor = '';
+  });
+  const activeBtn = document.getElementById('manArtLang' + lang.charAt(0).toUpperCase() + lang.slice(1));
+  if (activeBtn) activeBtn.style.borderColor = 'var(--accent)';
+};
+
 window.openManualArt = function() {
-    const code = prompt("Paste your code for review / Fix / Optimize:");
-    if (code && code.trim() !== "") {
-    const b64 = artEncodeB64Text(code);
-    openArt({ name: 'manual_fix.js', type: 'text/plain' }, b64);
-    // setTimeout(() => { artAction('fix'); }, 500);
-    }
-}
+  const ta = document.getElementById('manualArtInput');
+  if (ta) ta.value = '';
+  _manLang = 'js';
+  ['js','html','py','css','txt'].forEach(l => {
+    const btn = document.getElementById('manArtLang' + l.charAt(0).toUpperCase() + l.slice(1));
+    if (btn) btn.style.borderColor = l === 'js' ? 'rgba(251,191,36,.4)' : '';
+  });
+  document.getElementById('manualArtModal').classList.add('open');
+  setTimeout(() => ta && ta.focus(), 150);
+};
+
+window.submitManualArt = function() {
+  const code = document.getElementById('manualArtInput')?.value?.trim();
+  if (!code) return;
+  closeModal('manualArtModal');
+  const b64 = artEncodeB64Text(code);
+  const nameMap = { js:'manual_fix.js', html:'manual_fix.html', py:'manual_fix.py', css:'manual_fix.css', txt:'manual_fix.txt' };
+  const mimeMap = { js:'text/javascript', html:'text/html', py:'text/plain', css:'text/css', txt:'text/plain' };
+  openArt({ name: nameMap[_manLang] || 'manual_fix.js', type: mimeMap[_manLang] || 'text/plain' }, b64);
+};
 // ── PROMPT-TO-ACTION SHORTCUTS (MAGIC MASK FIX) ──
 async function artAction(action) {
   if (!ART.cur || !ART.cur.txt) return;
