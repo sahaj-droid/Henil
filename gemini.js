@@ -74,6 +74,7 @@ async function _openaiCall(cfg, messages, onChunk) {
 
   const response = await fetch(cfg.url, {
     method: 'POST',
+    signal: window.AppState?._abortController?.signal,
     headers: {
       'Authorization': `Bearer ${cfg.key}`,
       'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ async function _openaiCall(cfg, messages, onChunk) {
     const reader = response.body.getReader();
     let fullText = '';
     while (true) {
-      if (window.AppState?._abortController) break;
+      if (window.AppState?._abortController?.signal.aborted) break;
       const { value, done } = await reader.read();
       if (done) break;
       const chunk = new TextDecoder().decode(value);
@@ -127,6 +128,7 @@ async function _geminiStreamCall(cfg, history, prompt, onChunk) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${cfg.key}`;
   const response = await fetch(url, {
     method: 'POST',
+    signal: window.AppState?._abortController?.signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [...history, { role: 'user', parts: [{ text: prompt }] }]
@@ -138,7 +140,7 @@ async function _geminiStreamCall(cfg, history, prompt, onChunk) {
   const reader = response.body.getReader();
   let fullText = '';
   while (true) {
-    if (window.AppState?._abortController) break;
+    if (window.AppState?._abortController?.signal.aborted) break;
     const { value, done } = await reader.read();
     if (done) break;
     const chunk = new TextDecoder().decode(value);
@@ -183,7 +185,7 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
 
   let lastError = '';
   for (const rawItem of chain) {
-    if (window.AppState?._abortController) break;
+    if (window.AppState?._abortController?.signal.aborted) break;
     const cfg = _resolveProvider(rawItem);
 
     if (!cfg.key) { lastError = `No API key for ${cfg.provider}`; continue; }
@@ -193,7 +195,6 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
       if (cfg.format === 'gemini') {
         await _geminiStreamCall(cfg, priorHistory, currentPrompt, onChunk);
       } else {
-        // Convert Gemini history format → OpenAI format
         const messages = priorHistory.map(m => ({
           role: m.role === 'model' ? 'assistant' : 'user',
           content: m.parts[0].text
@@ -202,11 +203,13 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
       }
       return { ok: true };
     } catch(e) {
+      if (e.name === 'AbortError') return { ok: false, aborted: true };
       lastError = e.message;
       console.warn(`[Nivi] ${cfg.provider}/${cfg.model} failed: ${e.message}. Trying next...`);
     }
   }
 
+  if (window.AppState?._abortController?.signal.aborted) return { ok: false, aborted: true };
   _emitChunk(onChunk, `All models failed. Last error: ${lastError}`);
   return { ok: false };
 };
