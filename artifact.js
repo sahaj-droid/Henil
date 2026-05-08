@@ -251,26 +251,41 @@ async function artAction(action) {
 
   // ૪. API કોલ ચાલુ કરો
   toggleGen(true);
-  if(window.AppState) AppState._abortController = false;
+  if(window.AppState) AppState._abortController = new AbortController();
   const resId = 'nivi-' + Date.now();
   appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
   try {
     const hist = window.AppState ? AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user', parts:[{text:m.text}]})) : [];
     if(typeof directGeminiCallStreamMultiTurn === 'function') {
       await directGeminiCallStreamMultiTurn(hist, apiPrompt, (chunk) => {
-        if(!window.AppState || !AppState._abortController) updateMsg(resId, chunk);
+        if(!AppState?._abortController?.signal.aborted) updateMsg(resId, chunk);
       });
     }
   } catch(err) {
-    if(!window.AppState || !AppState._abortController) updateMsg(resId, 'Error: ' + err.message);
+    if(!AppState?._abortController?.signal.aborted) updateMsg(resId, 'Error: ' + err.message);
   } finally {
     toggleGen(false);
-    if(!window.AppState || !AppState._abortController) {
+    const _wasAborted = AppState?._abortController?.signal.aborted;
+    if(window.AppState) AppState._abortController = null;
+    if(!_wasAborted) {
       if(window.AppState) {
         const el = document.getElementById(resId);
         let rawText = el?.getAttribute('data-raw')?.replace(/&#39;/g, "'").replace(/&quot;/g, '"') || el?.innerText || '';
         AppState._tabChatHistory.push({role:'nivi', text: rawText});
         localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+
+        // Auto-save corrected code to IDB — extract code block from response
+        if (ART.cur?.name && rawText && typeof saveFileToMemory === 'function') {
+          const codeMatch = rawText.match(/```(?:\w+)?\n([\s\S]*?)```/);
+          if (codeMatch && codeMatch[1]) {
+            const correctedCode = codeMatch[1].trim();
+            const b64 = artEncodeB64Text(correctedCode);
+            saveFileToMemory(ART.cur.name, b64, ART.cur.mime || 'text/plain');
+            // Update ART.cur so panel shows latest
+            ART.cur.txt = correctedCode;
+            ART.cur.b64 = b64;
+          }
+        }
       }
     }
     if(typeof saveUserData === 'function') saveUserData('history');
