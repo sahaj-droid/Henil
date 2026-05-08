@@ -139,6 +139,10 @@
           </div>
           <div class="inp-foot">
             <span>Enter Send · Shift Enter New line · /image [prompt] · /song [topic]</span>
+            <span id="activeModelDisplay" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:5px;flex-shrink:0;">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);display:inline-block;" id="modelDot"></span>
+              <span id="modelLabel">No model</span>
+            </span>
           </div>
         </div>
       </div>
@@ -284,10 +288,8 @@
     <button class="mbtn sec" onclick="closeModal('manualArtModal')">Cancel</button>
   </div>
 </div>
-
 <!-- MOBILE SIDEBAR OVERLAY -->
 <div class="mob-overlay" id="mobOverlay" onclick="closeMobSidebar()"></div>
-
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
