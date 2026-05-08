@@ -31,7 +31,7 @@ window.AppState = window.AppState || {
   _tabChatHistory: [],
   _pendingFiles: [],
   _isGenerating: false,
-  _abortController: false
+  _abortController: null  // real AbortController instance (null = idle)
 };
 function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -213,7 +213,10 @@ window.toggleGen = function(g) {
 };
 window.stopGeneration = function() {
     window.toggleGen(false);
-    if(window.AppState) window.AppState._abortController = true;
+    if(window.AppState?._abortController) {
+      window.AppState._abortController.abort();
+    }
+    if(window.AppState) window.AppState._abortController = null;
 };
 function toggleSidebar(){
   const s=document.getElementById('sidebar');
@@ -339,7 +342,6 @@ const HERO_HTML=`<div id="heroSection"><div class="hero-icon">N</div><h1 class="
 function clearChat(){
   const history = window.AppState?._tabChatHistory || [];
   const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-
   if(history.length > 0){
     if (activeProj !== 'default') {
       // Project chat archive
@@ -360,12 +362,10 @@ function clearChat(){
   if(typeof closeArt === 'function') closeArt(); 
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML=HERO_HTML;
-  
   renderSidebarData();
   if(typeof saveNiviChat === 'function') saveNiviChat([]);
   if(typeof saveUserData === 'function') saveUserData('history');
 }
-
 function _fmt(text) {
   if(!text) return '';
     if(text.includes('<img') && text.includes('pollinations')) return text;
@@ -405,7 +405,6 @@ function appendMsg(role,text,id){
   if(role==='nivi' && typeof addArtifactButtons === 'function') addArtifactButtons(row);
   const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
 }
-
 function updateMsg(id,text){
   const el=document.getElementById(id);if(!el)return;
   el.setAttribute('data-raw',text.replace(/'/g,"&#39;").replace(/"/g,"&quot;"));
@@ -417,7 +416,6 @@ function updateMsg(id,text){
     const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
   }, 50);
 }
-
 function restoreChat(){
   try{
     const saved=JSON.parse(localStorage.getItem('niviTabChat')||'[]');
@@ -428,7 +426,6 @@ function restoreChat(){
     }
   }catch(e){}
 }
-
 function cpMsg(id){const el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"'));}
 // ── DELETE MESSAGE (nivi-core.js ma replace karo) ──
 async function delMsg(id){
@@ -458,7 +455,6 @@ async function delMsg(id){
     console.log("🗑️ Message deleted & synced across all DBs");
   }
 }
-
 function loadArchivedChat(id){
   const archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
   const archive = archives.find(a => String(a.id) === String(id));
@@ -474,7 +470,6 @@ function loadArchivedChat(id){
   archive.chat.forEach(msg => { appendMsg(msg.role, msg.text); });
   renderSidebarData();
 }
-
 async function deleteProject(id, name){
   if(!confirm(`Delete workspace "${name}"? This removes its local files and chat backup.`)) return;
   let projs = JSON.parse(localStorage.getItem('nivi_projects')||'[]');
@@ -487,7 +482,6 @@ async function deleteProject(id, name){
   if(document.getElementById('activeProjectSelect').value === id){ setProj('default'); } 
   else { renderProjectsUI(); }
 }
-
 function deleteCurrentChat(){
   if(!confirm('Delete current chat?')) return;
   if(window.AppState) AppState._tabChatHistory = [];
@@ -499,7 +493,6 @@ function deleteCurrentChat(){
   if(typeof saveNiviChat === 'function') saveNiviChat([]);
   if(typeof saveUserData === 'function') saveUserData('history');
 }
-
 function deleteArchivedChat(id){
   if(!confirm('Delete this archived chat?')) return;
   let archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
@@ -508,7 +501,8 @@ function deleteArchivedChat(id){
   renderSidebarData();
 }
 // ── SIDEBAR DATA RENDERER ──
-window.renderSidebarData = function() {
+let _sidebarRenderTimer = null;
+const _renderSidebarNow = function() {
   let models = []; 
   try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
   const ml = document.getElementById('modelList');
@@ -554,14 +548,17 @@ html += `<div class="si active" style="display:flex;align-items:center;gap:4px;"
     ch.innerHTML = html || `<div class="si" style="opacity:.4;">Empty</div>`;
   }
 };
-
+// Debounced public API — max once per 150ms (prevents jank on rapid calls)
+window.renderSidebarData = function() {
+  if (_sidebarRenderTimer) clearTimeout(_sidebarRenderTimer);
+  _sidebarRenderTimer = setTimeout(_renderSidebarNow, 150);
+};
 function openSavedFile(name){
   const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
   const f=files.find(x=>x.name===name);
   if(f?.data && typeof openArt === 'function') openArt({name:f.name,type:f.mimeType||'text/plain'},f.data);
   else alert('File data not found. Re-attach the file.');
 }
-
 async function deleteFile(name){
   if(!confirm(`Delete "${name}"?`))return;
   const projId = window._activeProjectId ||
@@ -592,23 +589,23 @@ async function deleteFile(name){
   }
   renderSidebarData();
 }
-// ── AUTO TITLE GENERATION ──
-async function generateChatTitle(firstMessage) {
-    const history = window.AppState ? AppState._tabChatHistory : [];
-    if (history.length > 2) return null;
-    const prompt = `Give a very short 2-3 word title for this chat. No quotes, no punctuation, just the title words. Text: "${firstMessage.slice(0, 200)}"`;
-    try {
-        // directGeminiCallWithFile nahi — streamMultiTurn use karo
-        let title = '';
-        await directGeminiCallStreamMultiTurn([], prompt, (chunk) => {
-            title = chunk;
-        });
-        title = title.trim().replace(/[\"'`*#\n]/g, '').slice(0, 30);
-        return title || 'New Chat';
-    } catch (e) {
-        console.error("Title Gen Failed:", e);
-    }
-    return "New Chat";
+// ── AUTO TITLE GENERATION — local heuristic (no API call) ──
+function generateChatTitle(firstMessage) {
+  try {
+    // Strip markdown, slash commands, file prefixes
+    let clean = firstMessage
+      .replace(/^📎[^\n]+\n/, '')         // remove file attachment prefix
+      .replace(/^\/\w+\s*/, '')            // remove slash commands
+      .replace(/[`*#_~>\[\]()]/g, '')      // strip markdown chars
+      .replace(/https?:\/\/\S+/g, '')      // strip URLs
+      .trim();
+    // Take first 4-5 meaningful words
+    const words = clean.split(/\s+/).filter(w => w.length > 1);
+    const title = words.slice(0, 5).join(' ').slice(0, 32);
+    return Promise.resolve(title || 'New Chat');
+  } catch(e) {
+    return Promise.resolve('New Chat');
+  }
 }
 // ── SEND MESSAGE LOGIC ──
 async function handleSend(){
@@ -618,7 +615,6 @@ async function handleSend(){
   const pendingFiles=window.AppState?._pendingFiles||[];
   const file=pendingFiles[0]||null;
   if(!text&&!pendingFiles.length)return;
-
   if(text.toLowerCase().startsWith('/image ')){
     const prompt=text.substring(7).trim();
     appendMsg('user',text);
@@ -631,48 +627,54 @@ async function handleSend(){
     if(window.AppState){AppState._tabChatHistory.push({role:'nivi',text:imgHtml});localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
     renderSidebarData();return;
   }
-
   const userText=pendingFiles.length>0?`📎 ${pendingFiles.map(f=>f.name).join(', ')}\n${text}`:text;
   appendMsg('user',userText);
   if(window.AppState){AppState._tabChatHistory.push({role:'user',text:userText});localStorage.setItem('niviTabChat',JSON.stringify(AppState._tabChatHistory));}
   inp.value='';inp.style.height='auto';clearFile();
-  toggleGen(true);if(window.AppState)AppState._abortController=false;
+  toggleGen(true);
+  if(window.AppState){
+    AppState._abortController = new AbortController();
+  }
   const resId='nivi-'+Date.now();
   appendMsg('nivi',`<div class="thinking"><span></span><span></span><span></span></div>`,resId);
-
   try{
-    if(file&&typeof directGeminiCallWithFile==='function'){
-      const b64=await window.readFileAsBase64(file);
-      const mime=window.getFileMimeType?window.getFileMimeType(file.name):file.type;
-      const r=await directGeminiCallWithFile(text||'Analyze this file.',b64,mime);
-      if(!window.AppState||!AppState._abortController){
-        updateMsg(resId,r.answer||'No answer received.');
-        const el = document.getElementById(resId);
-        const proj = document.getElementById('activeProjectSelect').value;
-        for (const f of pendingFiles) {
-          const fileB64 = await window.readFileAsBase64(f);
-          const fileMime = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
-          if (typeof saveFileToMemory === 'function') {
-            saveFileToMemory(f.name, fileB64, fileMime);
-          }
-          if (typeof saveFileToCloudWorkspace === 'function') {
-            saveFileToCloudWorkspace(proj, f.name, fileMime, fileB64);
-          }
+    if(pendingFiles.length > 0 && typeof directGeminiCallWithFile==='function'){
+      // Analyze all pending files (one by one, streaming each result)
+      const proj = document.getElementById('activeProjectSelect').value;
+      let combinedAnswer = '';
+      for (const f of pendingFiles) {
+        const fileB64 = await window.readFileAsBase64(f);
+        const fileMime = window.getFileMimeType ? window.getFileMimeType(f.name) : f.type;
+        // Save to memory & cloud
+        if (typeof saveFileToMemory === 'function') saveFileToMemory(f.name, fileB64, fileMime);
+        if (typeof saveFileToCloudWorkspace === 'function') saveFileToCloudWorkspace(proj, f.name, fileMime, fileB64);
+        // Analyze
+        const r = await directGeminiCallWithFile(text || 'Analyze this file.', fileB64, fileMime);
+        if (!AppState?._abortController?.signal.aborted) {
+          const prefix = pendingFiles.length > 1 ? `**${f.name}:**\n` : '';
+          combinedAnswer += prefix + (r.answer || 'No answer received.') + '\n\n';
+          updateMsg(resId, combinedAnswer.trim());
+          // Art card per file
+          const el = document.getElementById(resId);
           if (el && typeof makeArtCard === 'function') {
             const ext = f.name.split('.').pop().toLowerCase();
             el.parentElement.appendChild(makeArtCard(f.name, ext, fileB64, f));
           }
         }
-        if (typeof openArt === 'function') openArt(file, b64);
       }
-      if(window.AppState)AppState._pendingFiles=[];document.getElementById('fileInp').value='';
+      // Open first file in artifact panel
+      if (!AppState?._abortController?.signal.aborted && pendingFiles.length > 0 && typeof openArt === 'function') {
+        const firstB64 = await window.readFileAsBase64(pendingFiles[0]);
+        openArt(pendingFiles[0], firstB64);
+      }
+      if(window.AppState) AppState._pendingFiles=[];
+      document.getElementById('fileInp').value='';
     }else if(typeof directGeminiCallStreamMultiTurn==='function'){
       let apiText=text;
       if(text.toLowerCase().startsWith('/song ')){
         apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
       }
       const hist=window.AppState?AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user',parts:[{text:m.text}]})):[];
-
       // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
       const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
@@ -685,9 +687,7 @@ async function handleSend(){
       } else {
         memFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
       }
-      
       let fileContext = '';
-      
       // 🛑 FIX: Fukt pehli vaar (new chat) OR navi file add thay tyare j context API ne moklavo (Token Save)
       if (memFiles.length > 0 && (hist.length === 0 || pendingFiles.length > 0)) {
         const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
@@ -703,14 +703,16 @@ async function handleSend(){
       }
       
       const finalPrompt = fileContext ? apiText + fileContext : apiText;
-      await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!window.AppState||!AppState._abortController)updateMsg(resId,chunk);});
+      await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!AppState?._abortController?.signal.aborted)updateMsg(resId,chunk);});
     }
   }catch(err){
-    if(!window.AppState||!AppState._abortController)updateMsg(resId,'⚠ Connection Error: '+err.message);
+    if(!AppState?._abortController?.signal.aborted)updateMsg(resId,'⚠ Connection Error: '+err.message);
   } finally {
     toggleGen(false);
+    const _wasAborted = AppState?._abortController?.signal.aborted;
+    if(window.AppState) AppState._abortController = null;  // clear after each call
     let chatTitle = "Current Session"; 
-    if(!window.AppState || !AppState._abortController) {
+    if(!_wasAborted) {
       if(window.AppState) {
       const el = document.getElementById(resId);
         let rawText = '';
@@ -719,7 +721,6 @@ async function handleSend(){
         } else if (el) {
           rawText = el.innerText || '';
         }
-        
         // 🛑 FIX: Error text history ma save na thavo joiye
         const isErrorMsg = rawText.includes('⚠ Connection Error') || rawText.includes('All models failed');
         
@@ -791,7 +792,6 @@ window.addModelRow = function(config = { model: '', key: '', url: '' }) {
 window.saveSettings = function() {
   const rows = document.querySelectorAll('.mrow');
   const chain = [];
-
   rows.forEach(row => {
     const model = row.querySelector('.conf-model').value.trim();
     const key   = row.querySelector('.conf-key').value.trim();
