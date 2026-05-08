@@ -23,8 +23,11 @@ function _resolveProvider(item) {
   const resolvedKey = item.key || localStorage.getItem(`nivi_key_${item.provider}`) || '';
   const resolvedModel = item.model || localStorage.getItem(`nivi_model_${item.provider}`) || '';
 
+  // Auto-detect format: gemini model name = gemini API format, regardless of provider field
   let format = def.format;
-  if ((resolvedModel || '').toLowerCase().startsWith('gemini')) format = 'gemini';
+  if ((resolvedModel || '').toLowerCase().startsWith('gemini')) {
+    format = 'gemini';
+  }
 
   return { ...item, url: resolvedUrl, key: resolvedKey, model: resolvedModel, format };
 }
@@ -196,7 +199,7 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
         })).concat({ role: 'user', content: currentPrompt });
         await _openaiCall(cfg, messages, onChunk);
       }
-      return { ok: true };
+      return { ok: true, model: cfg.model };
     } catch(e) {
       if (e.name === 'AbortError') return { ok: false, aborted: true };
       lastError = e.message;
@@ -215,10 +218,15 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
 window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
   const chain = window.getModelChain();
 
-  // Gemini first — only provider that supports inline file data natively
-  const geminiRaw = chain.find(c => c.provider === 'gemini' || (c.model||'').toLowerCase().startsWith('gemini'));
+  // Gemini first — detect by provider field OR model name
+  const geminiRaw = chain.find(c => 
+    c.provider === 'gemini' || 
+    (c.model || '').toLowerCase().startsWith('gemini')
+  );
   if (geminiRaw) {
     const cfg = _resolveProvider(geminiRaw);
+    // Force format to gemini for proper API call
+    cfg.format = 'gemini';
     if (cfg.key) {
       try {
         return await _geminiFileCall(cfg, prompt, fileBase64, mimeType);
@@ -252,5 +260,4 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
 
   return { ok: false, answer: 'File analysis failed. Ensure Gemini is configured with a valid API key.' };
 };
-
 console.log('Nivi AI Engine v2.0 loaded - Universal provider support');
