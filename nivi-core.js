@@ -84,14 +84,19 @@ function handleFileSelectNew(inp){
   if(!inp.files||!inp.files.length)return;
   const files=Array.from(inp.files).slice(0,3);
   if(window.AppState)window.AppState._pendingFiles=files;
-  document.getElementById('filePreviewName').textContent=files.map(f=>f.name).join(', ');
+  // Alag chips banavo
+  document.getElementById('filePreviewName').innerHTML=files.map(f=>
+    `<span style="background:var(--bg);border:1px solid var(--border-a);border-radius:5px;padding:1px 7px;font-size:10px;white-space:nowrap;">${escapeHTML(f.name)}</span>`
+  ).join('');
   document.getElementById('filePreview').classList.add('show');
   document.getElementById('mainInput').focus();
 }
 function clearFile(){
   if(window.AppState)AppState._pendingFiles=[];
-  document.getElementById('fileInp').value='';
+  const inp=document.getElementById('fileInp');
+  inp.value='';inp.type='text';inp.type='file'; // Reset trick — same files re-select thay
   document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('filePreviewName').innerHTML='';
 }
 
 // ── INITIALIZATION
@@ -121,9 +126,31 @@ window.onload = async () => {
       if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
     }
   }
-  renderSidebarData();
+renderSidebarData();
 
-  // 2. CHAT RESTORE (Project vs Default)
+  // PASTE AS ATTACHMENT — Ctrl+V image support
+  document.addEventListener('paste', function(e) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imageItem = Array.from(items).find(i => i.type.startsWith('image/'));
+    if (!imageItem) return;
+    const file = imageItem.getAsFile();
+    if (!file) return;
+    // File object banavo with name
+    const ext = file.type.split('/')[1] || 'png';
+    const namedFile = new File([file], `pasted_image_${Date.now()}.${ext}`, {type: file.type});
+    const current = window.AppState?._pendingFiles || [];
+    if (current.length >= 3) { console.warn('Max 3 files'); return; }
+    const updated = [...current, namedFile].slice(0, 3);
+    if (window.AppState) window.AppState._pendingFiles = updated;
+    document.getElementById('filePreviewName').innerHTML = updated.map(f =>
+      `<span style="background:var(--bg);border:1px solid var(--border-a);border-radius:5px;padding:1px 7px;font-size:10px;white-space:nowrap;">${escapeHTML(f.name)}</span>`
+    ).join('');
+    document.getElementById('filePreview').classList.add('show');
+    document.getElementById('mainInput').focus();
+  });
+
+  // 2. CHAT RESTORE
   if (_initProj !== 'default') {
       try {
           let projChat = loadProjectChatLocal(_initProj);
