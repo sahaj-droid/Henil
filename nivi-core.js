@@ -168,7 +168,19 @@ window.stopGeneration = function() {
     window.toggleGen(false);
     if(window.AppState) window.AppState._abortController = true;
 };
-function toggleSidebar(){const s=document.getElementById('sidebar');if(window.innerWidth<=768)s.classList.toggle('mob-open');else s.classList.toggle('collapsed');}
+function toggleSidebar(){
+  const s=document.getElementById('sidebar');
+  if(window.innerWidth<=768){
+    const isOpen=s.classList.toggle('mob-open');
+    document.getElementById('mobOverlay')?.classList.toggle('open',isOpen);
+  } else {
+    s.classList.toggle('collapsed');
+  }
+}
+window.closeMobSidebar=function(){
+  document.getElementById('sidebar')?.classList.remove('mob-open');
+  document.getElementById('mobOverlay')?.classList.remove('open');
+};
 function openProjectModal(){document.getElementById('projectModal').classList.add('open');setTimeout(()=>document.getElementById('newProjectName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function updateActiveModelUI() {
