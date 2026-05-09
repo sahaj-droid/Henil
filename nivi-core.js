@@ -11,11 +11,12 @@ const projId = document.getElementById('activeProjectSelect')?.value ||
       console.warn('IndexedDB save failed, localStorage fallback:', e);
     }
   }
-  // localStorage ma update (Nivi context mate fast read) — project-aware key
+// localStorage ma update (Nivi context mate fast read) — project-aware key
   const _fileKey = `nivi_file_memory_${projId}`;
   let files = JSON.parse(localStorage.getItem(_fileKey) || '[]');
   const idx = files.findIndex(f => f.name === filename);
-  const entry = { name: filename, ts: Date.now(), data: null, 
+  // ✅ FIX: data pan save karo (IDB fallback mate) — entry ma data:base64Data
+  const entry = { name: filename, ts: Date.now(), data: base64Data, 
                   mimeType: mimeType || 'text/plain', projId };  
   if (idx >= 0) files[idx] = entry;
   else files.push(entry);
@@ -408,7 +409,18 @@ function appendMsg(role,text,id){
   const esc=escapeHTML(text);
   const acts=`<div class="msg-actions"><div class="abt" onclick="cpMsg('${msgId}')" title="Copy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div><div class="abt del" onclick="delMsg('${msgId}')" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div></div>`;
   const align=role==='user'?'flex-end':'flex-start';const mw=role==='user'?'max-width:80%;':'width:100%;';
-  row.innerHTML=`${av}<div style="display:flex;flex-direction:column;align-items:${align};${mw}"><div class="bubble" id="${msgId}" data-raw="${esc}">${fmt}</div>${acts}</div>`;
+  // ✅ FIX: User bubble khub motu hoy to collapse karo + Show more button
+  const isLongUserMsg = role === 'user' && uiText.length > 300;
+  const bubbleClass = isLongUserMsg ? 'bubble collapsed' : 'bubble';
+  const expandBtn = isLongUserMsg
+    ? `<div class="bubble-expand-btn" onclick="
+        const b=this.previousElementSibling;
+        const isCol=b.classList.contains('collapsed');
+        b.classList.toggle('collapsed',!isCol);
+        this.textContent=isCol?'▲ Show less':'▼ Show more';
+      ">▼ Show more</div>`
+    : '';
+  row.innerHTML=`${av}<div style="display:flex;flex-direction:column;align-items:${align};${mw}"><div class="${bubbleClass}" id="${msgId}" data-raw="${esc}">${fmt}</div>${expandBtn}${acts}</div>`;
   win.appendChild(row);
   if(role==='nivi' && typeof addArtifactButtons === 'function') addArtifactButtons(row);
   const wrap=document.getElementById('chatWrap');if(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight<200)wrap.scrollTop=wrap.scrollHeight;
@@ -595,10 +607,12 @@ async function deleteFile(name){
       console.log('✅ File deleted from Firebase:', name);
     } catch(e) { console.warn('Firebase file delete failed:', e); }
   }
-  // localStorage thi delete
-  let files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
+// ✅ FIX: project-aware key thi delete karo
+  const _delProjId = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  const _delKey = `nivi_file_memory_${_delProjId}`;
+  let files=JSON.parse(localStorage.getItem(_delKey)||'[]');
   files=files.filter(f=>f.name!==name);
-  localStorage.setItem('nivi_file_memory',JSON.stringify(files));
+  localStorage.setItem(_delKey, JSON.stringify(files));
   if(typeof ART !== 'undefined' && ART.cur?.name===name){
     if(typeof closeArt === 'function') closeArt();
     if(typeof closeSheet === 'function') closeSheet();
@@ -690,7 +704,19 @@ async function handleSend(){
       if(text.toLowerCase().startsWith('/song ')){
         apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
       }
-      const hist=window.AppState?AppState._tabChatHistory.slice(0,-1).map(m=>({role:m.role==='nivi'?'model':'user',parts:[{text:m.text}]})):[];
+      // ✅ FIX: History trim karo — max 20 messages, ane Nivi responses ma thi
+      // file context block (---[Files in Nivi Memory]--- wala) strip karo
+      // jethi context loop na thay ane same answer repeat na thay
+      const _rawHist = window.AppState ? AppState._tabChatHistory.slice(0, -1) : [];
+      const _trimHist = _rawHist.slice(-20); // max 20 messages (10 pairs)
+      const hist = _trimHist.map(m => {
+        let msgText = m.text;
+        // Nivi responses ma injected file context remove karo
+        if (m.role === 'nivi') {
+          msgText = msgText.replace(/\n\n---\n(?:\[Project:[^\]]+\] )?\[Files in Nivi Memory\][\s\S]*$/m, '').trim();
+        }
+        return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: msgText }] };
+      });
       // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
       const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
