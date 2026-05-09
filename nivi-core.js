@@ -11,15 +11,15 @@ async function saveFileToMemory(filename, base64Data, mimeType) {
       console.warn('IndexedDB save failed, localStorage fallback:', e);
     }
   }
-  // localStorage ma update (Nivi context mate fast read)
-  let files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+  // localStorage ma update (Nivi context mate fast read) — project-aware key
+  const _fileKey = `nivi_file_memory_${projId}`;
+  let files = JSON.parse(localStorage.getItem(_fileKey) || '[]');
   const idx = files.findIndex(f => f.name === filename);
-  // 🛑 MAIN FIX: localStorage ma data 'null' pass karvano che (memory full na thay)
   const entry = { name: filename, ts: Date.now(), data: null, 
                   mimeType: mimeType || 'text/plain', projId };  
   if (idx >= 0) files[idx] = entry;
   else files.push(entry);
-  localStorage.setItem('nivi_file_memory', JSON.stringify(files));
+  localStorage.setItem(_fileKey, JSON.stringify(files));
   // Firebase cloud backup (project only)
   if (projId !== 'default' && typeof saveFileToCloudWorkspace === 'function') {
     saveFileToCloudWorkspace(projId, filename, mimeType, base64Data);
@@ -305,7 +305,7 @@ async function changeActiveProject(){
         console.log('IndexedDB empty for project, falling back to Firebase...');
         if (typeof syncWorkspaceFiles === 'function') await syncWorkspaceFiles(newProj);
         // Firebase files ne IndexedDB ma pan mirror karo
-        const fbFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+        const fbFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${newProj}`) || '[]');
         for (const f of fbFiles) {
           if (f.data) {
             try { await NiviDB.saveFile(newProj, f.name, f.mimeType, f.data); } catch(e) {}
@@ -357,10 +357,11 @@ function clearChat(){
     } else {
       // Default chat archive (existing logic)
       if(typeof archiveNiviChat === 'function') archiveNiviChat(history);
-      let a=JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
+      const _archKey = `nivi_chat_archives_default`;
+      let a=JSON.parse(localStorage.getItem(_archKey)||'[]');
       a.unshift({id:Date.now(), msgCount: history.length, chat: history, title: localStorage.getItem('nivi_current_title') || 'New Chat'});
       if(a.length > 20) a = a.slice(0,20);
-      localStorage.setItem('nivi_chat_archives', JSON.stringify(a));
+      localStorage.setItem(_archKey, JSON.stringify(a));
     }
   }
   if(window.AppState) AppState._tabChatHistory=[];
@@ -463,7 +464,9 @@ async function delMsg(id){
   }
 }
 function loadArchivedChat(id){
-  const archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
+  const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  const _archKey = `nivi_chat_archives_${_activeProj}`;
+  const archives = JSON.parse(localStorage.getItem(_archKey)||'[]');
   const archive = archives.find(a => String(a.id) === String(id));
   if(!archive) { console.log("Archive not found!"); return; }
   if(!archive.chat || archive.chat.length === 0) { alert("No data in this chat"); return; }
@@ -502,9 +505,11 @@ function deleteCurrentChat(){
 }
 function deleteArchivedChat(id){
   if(!confirm('Delete this archived chat?')) return;
-  let archives = JSON.parse(localStorage.getItem('nivi_chat_archives')||'[]');
+  const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  const _archKey = `nivi_chat_archives_${_activeProj}`;
+  let archives = JSON.parse(localStorage.getItem(_archKey)||'[]');
   archives = archives.filter(a => a.id !== id);
-  localStorage.setItem('nivi_chat_archives', JSON.stringify(archives));
+  localStorage.setItem(_archKey, JSON.stringify(archives));
   renderSidebarData();
 }
 // ── SIDEBAR DATA RENDERER ──
@@ -518,7 +523,8 @@ const _renderSidebarNow = function() {
     const clr = {gemini: 'var(--accent)', openrouter: 'var(--purple)', nvidia: 'var(--amber)', custom: 'var(--green)'};
     ml.innerHTML = models.map((m, i) => `<div class="si" title="${escapeHTML(m.provider)}: ${escapeHTML(m.model)}"><span style="color:${clr[m.provider] || 'var(--text-sub)'};font-size:9px;font-weight:700;flex-shrink:0;">${i+1}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(m.model || m.provider)}</span>${i === 0 ? '<span class="bdg" style="background:var(--accent-dim);color:var(--accent);">active</span>' : ''}</div>`).join('');
   }
-  const files = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+  const _fileProjId = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  const files = JSON.parse(localStorage.getItem(`nivi_file_memory_${_fileProjId}`) || '[]');
   const fl = document.getElementById('fileList');
   if (fl) {
     if (files.length) {
@@ -536,8 +542,10 @@ const _renderSidebarNow = function() {
   }
   const ch = document.getElementById('chatHistory');
   if (ch) {
+    const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+    const _archKey = `nivi_chat_archives_${_activeProj}`;
     const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
-    const archives = JSON.parse(localStorage.getItem('nivi_chat_archives') || '[]');
+    const archives = JSON.parse(localStorage.getItem(_archKey) || '[]');
     let html = '';
     if (history.length) {
       const curTitle = localStorage.getItem('nivi_current_title') || 'Current Session';
@@ -561,7 +569,8 @@ window.renderSidebarData = function() {
   _sidebarRenderTimer = setTimeout(_renderSidebarNow, 150);
 };
 function openSavedFile(name){
-  const files=JSON.parse(localStorage.getItem('nivi_file_memory')||'[]');
+  const _pId = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  const files=JSON.parse(localStorage.getItem(`nivi_file_memory_${_pId}`)||'[]');
   const f=files.find(x=>x.name===name);
   if(f?.data && typeof openArt === 'function') openArt({name:f.name,type:f.mimeType||'text/plain'},f.data);
   else alert('File data not found. Re-attach the file.');
@@ -690,10 +699,10 @@ async function handleSend(){
         try {
           memFiles = await NiviDB.getProjectFiles(_ctxProj);
         } catch(e) {
-          memFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+          memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
         }
       } else {
-        memFiles = JSON.parse(localStorage.getItem('nivi_file_memory') || '[]');
+        memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
       }
       let fileContext = '';
       // Always inject file context if files exist — not just first message
