@@ -826,3 +826,16 @@ window.saveSettings = function() {
   if(typeof updateActiveModelUI === 'function') updateActiveModelUI();
   if(typeof renderSidebarData === 'function') renderSidebarData();
 }
+// ── AUTO-SCROLL HELPER ──
+window.scrollToBottom = function() {
+  const chatWrap = document.querySelector('.chat-wrap');
+  if (chatWrap) {
+    // 100ms નો delay આપવો જેથી DOM માં કન્ટેન્ટ રેન્ડર થઈ જાય
+    setTimeout(() => {
+      chatWrap.scrollTo({
+        top: chatWrap.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
+  }
+};
