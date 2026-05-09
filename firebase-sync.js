@@ -420,10 +420,11 @@ const NiviDB = {
   },
 
   // ── Load project files into localStorage (Nivi context mate) ──
-  async syncToLocalMemory(projId) {
+async syncToLocalMemory(projId) {
     try {
       const files = await this.getProjectFiles(projId);
-      localStorage.setItem('nivi_file_memory', JSON.stringify(files));
+      // ✅ FIX: project-aware key use karo — sidebar same key read kare che
+      localStorage.setItem(`nivi_file_memory_${projId}`, JSON.stringify(files));
       if (typeof renderSidebarData === 'function') renderSidebarData();
       console.log(`✅ IndexedDB → LocalMemory synced: ${files.length} files for ${projId}`);
       return files;
