@@ -703,3 +703,156 @@ pre:hover .run-art-btn { opacity: 1; }
   .status-chip { max-width: 110px; overflow: hidden; }
   .ws-pill { max-width: 180px; }
 }
+
+/* ══════════════════════════════════════════════
+   NIVI PRO — Premium Glow & Animation Layer v1
+   Additive only — no existing class overrides
+══════════════════════════════════════════════ */
+
+/* ── 1. Send button — purple bloom on hover ── */
+.pbtn.send {
+  position: relative;
+  overflow: visible;
+  transition: background .18s, border-color .18s, box-shadow .18s, transform .15s;
+}
+.pbtn.send:hover {
+  box-shadow: 0 0 0 4px rgba(109,40,217,.18), 0 0 16px rgba(109,40,217,.22);
+  transform: scale(1.06);
+}
+.pbtn.send:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 0 2px rgba(109,40,217,.25);
+}
+
+/* ── 2. Input pill — premium focus ring ── */
+.input-pill {
+  transition: border-color .2s, box-shadow .25s;
+}
+.input-pill:focus-within {
+  border-color: rgba(109,40,217,.55) !important;
+  box-shadow:
+    0 0 0 3px rgba(109,40,217,.1),
+    0 0 20px rgba(109,40,217,.08),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+/* ── 3. Nivi avatar — subtle purple glow ── */
+.nav {
+  box-shadow: 0 0 0 2px rgba(109,40,217,.3), 0 0 12px rgba(109,40,217,.18);
+  transition: box-shadow .3s;
+}
+
+/* ── 4. Active sidebar item — left accent glow ── */
+.si.active {
+  box-shadow: inset 2px 0 0 var(--accent), 0 0 12px rgba(109,40,217,.08);
+}
+.si {
+  transition: background .15s, color .15s, border-color .15s, transform .15s, box-shadow .15s;
+}
+.si:hover {
+  transform: translateX(2px);
+}
+
+/* ── 5. New Chat button — subtle glow on hover ── */
+.new-btn {
+  transition: background .18s, border-color .18s, box-shadow .18s;
+}
+.new-btn:hover {
+  box-shadow: 0 0 0 3px rgba(109,40,217,.1), 0 4px 14px rgba(0,0,0,.25);
+}
+
+/* ── 6. Hero icon — soft pulse animation ── */
+@keyframes heroPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(109,40,217,.4), 0 0 20px rgba(109,40,217,.15); }
+  50%       { box-shadow: 0 0 0 8px rgba(109,40,217,.0), 0 0 32px rgba(109,40,217,.22); }
+}
+.hero-icon {
+  animation: heroPulse 3s ease-in-out infinite;
+}
+
+/* ── 7. Hero title — gradient text ── */
+.hero-title {
+  background: linear-gradient(120deg, #fff 20%, var(--accent-text) 55%, #fff 85%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── 8. Message animation — staggered smooth ── */
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(10px) scale(.99); }
+  to   { opacity: 1; transform: none; }
+}
+.msg-row { animation: msgIn .28s cubic-bezier(.22,1,.36,1) both; }
+.msg-row.ur { animation-delay: .04s; }
+
+/* ── 9. Thinking dots — purple glow pulse ── */
+.thinking span {
+  background: var(--accent-text);
+  box-shadow: 0 0 6px rgba(109,40,217,.5);
+}
+@keyframes think {
+  0%,100% { opacity:.25; transform:scale(.75); box-shadow:0 0 4px rgba(109,40,217,.3); }
+  50%     { opacity:1;   transform:scale(1.15); box-shadow:0 0 10px rgba(109,40,217,.6); }
+}
+
+/* ── 10. Hchip (suggestion chips) — hover lift + glow ── */
+.hchip {
+  transition: background .18s, border-color .18s, color .18s, transform .18s, box-shadow .18s;
+}
+.hchip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(109,40,217,.15);
+}
+
+/* ── 11. Art card — hover lift + border glow ── */
+.art-card {
+  transition: background .18s, border-color .2s, transform .18s, box-shadow .2s;
+}
+.art-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(109,40,217,.12);
+  border-color: rgba(109,40,217,.4);
+}
+
+/* ── 12. Toolbar buttons (tbtn) — active glow ── */
+.tbtn.prim {
+  transition: background .15s, box-shadow .15s;
+}
+.tbtn.prim:hover {
+  box-shadow: 0 0 10px rgba(109,40,217,.2);
+}
+
+/* ── 13. Modal open animation — smoother ── */
+@keyframes mIn {
+  from { opacity:0; transform:scale(.95) translateY(10px); }
+  to   { opacity:1; transform:none; }
+}
+
+/* ── 14. Status dot — green glow ── */
+.sdot {
+  box-shadow: 0 0 5px currentColor;
+}
+
+/* ── 15. User bubble — subtle border glow on appear ── */
+.ur .bubble {
+  transition: box-shadow .2s;
+}
+.msg-row.ur:last-child .bubble {
+  box-shadow: 0 0 0 1px rgba(109,40,217,.1), 0 2px 12px rgba(0,0,0,.2);
+}
+
+/* ── Mobile: disable heavy animations for performance ── */
+@media(max-width: 768px) {
+  .hero-icon { animation: none; }
+  .hero-title { animation: none; background: none; -webkit-text-fill-color: var(--text); }
+  .hchip:hover { transform: none; box-shadow: none; }
+  .art-card:hover { transform: none; }
+  .si:hover { transform: none; }
+}
