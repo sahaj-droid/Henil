@@ -1,7 +1,7 @@
 // ── INDEXEDDB ──
 async function saveFileToMemory(filename, base64Data, mimeType) {
-  const projId = window._activeProjectId || 
-                 document.getElementById('activeProjectSelect')?.value || 'default';
+const projId = document.getElementById('activeProjectSelect')?.value || 
+               window._activeProjectId || 'default';
   // IndexedDB ma save (primary - WITH full base64 data)
   if (window.NiviDB) {
     try {
