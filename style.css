@@ -347,7 +347,12 @@ html, body {
 .bubble { font-size: 15px; line-height: 1.75; font-family: var(--sans); white-space: pre-wrap; word-wrap: normal; overflow-wrap: anywhere; display: inline-block; min-width: fit-content;}
 
 /* User Bubble */
-.ur .bubble { background: linear-gradient(135deg, #1e1e26 0%, rgba(109,40,217,0.06) 100%); border: 1px solid rgba(255,255,255,0.06); padding: 12px 18px; border-radius: 16px 16px 4px 16px; color: var(--text); max-width: 85%; width: -moz-fit-content;  width: fit-content; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: box-shadow 0.2s, border-color 0.2s;}
+.ur .bubble { background: linear-gradient(135deg, #1e1e26 0%, rgba(109,40,217,0.06) 100%); border: 1px solid rgba(255,255,255,0.06); padding: 12px 18px; border-radius: 16px 16px 4px 16px; color: var(--text); max-width: 85%; width: -moz-fit-content; width: fit-content; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: box-shadow 0.2s, border-color 0.2s;}
+/* ✅ FIX: Long user bubble collapse */
+.ur .bubble.collapsed { max-height: 120px; overflow: hidden; position: relative; cursor: pointer; }
+.ur .bubble.collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(transparent, #1e1e26); border-radius: 0 0 16px 4px; pointer-events: none; }
+.bubble-expand-btn { font-size: 11px; color: var(--accent); cursor: pointer; margin-top: 4px; text-align: right; opacity: 0.8; user-select: none; }
+.bubble-expand-btn:hover { opacity: 1; }
 .ur .bubble:hover {box-shadow: 0 6px 16px rgba(109,40,217,0.08); border-color: rgba(109,40,217,0.2);}
 
 /* AI Bubble */
