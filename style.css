@@ -326,9 +326,8 @@ html, body {
 }
 
 /* ══════════════════════════════
-   MESSAGES & BUBBLES (PREMIUM v4.0)
+   MESSAGES & BUBBLES (UPDATED)
 ══════════════════════════════ */
-/* Staggered Smooth Entry */
 @keyframes msgIn {
   from { opacity: 0; transform: translateY(12px) scale(0.98); }
   to   { opacity: 1; transform: none; }
@@ -337,7 +336,6 @@ html, body {
 .msg-row.ur { justify-content: flex-end; }
 .msg-row.nr { justify-content: flex-start; gap: 14px; }
 
-/* AI Avatar Glow */
 .avatar { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-top: 2px; }
 .nav { 
   background: linear-gradient(135deg, var(--accent), #8b5cf6); 
@@ -345,23 +343,12 @@ html, body {
   color: #fff;
 }
 
-.bubble { font-size: 15px; line-height: 1.75; font-family: var(--sans); word-break: break-word; overflow-wrap: anywhere; }
+/* --- SUDHARELU BUBBLE CSS --- */
+.bubble { font-size: 15px; line-height: 1.75; font-family: var(--sans); white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; display: inline-block; }
 
-/* User Bubble - Premium Dark Purple Tint */
-.ur .bubble { 
-  background: linear-gradient(135deg, #1e1e26 0%, rgba(109,40,217,0.06) 100%);
-  border: 1px solid rgba(255,255,255,0.06); 
-  padding: 12px 18px; 
-  border-radius: 16px 16px 4px 16px; 
-  color: var(--text); 
-  max-width: 85%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: box-shadow 0.2s, border-color 0.2s;
-}
-.ur .bubble:hover {
-  box-shadow: 0 6px 16px rgba(109,40,217,0.08);
-  border-color: rgba(109,40,217,0.2);
-}
+/* User Bubble */
+.ur .bubble { background: linear-gradient(135deg, #1e1e26 0%, rgba(109,40,217,0.06) 100%); border: 1px solid rgba(255,255,255,0.06); padding: 12px 18px; border-radius: 16px 16px 4px 16px; color: var(--text); max-width: 85%; width: fit-content; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: box-shadow 0.2s, border-color 0.2s;}
+.ur .bubble:hover {box-shadow: 0 6px 16px rgba(109,40,217,0.08); border-color: rgba(109,40,217,0.2);}
 
 /* AI Bubble */
 .nr .bubble { padding: 4px 0; color: var(--text); flex: 1; max-width: 100%; }
@@ -369,13 +356,7 @@ html, body {
 .nr .bubble p:last-child { margin-bottom: 0; }
 
 /* Clean Code Blocks */
-pre { 
-  background: #09090b !important; 
-  border: 1px solid rgba(255,255,255,0.08) !important; 
-  border-radius: 12px !important; 
-  padding: 14px; margin: 12px 0; 
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);
-}
+pre { background: #09090b !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 12px !important; padding: 14px; margin: 12px 0; box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);}
 code { font-family: var(--mono); font-size: 13px; }
 .tbdg { font-family: var(--mono); font-size: 10px; background: rgba(255,255,255,0.04); color: var(--text-sub); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); margin-top: 8px; display: inline-block; }
 
@@ -738,14 +719,16 @@ pre:hover .run-art-btn { opacity: 1; }
     padding: 0 12px 18px;
     padding-bottom: max(18px, env(safe-area-inset-bottom, 18px));
   }
-
-  #heroSection { min-height: calc(100vh - 218px); padding: 22px 12px 20px; gap: 12px; }
+  .ur .bubble { 
+    max-width: 90%; 
+    padding: 8px 14px; 
+    width: fit-content;
+  }
+   #heroSection { min-height: calc(100vh - 218px); padding: 22px 12px 20px; gap: 12px; }
   .hero-title { font-size: 28px; }
   .hero-sub { font-size: 13px; }
   .hero-chips { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 360px; }
   .hchip { justify-content: center; text-align: center; min-width: 0; }
-
-  .ur .bubble { max-width: 88%; }
 
   .mob-overlay { display: none; position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
   .mob-overlay.open { display: block; }
