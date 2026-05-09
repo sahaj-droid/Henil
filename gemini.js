@@ -108,7 +108,7 @@ async function _openaiCall(cfg, messages, onChunk) {
         try {
           const data = JSON.parse(line.replace('data: ', ''));
           const delta = data.choices?.[0]?.delta?.content || '';
-          if (delta) { fullText += delta; _emitChunk(onChunk, fullText); }
+          if (delta) { fullText += delta; _emitChunk(onChunk, fullText); window.scrollToBottom(); }
         } catch(e) {}
       }
     }
