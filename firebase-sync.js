@@ -28,6 +28,11 @@ async function saveNiviChat(chatHistory) {
       return;
     }
 
+    // Save to IndexedDB first
+    if (window.NiviDB) {
+      try { await NiviDB.saveChat('default', validChat); } catch(e) { console.warn('IDB chat save failed', e); }
+    }
+
     await db.collection('users').doc(userId)
             .collection('niviChats').doc(chatId).set({
       messages: validChat,
@@ -49,10 +54,23 @@ async function loadNiviChat() {
   try {
     const chatId = localStorage.getItem('nivi_current_session_id');
     if (!chatId) return null; // koi session nahi — hero show thase
+
+    // Try IndexedDB first
+    if (window.NiviDB) {
+      const localChat = await NiviDB.getChat('default');
+      if (localChat && localChat.length > 0) {
+        return localChat;
+      }
+    }
+
     const doc = await db.collection('users').doc(userId)
                         .collection('niviChats').doc(chatId).get();
     if (doc.exists && doc.data().messages) {
-      return doc.data().messages;
+      const msgs = doc.data().messages;
+      if (window.NiviDB && msgs && msgs.length > 0) {
+        await NiviDB.saveChat('default', msgs); // sync back
+      }
+      return msgs;
     }
   } catch(e) {
     console.error('loadNiviChat error:', e);
@@ -172,7 +190,7 @@ async function saveFileToCloudWorkspace(projId, fileName, mimeType, base64Data) 
     await db.collection('users').doc(userId)
             .collection('workspaces').doc(projId)
             .collection('files').doc(fileId).set({
-      name: fileName, mimeType, data: base64Data,
+      name: fileName, mimeType,
       uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     _updateSyncUI('connected');
@@ -263,6 +281,12 @@ async function saveProjectChat(projId, chatHistory) {
   const sessionId = _getProjectSessionId(projId);
   try {
     _updateSyncUI('syncing');
+    
+    // Save to IndexedDB first
+    if (window.NiviDB) {
+      try { await NiviDB.saveChat(projId, chatHistory); } catch(e) { console.warn('IDB chat save failed', e); }
+    }
+
     await db.collection('projectChats').doc(projId)
             .collection('sessions').doc(sessionId).set({
       userId,
@@ -284,11 +308,22 @@ async function loadProjectChat(projId) {
   const userId = _getNiviUserId();
   const sessionId = _getProjectSessionId(projId);
   try {
+    // Try IndexedDB first
+    if (window.NiviDB) {
+      const localChat = await NiviDB.getChat(projId);
+      if (localChat && localChat.length > 0) {
+        console.log('✅ Project chat loaded from IDB:', projId);
+        return localChat;
+      }
+    }
+
     const doc = await db.collection('projectChats').doc(projId)
                         .collection('sessions').doc(sessionId).get();
     if (doc.exists && doc.data().messages && doc.data().messages.length > 0) {
-      console.log('✅ Project chat loaded:', projId);
-      return doc.data().messages;
+      console.log('✅ Project chat loaded from Firebase:', projId);
+      const msgs = doc.data().messages;
+      if (window.NiviDB) await NiviDB.saveChat(projId, msgs); // sync back
+      return msgs;
     }
   } catch(e) {
     console.error('loadProjectChat error:', e);
@@ -354,8 +389,9 @@ console.log('Project Chat Module v2.1 loaded');
 const NiviDB = {
   _db: null,
   DB_NAME: 'NiviProDB',
-  DB_VERSION: 1,
+  DB_VERSION: 2,
   STORE_FILES: 'projectFiles',
+  STORE_CHATS: 'projectChats',
 
   // ── Open / Init DB ──
   async open() {
@@ -367,6 +403,9 @@ const NiviDB = {
         if (!db.objectStoreNames.contains(this.STORE_FILES)) {
           const store = db.createObjectStore(this.STORE_FILES, { keyPath: 'id' });
           store.createIndex('byProject', 'projId', { unique: false });
+        }
+        if (!db.objectStoreNames.contains(this.STORE_CHATS)) {
+          db.createObjectStore(this.STORE_CHATS, { keyPath: 'projId' });
         }
       };
       req.onsuccess = (e) => { this._db = e.target.result; resolve(this._db); };
@@ -432,6 +471,32 @@ async syncToLocalMemory(projId) {
       console.error('syncToLocalMemory error:', e);
       return [];
     }
+  },
+
+  // ── Save chat to IndexedDB ──
+  async saveChat(projId, messages) {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(this.STORE_CHATS, 'readwrite');
+      tx.objectStore(this.STORE_CHATS).put({
+        projId,
+        messages,
+        savedAt: Date.now()
+      });
+      tx.oncomplete = () => resolve(true);
+      tx.onerror    = (e) => reject(e.target.error);
+    });
+  },
+
+  // ── Load chat from IndexedDB ──
+  async getChat(projId) {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(this.STORE_CHATS, 'readonly');
+      const req = tx.objectStore(this.STORE_CHATS).get(projId);
+      req.onsuccess = () => resolve(req.result ? req.result.messages : null);
+      req.onerror   = (e) => reject(e.target.error);
+    });
   }
 };
 

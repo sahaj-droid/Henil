@@ -174,8 +174,8 @@ renderSidebarData();
   // 2. CHAT RESTORE
   if (_initProj !== 'default') {
       try {
-          let projChat = loadProjectChatLocal(_initProj);
-          // Firebase fallback bandh — localStorage j master chhe
+          // Use IDB/Firebase load wrapper instead of LocalStorage only
+          let projChat = typeof loadProjectChat === 'function' ? await loadProjectChat(_initProj) : loadProjectChatLocal(_initProj);
           if (projChat && projChat.length > 0) {
               if(window.AppState) AppState._tabChatHistory = projChat;
               localStorage.setItem('niviTabChat', JSON.stringify(projChat));
@@ -185,15 +185,15 @@ renderSidebarData();
   } else {
       // Default Nivi Chat Restore
       try {
-// LocalStorage ONLY — Firebase auto-load bandh (cold storage)
-          const localHistory = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+          // Use IDB/Firebase load wrapper instead of LocalStorage only
+          let localHistory = typeof loadNiviChat === 'function' ? await loadNiviChat() : JSON.parse(localStorage.getItem('niviTabChat') || '[]');
           if (localHistory && localHistory.length > 0) {
               if(window.AppState) AppState._tabChatHistory = localHistory;
+              localStorage.setItem('niviTabChat', JSON.stringify(localHistory));
               localHistory.forEach(msg => appendMsg(msg.role, msg.text));
-              console.log('✅ Chat restored from localStorage');
+              console.log('✅ Chat restored from IDB/Firebase');
           } else {
               if(window.AppState) AppState._tabChatHistory = [];
-              // Hero section visible raheshe automatically
           }
       } catch(e){
           console.warn('Chat init failed, fallback:', e);
@@ -321,20 +321,32 @@ async function changeActiveProject(){
   }
 
   // Step 5: Load project chat
-if (newProj !== 'default') {
+  if (newProj !== 'default') {
     try {
-      // LocalStorage ONLY — Firebase auto-load bandh
-      const projChat = loadProjectChatLocal(newProj);
+      // Try IDB/Firebase via loadProjectChat
+      const projChat = typeof loadProjectChat === 'function' ? await loadProjectChat(newProj) : loadProjectChatLocal(newProj);
       if (projChat && projChat.length > 0) {
-        AppState._tabChatHistory = projChat;
+        if(window.AppState) AppState._tabChatHistory = projChat;
+        localStorage.setItem('niviTabChat', JSON.stringify(projChat));
         projChat.forEach(msg => appendMsg(msg.role, msg.text));
-        console.log('✅ Project chat restored from local:', newProj);
+        console.log('✅ Project chat restored:', newProj);
       }
     } catch(e) {
       console.warn('Project chat load failed:', e);
     }
+  } else {
+    try {
+      const defChat = typeof loadNiviChat === 'function' ? await loadNiviChat() : JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+      if (defChat && defChat.length > 0) {
+        if(window.AppState) AppState._tabChatHistory = defChat;
+        localStorage.setItem('niviTabChat', JSON.stringify(defChat));
+        defChat.forEach(msg => appendMsg(msg.role, msg.text));
+        console.log('✅ Default chat restored');
+      }
+    } catch(e) {
+      console.warn('Default chat load failed:', e);
+    }
   }
-  // Default project: localStorage already loaded on init — no action needed
 }
 function createNewProject(){
   const n=document.getElementById('newProjectName').value.trim();if(!n)return;
@@ -704,6 +716,17 @@ async function handleSend(){
       if(text.toLowerCase().startsWith('/song ')){
         apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
       }
+
+      // Add SYSTEM DIRECTIVE
+      const niviDirective = `
+SYSTEM DIRECTIVE: You are Nivi AI. NEVER guess code replacements. You must always provide targeted, exact code replacements in this EXACT format:
+Line Number: [Exact or approximate line]
+File Name: [Exact file name]
+Existing Content / Block: [The exact old code]
+Proposed Content / Block: [The new fixed code]
+`;
+      apiText = niviDirective + "\n\n" + apiText;
+
       // ✅ FIX: History trim karo — max 20 messages, ane Nivi responses ma thi
       // file context block (---[Files in Nivi Memory]--- wala) strip karo
       // jethi context loop na thay ane same answer repeat na thay
