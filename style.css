@@ -391,45 +391,66 @@ code { font-family: var(--mono); font-size: 12px; }
 @keyframes think { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.1)} }
 
 /* ══════════════════════════════
-   INPUT ZONE
+   INPUT ZONE (PREMIUM v4.0)
 ══════════════════════════════ */
 .input-zone {
   position: absolute; bottom: 0; left: 0; right: 0;
-  padding: 0 20px 20px;
-  background: linear-gradient(transparent, rgba(9,9,11,.95) 28%, var(--bg) 70%);
+  padding: 0 20px 22px;
+  /* Smooth Glassmorphism fade to background */
+  background: linear-gradient(to top, var(--bg) 50%, rgba(9,9,11,0.85) 80%, transparent 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 50;
 }
 .input-wrap { max-width: 840px; margin: 0 auto; }
 
-.file-prev {
-  display: none; margin-bottom: 7px;
-  padding: 5px 11px; border-radius: 8px;
-  background: var(--accent-dim); border: 1px solid var(--border-a);
-  color: var(--accent-text); font-family: var(--mono); font-size: 11px;
-  align-items: center; gap: 7px;
-}
-.file-prev.show { display: flex; }
-
+/* ── The Pill ── */
 .input-pill {
-  background: var(--bg-input);
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.1);
-  padding: 10px 12px;
-  display: flex; align-items: flex-end; gap: 8px;
-  transition: border-color .2s, box-shadow .2s;
-  min-height: 56px;
+  background: rgba(20, 20, 24, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.03);
+  padding: 10px 14px;
+  display: flex; align-items: flex-end; gap: 12px;
+  transition: border-color .25s, box-shadow .25s, transform .25s, background .25s;
+  min-height: 60px;
 }
-.input-pill:focus-within {
-  border-color: rgba(109,40,217,.45);
-  box-shadow: 0 0 0 3px rgba(109,40,217,.08);
-}
-.input-pill textarea {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: var(--text); font-family: var(--sans); font-size: 15px;
-  resize: none; max-height: 170px; overflow-y: auto;
-  padding: 5px 2px; line-height: 1.55;
-}
-.input-pill textarea::placeholder { color: var(--text-muted); }
 
+/* Premium Focus Lift & Glow */
+.input-pill:focus-within {
+  background: rgba(24, 24, 28, 0.9);
+  border-color: rgba(109,40,217,.55) !important;
+  box-shadow: 
+    0 0 0 3px rgba(109,40,217,.12), 
+    0 12px 40px rgba(0,0,0,.4), 
+    inset 0 1px 0 rgba(255,255,255,.05) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Content Column (Files + Text) ── */
+.input-content-col {
+  flex: 1; /* આનાથી ટેક્સ્ટ એરિયા અને ફાઈલો આખી પહોળાઈ કવર કરશે */
+  display: flex; flex-direction: column; gap: 4px;
+  justify-content: center; min-height: 38px;
+}
+
+.input-pill textarea {
+  width: 100%; background: transparent; border: none; outline: none;
+  color: var(--text); font-family: var(--sans); font-size: 15px;
+  resize: none; max-height: 180px; overflow-y: auto;
+  padding: 8px 0; line-height: 1.6;
+  transition: height 0.1s ease-out;
+}
+.input-pill textarea::placeholder { color: var(--text-muted); font-weight: 400; }
+
+/* ── Action Buttons Container ── */
+.input-actions-right {
+  display: flex; align-items: center; gap: 6px; padding-bottom: 2px;
+}
+
+/* ── Buttons ── */
 .pbtn {
   width: 34px; height: 34px; min-width: 34px; min-height: 34px;
   border-radius: 8px; flex-shrink: 0;
@@ -444,14 +465,49 @@ code { font-family: var(--mono); font-size: 12px; }
 .pbtn.send:hover { background: var(--accent-lt); border-color: var(--accent-lt); }
 .pbtn.stop { display: none; color: var(--red); border-color: rgba(248,113,113,.25); background: var(--red-dim); }
 
-.inp-foot {
-  display: flex; align-items: center;
-  margin-top: 6px;
-  font-family: var(--mono); font-size: 10px;
-  color: var(--text-muted); gap: 10px;
-  justify-content: center;
+/* ── Integrated File Chips ── */
+.file-prev {
+  display: none; flex-wrap: wrap; gap: 6px; padding-top: 4px;
+}
+.file-prev.show { display: flex; }
+
+.file-chip {
+  background: var(--accent-dim);
+  border: 1px solid var(--border-a);
+  color: var(--accent-text);
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  padding: 4px 10px; border-radius: 8px;
+  display: inline-flex; align-items: center; gap: 6px;
+  animation: chipIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.file-chip svg { opacity: 0.7; }
+.file-chip-close {
+  cursor: pointer; opacity: 0.5; font-size: 14px; 
+  line-height: 1; padding-left: 2px; transition: opacity 0.15s, color 0.15s;
+}
+.file-chip-close:hover { opacity: 1; color: #fff; }
+
+@keyframes chipIn {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to { opacity: 1; transform: none; }
 }
 
+/* ── Premium Footer ── */
+.inp-foot {
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 12px; font-family: var(--sans); font-size: 11px;
+  color: var(--text-muted); gap: 16px;
+  opacity: 0.6; transition: opacity 0.25s;
+}
+.input-zone:hover .inp-foot { opacity: 1; }
+
+.inp-foot kbd {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 2px 6px; border-radius: 4px;
+  font-family: var(--mono); color: var(--text-sub);
+  font-size: 10px; box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+}
 /* ══════════════════════════════
    ARTIFACT PANEL (DESKTOP)
 ══════════════════════════════ */
