@@ -236,8 +236,6 @@ async function artAction(action) {
   } else if(action === 'optimize') {
     apiPrompt = `Please optimize this ${lang} code.\n<nivi-hidden>\nPlease optimize this code for better performance and readability:\n\n\`\`\`${lang}\n${code}\n\`\`\`\n</nivi-hidden>`;
   }
-  closeArt();
-  closeSheet();
 
   appendMsg('user', apiPrompt);
   if(window.AppState) {
