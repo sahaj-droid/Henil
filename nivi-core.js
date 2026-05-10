@@ -244,21 +244,30 @@ function openProjectModal(){document.getElementById('projectModal').classList.ad
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function updateActiveModelUI(respondingModel) {
     let models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
-    const label = document.getElementById('modelLabel');
+    const sel = document.getElementById('modelSwitcher');
     const dot = document.getElementById('modelDot');
-    if (!label) return;
-
-    const activeModel = respondingModel || (models.length > 0 ? (models[0].model || models[0].provider) : null);
-
-    if (activeModel) {
-        // Short display name — strip redundant prefix
-        const shortName = activeModel.replace('gemini-', 'gemini ').replace('-preview','').replace('-lite',' lite');
-        label.textContent = shortName;
-        if (dot) dot.style.background = respondingModel ? '#1D9E75' : 'var(--text-muted)';
-    } else {
-        label.textContent = 'No model';
+    if (!sel) return;
+    // Dropdown populate karo (always fresh)
+    sel.innerHTML = '';
+    if (!models.length) {
+        sel.innerHTML = '<option value="">No model</option>';
         if (dot) dot.style.background = 'var(--text-muted)';
+        return;
     }
+    models.forEach((m, i) => {
+        const val = m.model || m.provider || '';
+        const shortName = val.replace('gemini-', 'gemini ').replace('-preview','').replace('-lite',' lite');
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = (i === 0 ? '● ' : '○ ') + shortName;
+        sel.appendChild(opt);
+    });
+    // Active model set karo
+    const activeIdx = respondingModel
+        ? models.findIndex(m => (m.model || m.provider) === respondingModel)
+        : 0;
+    sel.value = String(Math.max(0, activeIdx));
+    if (dot) dot.style.background = respondingModel ? '#1D9E75' : 'var(--accent)';
 }
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
 
@@ -886,7 +895,21 @@ window.addModelRow = function(config = { model: '', key: '', url: '' }) {
   `;
   c.appendChild(row);
 }
-
+window.switchActiveModel = function(idx) {
+    let chain = [];
+    try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+    const i = parseInt(idx);
+    if (isNaN(i) || i < 0 || i >= chain.length || i === 0) return;
+    // Selected model ne top par muko
+    const selected = chain.splice(i, 1)[0];
+    chain.unshift(selected);
+    localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
+    updateActiveModelUI();
+    renderSidebarData();
+    // Settings modal open hoy to re-render karo
+    const sm = document.getElementById('settingsModal');
+    if (sm && sm.classList.contains('open')) openSettings();
+}
 window.saveSettings = function() {
   const rows = document.querySelectorAll('.mrow');
   const chain = [];
