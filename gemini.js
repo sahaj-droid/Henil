@@ -130,7 +130,7 @@ async function _geminiStreamCall(cfg, history, prompt, onChunk) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [...history, { role: 'user', parts: [{ text: prompt }] }]
-      tools: [{ googleSearch: {} }]
+      // અહીથી આપણે tools કાઢી નાખ્યું છે.  tools: [{ googleSearch: {} }]
     })
   });
 
