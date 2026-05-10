@@ -138,7 +138,7 @@ window.onload = async () => {
     try {
       const idbFiles = await NiviDB.getProjectFiles(_initProj);
       if (idbFiles && idbFiles.length > 0) {
-        localStorage.setItem('nivi_file_memory', JSON.stringify(idbFiles));
+        localStorage.setItem(`nivi_file_memory_${_initProj}`, JSON.stringify(idbFiles));
         console.log(`✅ Files restored from IndexedDB on load: ${idbFiles.length}`);
       } else {
         if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
@@ -717,29 +717,23 @@ async function handleSend(){
         apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
       }
 
-      // Add SYSTEM DIRECTIVE
-      const niviDirective = `
-SYSTEM DIRECTIVE: You are Nivi AI. NEVER guess code replacements. You must always provide targeted, exact code replacements in this EXACT format:
-Line Number: [Exact or approximate line]
-File Name: [Exact file name]
-Existing Content / Block: [The exact old code]
-Proposed Content / Block: [The new fixed code]
-`;
-      apiText = niviDirective + "\n\n" + apiText;
-
-      // ✅ FIX: History trim karo — max 20 messages, ane Nivi responses ma thi
-      // file context block (---[Files in Nivi Memory]--- wala) strip karo
-      // jethi context loop na thay ane same answer repeat na thay
-      const _rawHist = window.AppState ? AppState._tabChatHistory.slice(0, -1) : [];
-      const _trimHist = _rawHist.slice(-20); // max 20 messages (10 pairs)
-      const hist = _trimHist.map(m => {
-        let msgText = m.text;
-        // Nivi responses ma injected file context remove karo
-        if (m.role === 'nivi') {
-          msgText = msgText.replace(/\n\n---\n(?:\[Project:[^\]]+\] )?\[Files in Nivi Memory\][\s\S]*$/m, '').trim();
+      // directive ne hist na shuruat ma system message tarke mukho:
+        const _rawHist = window.AppState ? AppState._tabChatHistory.slice(0, -1) : [];
+        const _trimHist = _rawHist.slice(-20);
+        const hist = _trimHist.map(m => {
+          let msgText = m.text;
+          if (m.role === 'nivi') {
+            msgText = msgText.replace(/\n\n---\n(?:\[Project:[^\]]+\] )?\[Files in Nivi Memory\][\s\S]*$/m, '').trim();
+          }
+          return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: msgText }] };
+        });
+        // Directive faqt history khali hoy tyare (navi chat) inject karo
+        const niviDirective = `SYSTEM DIRECTIVE: You are Nivi AI. NEVER guess code replacements. Always provide targeted, exact code replacements with: Line Number, File Name, Existing Content/Block, Proposed Content/Block.`;
+        if (hist.length === 0) {
+          hist.unshift({ role: 'user', parts: [{ text: niviDirective }] });
+          hist.push({ role: 'model', parts: [{ text: 'Understood. I am Nivi AI. I will always provide exact, targeted code replacements with line numbers and file names.' }] });
         }
-        return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: msgText }] };
-      });
+
       // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
       const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
