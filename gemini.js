@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-//  NIVI PRO — Universal AI Engine v2.0
+//  NIVI PRO — Universal AI Engine v2.0 (HYBRID SEARCH ENABLED)
 //  Providers: Gemini | OpenRouter | Nvidia (+ any OpenAI-compatible)
 //  Config: localStorage only — no code change needed
 // ═══════════════════════════════════════════════════════════
@@ -108,7 +108,7 @@ async function _openaiCall(cfg, messages, onChunk) {
         try {
           const data = JSON.parse(line.replace('data: ', ''));
           const delta = data.choices?.[0]?.delta?.content || '';
-          if (delta) { fullText += delta; _emitChunk(onChunk, fullText); window.scrollToBottom(); }
+          if (delta) { fullText += delta; _emitChunk(onChunk, fullText); window.scrollToBottom?.(); }
         } catch(e) {}
       }
     }
@@ -121,39 +121,134 @@ async function _openaiCall(cfg, messages, onChunk) {
   throw new Error('No choices in response');
 }
 
-// ── Gemini streaming call ──
-async function _geminiStreamCall(cfg, history, prompt, onChunk) {
+// ═══════════════════════════════════════════════════════════
+//  HYBRID SEARCH ENGINES (DuckDuckGo + Google Custom Search)
+// ═══════════════════════════════════════════════════════════
+
+async function executeDuckDuckGoSearch(query) {
+  try {
+    const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
+    const data = await res.json();
+    if (data.AbstractText) return data.AbstractText;
+    if (data.RelatedTopics && data.RelatedTopics.length > 0) return data.RelatedTopics.slice(0, 3).map(t => t.Text).join('\n');
+    return "No general results found.";
+  } catch (e) { return "General search failed."; }
+}
+
+async function executeGooglePremiumSearch(query, needsImage) {
+  try {
+    // ⚠️ અહી તમારી નવી બનાવેલી Google API Key નાખો 
+    const GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY"; 
+    
+    // તમારો અસલી CX સેટ કરેલો છે
+    const GOOGLE_CX = "506ee5024b0e14108"; 
+    
+    let url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&num=3`;
+    if (needsImage) url += `&searchType=image`;
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (data.items && data.items.length > 0) {
+      if (needsImage) {
+          return data.items.map(item => `![${item.title}](${item.link})`).join('\n\n');
+      } else {
+          return data.items.map(item => `Title: ${item.title}\nInfo: ${item.snippet}`).join('\n\n');
+      }
+    }
+    return "No premium data found on allowed sites.";
+  } catch (e) { return "Premium search failed."; }
+}
+
+// ── Gemini Tool Definitions ──
+const niviSearchTools = [{
+  functionDeclarations: [
+    {
+      name: "search_general_web",
+      description: "Use this for general knowledge, world news, weather, or universal facts.",
+      parameters: { type: "OBJECT", properties: { query: { type: "STRING" } }, required: ["query"] }
+    },
+    {
+      name: "search_premium_data",
+      description: "Use this specifically for Stock Market (NSE/BSE), Cricket live scores, Coding resources, or when the user explicitly asks for an IMAGE.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          query: { type: "STRING" },
+          needs_image: { type: "BOOLEAN", description: "Set to true if the user asked for an image/photo" }
+        },
+        required: ["query", "needs_image"]
+      }
+    }
+  ]
+}];
+
+// ── Recursive Gemini stream handler (handles tool calls) ──
+async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${cfg.key}`;
   const response = await fetch(url, {
     method: 'POST',
     signal: window.AppState?._abortController?.signal,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [...history, { role: 'user', parts: [{ text: prompt }] }]
-      // અહીથી આપણે tools કાઢી નાખ્યું છે.  tools: [{ googleSearch: {} }]
-    })
+    body: JSON.stringify({ contents: contents, tools: niviSearchTools })
   });
 
   if (!response.ok) throw new Error(`Gemini ${response.status}`);
   const reader = response.body.getReader();
-  let fullText = '';
+  
+  let fullText = existingText;
+  let funcCall = null;
+
   while (true) {
     if (window.AppState?._abortController?.signal.aborted) break;
     const { value, done } = await reader.read();
     if (done) break;
     const chunk = new TextDecoder().decode(value);
     const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+    
     for (const line of lines) {
       try {
         const data = JSON.parse(line.replace('data: ', ''));
-        if (data.candidates?.[0]?.content) {
-          fullText += data.candidates[0].content.parts[0].text;
-          _emitChunk(onChunk, fullText);
+        if (data.candidates?.[0]?.content?.parts) {
+          const part = data.candidates[0].content.parts[0];
+          if (part.text) {
+            fullText += part.text;
+            _emitChunk(onChunk, fullText);
+          } else if (part.functionCall) {
+            funcCall = part.functionCall;
+          }
         }
       } catch(e) {}
     }
   }
+
+  // જો ટૂલ કોલ પકડાયો હોય તો સર્ચ કરો
+  if (funcCall) {
+    let searchResults = "";
+    if (funcCall.name === 'search_general_web') {
+      _emitChunk(onChunk, fullText + `\n<span style="color:var(--amber);font-size:11px;">🔍 Searching web for: "${funcCall.args.query}"...</span>\n\n`);
+      searchResults = await executeDuckDuckGoSearch(funcCall.args.query);
+    } else if (funcCall.name === 'search_premium_data') {
+      _emitChunk(onChunk, fullText + `\n<span style="color:var(--green);font-size:11px;">📊 Fetching premium data for: "${funcCall.args.query}"...</span>\n\n`);
+      searchResults = await executeGooglePremiumSearch(funcCall.args.query, funcCall.args.needs_image);
+    }
+
+    // બીજો કોલ મારો (ડેટા સાથે)
+    const followUpContents = [
+      ...contents,
+      { role: 'model', parts: [{ functionCall: funcCall }] },
+      { role: 'function', parts: [{ functionResponse: { name: funcCall.name, response: { result: searchResults } } }] }
+    ];
+    return await _runGeminiStreamSequence(cfg, followUpContents, onChunk, fullText);
+  }
+
   return { ok: true, text: fullText };
+}
+
+// ── Gemini streaming call ──
+async function _geminiStreamCall(cfg, history, prompt, onChunk) {
+  const contents = [...history, { role: 'user', parts: [{ text: prompt }] }];
+  return await _runGeminiStreamSequence(cfg, contents, onChunk, '');
 }
 
 // ── Gemini file call ──
@@ -260,4 +355,4 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
 
   return { ok: false, answer: 'File analysis failed. Ensure Gemini is configured with a valid API key.' };
 };
-console.log('Nivi AI Engine v2.0 loaded - Universal provider support');
+console.log('Nivi AI Engine v2.0 loaded - Hybrid Search Active 🚀');
