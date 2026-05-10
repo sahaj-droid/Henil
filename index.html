@@ -121,6 +121,10 @@
             </div>
 
             <div class="input-actions-right">
+              <button id="modelPickerBtn" onclick="cycleModel()" title="Switch model" style="display:flex;align-items:center;gap:5px;height:34px;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#ccc;font-family:var(--mono);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">
+                <span id="modelPickerLabel">No model</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
               <button id="stopBtn" class="pbtn stop" onclick="stopGeneration()">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
               </button>
@@ -134,7 +138,6 @@
             <span><kbd>↵</kbd> Send</span>
             <span><kbd>⇧</kbd> + <kbd>↵</kbd> New line</span>
             <span>Type <kbd>/</kbd> for commands</span>
-            <div id="activeModelDisplay" style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;"></div>
             </div>
           </div>
         </div>
