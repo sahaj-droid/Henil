@@ -138,8 +138,7 @@ async function executeDuckDuckGoSearch(query) {
 async function executeGooglePremiumSearch(query, needsImage) {
   try {
     // ⚠️ અહી તમારી નવી બનાવેલી Google API Key નાખો 
-    const GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY"; 
-    
+    const GOOGLE_API_KEY = "AIzaSyDMmyzs98iXR0zw6itjZbOxdHDkuCc2FSU"; 
     // તમારો અસલી CX સેટ કરેલો છે
     const GOOGLE_CX = "506ee5024b0e14108"; 
     
