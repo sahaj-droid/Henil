@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-//  NIVI PRO — Universal AI Engine v2.0 (HYBRID SEARCH ENABLED)
+//  NIVI PRO — Universal AI Engine v2.0 (DUCKDUCKGO SEARCH ENABLED)
 //  Providers: Gemini | OpenRouter | Nvidia (+ any OpenAI-compatible)
 //  Config: localStorage only — no code change needed
 // ═══════════════════════════════════════════════════════════
@@ -109,7 +109,7 @@ async function _openaiCall(cfg, messages, onChunk) {
   throw new Error('No choices in response');
 }
 
-// ── Search Engines ──
+// ── Search Engine (DuckDuckGo ONLY) ──
 async function executeDuckDuckGoSearch(query) {
   try {
     const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
@@ -120,26 +120,13 @@ async function executeDuckDuckGoSearch(query) {
   } catch (e) { return "General search failed."; }
 }
 
-async function executeGooglePremiumSearch(query, needsImage) {
-  try {
-    const GOOGLE_API_KEY = "AIzaSyDMmyzs98iXR0zw6itjZbOxdHDkuCc2FSU"; // ⚠️ તમારી API Key અહીં નાખો
-    const GOOGLE_CX = "506ee5024b0e14108"; 
-    let url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&num=3`;
-    if (needsImage) url += `&searchType=image`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.items && data.items.length > 0) {
-      if (needsImage) return data.items.map(item => `![${item.title}](${item.link})`).join('\n\n');
-      return data.items.map(item => `Title: ${item.title}\nInfo: ${item.snippet}`).join('\n\n');
-    }
-    return "No data found for the query.";
-  } catch (e) { return "Search failed."; }
-}
-
 const niviSearchTools = [{
   functionDeclarations: [
-    { name: "search_general_web", description: "Use for general facts or news.", parameters: { type: "OBJECT", properties: { query: { type: "STRING" } }, required: ["query"] } },
-    { name: "search_premium_data", description: "Use for Stocks, Cricket scores, or Images.", parameters: { type: "OBJECT", properties: { query: { type: "STRING" }, needs_image: { type: "BOOLEAN" } }, required: ["query", "needs_image"] } }
+    { 
+      name: "search_general_web", 
+      description: "Use for general facts, news, and web searches.", 
+      parameters: { type: "OBJECT", properties: { query: { type: "STRING" } }, required: ["query"] } 
+    }
   ]
 }];
 
@@ -151,9 +138,7 @@ async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
   const payload = {
     systemInstruction: { 
       parts: [{ 
-        text: `You are Nivi, an advanced AI Assistant. Today's date is ${currentDate}. 
-        1. For 'live' or 'today' or 'current' queries, use today's date.
-        2. For 'past' or 'old' queries, provide historical data accurately without warnings.` 
+        text: `You are Nivi, an advanced AI Assistant. Today's date is ${currentDate}. Answer user queries accurately. If you need information from the web, use the search_general_web tool.` 
       }] 
     },
     contents: contents,
@@ -202,23 +187,17 @@ async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
     }
   }
 
-if (funcCallPart) {
+  if (funcCallPart) {
     const fName = funcCallPart.functionCall.name;
     const fArgs = funcCallPart.functionCall.args;
-    // 🚀 કયું એન્જિન વપરાયું તે સ્ક્રીન પર દેખાડવા માટે:
-    let thinkMsg = "";
-    if (fName === 'search_general_web') {
-      thinkMsg = `\n\n> 🦆 **DuckDuckGo:** *"${fArgs.query}"*...\n\n`;
-    } else if (fName === 'search_premium_data') {
-      thinkMsg = `\n\n> 🌐 **Google Search:** *"${fArgs.query}"*...\n\n`;
-    }
     
-    fullText += thinkMsg;
-    _emitChunk(onChunk, fullText);
+    // DuckDuckGo UI Indicator
+    _emitChunk(onChunk, fullText + `\n\n> 🦆 **DuckDuckGo:** *"${fArgs.query}"*...\n\n`);
     
     let result = "";
-    if (fName === 'search_general_web') result = await executeDuckDuckGoSearch(fArgs.query);
-    else if (fName === 'search_premium_data') result = await executeGooglePremiumSearch(fArgs.query, fArgs.needs_image);
+    if (fName === 'search_general_web') {
+      result = await executeDuckDuckGoSearch(fArgs.query);
+    }
 
     const followUpContents = [
       ...contents,
@@ -277,4 +256,4 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
   return { ok: false, answer: 'File analysis failed.' };
 };
 
-console.log('Nivi AI Engine v2.0 loaded - Hybrid Search Active 🚀');
+console.log('Nivi AI Engine v2.0 loaded - DuckDuckGo Search Active 🦆');
