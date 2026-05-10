@@ -130,11 +130,11 @@ async function _geminiStreamCall(cfg, history, prompt, onChunk) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [...history, { role: 'user', parts: [{ text: prompt }] }]
+      tools: [{ googleSearch: {} }]
     })
   });
 
   if (!response.ok) throw new Error(`Gemini ${response.status}`);
-
   const reader = response.body.getReader();
   let fullText = '';
   while (true) {
