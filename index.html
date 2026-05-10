@@ -140,9 +140,11 @@
             <span><kbd>↵</kbd> Send</span>
             <span><kbd>⇧</kbd> + <kbd>↵</kbd> New line</span>
             <span>Type <kbd>/</kbd> for commands</span>
-            <span id="activeModelDisplay" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:5px;flex-shrink:0;">
-              <span style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);display:inline-block;" id="modelDot"></span>
-              <span id="modelLabel">No model</span>
+            <span id="activeModelDisplay" style="margin-left:auto;display:flex;align-items:center;gap:5px;flex-shrink:0;">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--text-muted);display:inline-block;flex-shrink:0;" id="modelDot"></span>
+              <select id="modelSwitcher" onchange="switchActiveModel(this.value)" title="Switch active model" style="background:transparent;border:none;color:var(--text-muted);font-family:var(--mono);font-size:10px;cursor:pointer;outline:none;padding:0 2px;max-width:160px;appearance:none;-webkit-appearance:none;">
+                <option value="">No model</option>
+              </select>
             </span>
           </div>
 
