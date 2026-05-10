@@ -218,6 +218,14 @@ window.stopGeneration = function() {
       window.AppState._abortController.abort();
     }
     if(window.AppState) window.AppState._abortController = null;
+    // ✅ FIX: ચોંટી ગયેલા 'Thinking' એનિમેશનને તરત કાઢી નાખો
+    const thinkingBubbles = document.querySelectorAll('.thinking');
+    thinkingBubbles.forEach(el => {
+        const msgId = el.closest('.bubble')?.id;
+        if (msgId) {
+            updateMsg(msgId, '<span style="color:var(--text-muted); font-style:italic;">[Stopped by user]</span>');
+        }
+    });
 };
 function toggleSidebar(){
   const s=document.getElementById('sidebar');
@@ -772,6 +780,11 @@ async function handleSend(){
     toggleGen(false);
     const _wasAborted = AppState?._abortController?.signal.aborted;
     if(window.AppState) AppState._abortController = null;  // clear after each call
+    // ✅ FIX: જો મોડલ જવાબ ના આપે અને થિંકિંગ ચોંટી જાય, તો તેને કાઢો
+    const el = document.getElementById(resId);
+    if (el && el.innerHTML.includes('class="thinking"')) {
+        updateMsg(resId, '<span style="color:var(--red);">⚠ No response from model.</span>');
+    }
     let chatTitle = "Current Session"; 
     if(!_wasAborted) {
       if(window.AppState) {
