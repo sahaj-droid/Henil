@@ -344,7 +344,7 @@ html, body {
 }
 
 /* --- SUDHARELU BUBBLE CSS --- */
-.bubble { font-size: 15px; line-height: 1.75; font-family: var(--sans); white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; display: block; min-width: 0; max-width: 80%;}
+.bubble { font-size: 15px; line-height: 1.75; font-family: var(--sans); white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; display: block; min-width: 0; max-width: 100%;}
 
 /* User Bubble */
 .ur .bubble { background: linear-gradient(135deg, #1e1e26 0%, rgba(109,40,217,0.06) 100%); border: 1px solid rgba(255,255,255,0.06); padding: 12px 18px; border-radius: 16px 16px 4px 16px; color: var(--text); max-width: 85%; width: -moz-fit-content; width: fit-content; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: box-shadow 0.2s, border-color 0.2s;}
