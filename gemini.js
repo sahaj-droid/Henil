@@ -70,11 +70,9 @@ async function _openaiCall(cfg, messages, onChunk) {
   if (data.choices?.[0]) return { ok: true, text: data.choices[0].message.content };
   throw new Error('No choices in response');
 }
-
 // ═══════════════════════════════════════════════════════════
 //  HYBRID SEARCH ENGINES (DuckDuckGo + Google Custom Search)
 // ═══════════════════════════════════════════════════════════
-
 async function executeDuckDuckGoSearch(query) {
   try {
     const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
@@ -84,7 +82,6 @@ async function executeDuckDuckGoSearch(query) {
     return "No general results found.";
   } catch (e) { return "General search failed."; }
 }
-
 async function executeGooglePremiumSearch(query, needsImage) {
   try {
     const GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY"; // ⚠️ તમારી API કી અહી નાખો
@@ -100,20 +97,16 @@ async function executeGooglePremiumSearch(query, needsImage) {
     return "No premium data found on allowed sites for the given query.";
   } catch (e) { return "Premium search failed."; }
 }
-
 const niviSearchTools = [{
   functionDeclarations: [
     { name: "search_general_web", description: "Use for general knowledge, world news, or universal facts.", parameters: { type: "OBJECT", properties: { query: { type: "STRING" } }, required: ["query"] } },
     { name: "search_premium_data", description: "Use for Stock Market, Cricket live scores, Coding resources, or Images.", parameters: { type: "OBJECT", properties: { query: { type: "STRING" }, needs_image: { type: "BOOLEAN", description: "True if user wants an image" } }, required: ["query", "needs_image"] } }
   ]
 }];
-
+// ── Recursive Gemini stream handler (handles tool calls) ──
 async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
-  // System Instruction: આનાથી Nivi ને આજની તારીખ ખબર રહેશે!
   const currentDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${cfg.key}`;
-  
-// ── સ્માર્ટ સિસ્ટમ ઇન્સ્ટ્રક્શન (Historical અને Live બંને માટે) ──
   const payload = {
     systemInstruction: { 
       parts: [{ 
@@ -125,56 +118,78 @@ async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
     contents: contents,
     tools: niviSearchTools
   };
-
   const response = await fetch(url, {
-    method: 'POST', signal: window.AppState?._abortController?.signal,
+    method: 'POST', 
+    signal: window.AppState?._abortController?.signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-
   if (!response.ok) {
     const errText = await response.text();
     let errMsg = `Gemini ${response.status}`;
-    try { const errObj = JSON.parse(errText); errMsg += `: ${errObj.error.message}`; } 
-    catch(e) { errMsg += `: ${errText.substring(0, 150)}`; }
+    try { 
+      const errObj = JSON.parse(errText); 
+      errMsg += `: ${errObj.error.message}`; 
+    } catch(e) { 
+      errMsg += `: ${errText.substring(0, 150)}`; 
+    }
     throw new Error(errMsg);
   }
-
   const reader = response.body.getReader();
   let fullText = existingText;
-  let funcCall = null;
-
+  // 🚀 NEW: મોડેલનો આખો ઓરિજિનલ ડેટા સાચવવા માટે
+  let funcCallPart = null;
+  let modelParts = []; 
   while (true) {
     if (window.AppState?._abortController?.signal.aborted) break;
-    const { value, done } = await reader.read(); if (done) break;
+    const { value, done } = await reader.read(); 
+    if (done) break;
     const chunk = new TextDecoder().decode(value);
     const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
     for (const line of lines) {
       try {
         const data = JSON.parse(line.replace('data: ', ''));
         if (data.candidates?.[0]?.content?.parts) {
-          const part = data.candidates[0].content.parts[0];
-          if (part.text) { fullText += part.text; _emitChunk(onChunk, fullText); window.scrollToBottom?.(); } 
-          else if (part.functionCall) { funcCall = part.functionCall; }
+          for (const part of data.candidates[0].content.parts) {
+            if (part.text) { 
+              // ટેક્સ્ટ ભેગું કરો
+              if (modelParts.length > 0 && modelParts[modelParts.length - 1].text) {
+                  modelParts[modelParts.length - 1].text += part.text;
+              } else {
+                  modelParts.push({ text: part.text });
+              }
+              fullText += part.text; 
+              _emitChunk(onChunk, fullText); 
+              window.scrollToBottom?.(); 
+            } else {
+              // 🚀 NEW: Function call કે thought_signature ને કાપ્યા વગર બેઠ્ઠા સાચવી લો
+              modelParts.push(part);
+              if (part.functionCall) { 
+                funcCallPart = part; 
+              }
+            }
+          }
         }
       } catch(e) {}
     }
   }
-
-  if (funcCall) {
+  // જો સર્ચ કરવાનું આવ્યું હોય તો...
+  if (funcCallPart) {
     let searchResults = "";
-    // HTML કાઢીને Markdown નાખ્યું છે જેથી 400 Error ના આવે
-    let thinkMsg = `\n\n> 🔍 **Searching web for:** *"${funcCall.args.query}"*...\n\n`;
+    const fName = funcCallPart.functionCall.name;
+    const fArgs = funcCallPart.functionCall.args;
+    let thinkMsg = `\n\n> 🔍 **Searching web for:** *"${fArgs.query}"*...\n\n`;
     fullText += thinkMsg;
     _emitChunk(onChunk, fullText);
-
-    if (funcCall.name === 'search_general_web') searchResults = await executeDuckDuckGoSearch(funcCall.args.query);
-    else if (funcCall.name === 'search_premium_data') searchResults = await executeGooglePremiumSearch(funcCall.args.query, funcCall.args.needs_image);
-
+    if (fName === 'search_general_web') {
+      searchResults = await executeDuckDuckGoSearch(fArgs.query);
+    } else if (fName === 'search_premium_data') {
+      searchResults = await executeGooglePremiumSearch(fArgs.query, fArgs.needs_image);
+    }
     const followUpContents = [
       ...contents,
-      { role: 'model', parts: [{ functionCall: funcCall }] },
-      { role: 'function', parts: [{ functionResponse: { name: funcCall.name, response: { result: searchResults } } }] }
+      { role: 'model', parts: modelParts }, // 🚀 NEW: ઓરિજિનલ signature સાથે આખો ડેટા પાછો મોકલો
+      { role: 'function', parts: [{ functionResponse: { name: fName, response: { result: searchResults } } }] }
     ];
     return await _runGeminiStreamSequence(cfg, followUpContents, onChunk, fullText);
   }
@@ -196,18 +211,15 @@ async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
   if (response.ok && data.candidates) return { ok: true, answer: data.candidates[0].content.parts[0].text };
   throw new Error(data.error?.message || 'Gemini file call failed');
 }
-
 window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk) {
   const chain = window.getModelChain();
   if (chain.length === 0) { _emitChunk(onChunk, 'No models configured. Open Settings to add a model.'); return { ok: false }; }
-
   let lastError = '';
   for (const rawItem of chain) {
     if (window.AppState?._abortController?.signal.aborted) break;
     const cfg = _resolveProvider(rawItem);
     if (!cfg.key) { lastError = `No API key for ${cfg.provider}`; continue; }
     if (!cfg.model) { lastError = `No model set for ${cfg.provider}`; continue; }
-
     try {
       if (cfg.format === 'gemini') await _geminiStreamCall(cfg, priorHistory, currentPrompt, onChunk);
       else {
@@ -225,7 +237,6 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
   _emitChunk(onChunk, `All models failed. Last error: ${lastError}`);
   return { ok: false };
 };
-
 window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
   const chain = window.getModelChain();
   const geminiRaw = chain.find(c => c.provider === 'gemini' || (c.model || '').toLowerCase().startsWith('gemini'));
