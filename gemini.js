@@ -202,10 +202,19 @@ async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
     }
   }
 
-  if (funcCallPart) {
+if (funcCallPart) {
     const fName = funcCallPart.functionCall.name;
     const fArgs = funcCallPart.functionCall.args;
-    _emitChunk(onChunk, fullText + `\n\n> 🔍 **Searching web for:** *"${fArgs.query}"*...\n\n`);
+    // 🚀 કયું એન્જિન વપરાયું તે સ્ક્રીન પર દેખાડવા માટે:
+    let thinkMsg = "";
+    if (fName === 'search_general_web') {
+      thinkMsg = `\n\n> 🦆 **DuckDuckGo:** *"${fArgs.query}"*...\n\n`;
+    } else if (fName === 'search_premium_data') {
+      thinkMsg = `\n\n> 🌐 **Google Search:** *"${fArgs.query}"*...\n\n`;
+    }
+    
+    fullText += thinkMsg;
+    _emitChunk(onChunk, fullText);
     
     let result = "";
     if (fName === 'search_general_web') result = await executeDuckDuckGoSearch(fArgs.query);
