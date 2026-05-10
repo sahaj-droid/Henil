@@ -805,8 +805,10 @@ async function handleSend(){
     }
   }catch(err){
     if(!AppState?._abortController?.signal.aborted)updateMsg(resId,'⚠ Connection Error: '+err.message);
-  } finally {
+    } finally {
     toggleGen(false);
+    // Artifact panel open hoy to close na karvo
+    const _artOpen = document.getElementById('artPanel')?.style.width !== '0px' && document.getElementById('artPanel')?.style.width !== '';
     const _wasAborted = AppState?._abortController?.signal.aborted;
     if(window.AppState) AppState._abortController = null;  // clear after each call
     // ✅ FIX: જો મોડલ જવાબ ના આપે અને થિંકિંગ ચોંટી જાય, તો તેને કાઢો
