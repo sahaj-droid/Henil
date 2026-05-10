@@ -479,32 +479,31 @@ function restoreChat(){
   }catch(e){}
 }
 function cpMsg(id){const el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"'));}
-// ✅ FIX 2: સિંગલ મેસેજ ડીલીટ અને સાચું Firebase Sync
-async function delMsg(id){
+// ✅ BULLETPROOF DELETE FUNCTION
+async function delMsg(id) {
   if(!confirm('Delete this message?')) return;
   const row = document.getElementById('row-'+id);
-  const el = document.getElementById(id);
-  if(!el) return;
-  const raw = el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
-  if(row) row.remove();
-  
-  if(window.AppState?._tabChatHistory){
-    AppState._tabChatHistory = AppState._tabChatHistory.filter(m => m.text !== raw);
-    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
-    
-    const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-    if (activeProj !== 'default') {
-        if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(activeProj, AppState._tabChatHistory);
-        if (typeof saveProjectChat === 'function') await saveProjectChat(activeProj, AppState._tabChatHistory);
-    } else {
-        // અહીં નામ સુધાર્યું છે જેથી Firebase અપડેટ થાય
-        if(typeof syncNiviChat === 'function') {
-            await syncNiviChat(AppState._tabChatHistory);
-        } else if(typeof saveNiviChat === 'function') {
-            await saveNiviChat(AppState._tabChatHistory);
-        }
-    }
-    console.log("🗑️ Message permanently deleted from all DBs");
+  if(!row) return;
+  // 1. સ્ક્રીન પરથી મેસેજનો નંબર શોધો
+  const chatWindow = document.getElementById('chatWindow');
+  const allRows = Array.from(chatWindow.querySelectorAll('.msg-row'));
+  const index = allRows.indexOf(row);
+  if (index > -1 && window.AppState?._tabChatHistory) {
+      // 2. UI માંથી કાઢી નાખો
+      row.remove();
+      // 3. મેમરીમાંથી એ જ નંબરનો મેસેજ કાઢી નાખો (Text matching ની મગજમારી ખતમ!)
+      AppState._tabChatHistory.splice(index, 1);
+      localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+      // 4. Firebase ને લેટેસ્ટ હિસ્ટ્રી મોકલો
+      const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+      if (activeProj !== 'default') {
+          if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(activeProj, AppState._tabChatHistory);
+          if (typeof saveProjectChat === 'function') await saveProjectChat(activeProj, AppState._tabChatHistory);
+      } else {
+          if(typeof syncNiviChat === 'function') await syncNiviChat(AppState._tabChatHistory);
+          else if(typeof saveNiviChat === 'function') await saveNiviChat(AppState._tabChatHistory);
+      }
+      console.log("💥 Target Destroyed: Message deleted perfectly!");
   }
 }
 function loadArchivedChat(id){
