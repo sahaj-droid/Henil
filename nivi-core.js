@@ -243,34 +243,36 @@ window.closeMobSidebar=function(){
 function openProjectModal(){document.getElementById('projectModal').classList.add('open');setTimeout(()=>document.getElementById('newProjectName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function updateActiveModelUI(respondingModel) {
-    let models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]');
-    const sel = document.getElementById('modelSwitcher');
-    const dot = document.getElementById('modelDot');
-    if (!sel) return;
-    // Dropdown populate karo (always fresh)
-    sel.innerHTML = '';
+    let models = [];
+    try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+    const wrap = document.getElementById('activeModelDisplay');
+    if (!wrap) return;
     if (!models.length) {
-        sel.innerHTML = '<option value="">No model</option>';
-        if (dot) dot.style.background = 'var(--text-muted)';
+        wrap.innerHTML = `<span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">No model</span>`;
         return;
     }
-    models.forEach((m, i) => {
-        const val = m.model || m.provider || '';
-        const shortName = val.replace('gemini-', 'gemini ').replace('-preview','').replace('-lite',' lite');
-        const opt = document.createElement('option');
-        opt.value = String(i);
-        opt.textContent = (i === 0 ? '● ' : '○ ') + shortName;
-        sel.appendChild(opt);
-    });
-    // Active model set karo
-    const activeIdx = respondingModel
-        ? models.findIndex(m => (m.model || m.provider) === respondingModel)
-        : 0;
-    sel.value = String(Math.max(0, activeIdx));
-    if (dot) dot.style.background = respondingModel ? '#1D9E75' : 'var(--accent)';
+    const activeModelName = respondingModel || (models[0].model || models[0].provider || '');
+    wrap.innerHTML = models.map((m, i) => {
+        const name = m.model || m.provider || '';
+        const shortName = name.replace('gemini-', '').replace('-preview','').replace('-flash-lite','-fl').replace('-flash','-f').replace('-pro','-p');
+        const isActive = (name === activeModelName) || (!respondingModel && i === 0);
+        const activeStyle = isActive
+            ? `background:var(--accent-dim);color:var(--accent);border-color:rgba(99,102,241,.4);`
+            : `background:transparent;color:var(--text-muted);border-color:var(--border);`;
+        return `<button onclick="switchActiveModel(${i})" title="${escapeHTML(name)}" style="font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid;cursor:pointer;transition:all .2s;${activeStyle}">${escapeHTML(shortName)}</button>`;
+    }).join('');
+}
+window.switchActiveModel = function(idx) {
+    let chain = [];
+    try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+    if (idx === 0 || idx >= chain.length) return;
+    const selected = chain.splice(idx, 1)[0];
+    chain.unshift(selected);
+    localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
+    updateActiveModelUI();
+    renderSidebarData();
 }
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
-
 // ── WORKSPACE (PROJECTS) ──
 function renderProjectsUI(){
   const projs=JSON.parse(localStorage.getItem('nivi_projects')||'[]');
