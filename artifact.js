@@ -432,9 +432,24 @@ function _applyPatches(originalContent, patches, targetFilename) {
   }
 
   for (const patch of relevant) {
-    const findText = patch.find;
-    if (content.includes(findText)) {
-      content = content.replace(findText, patch.replace);
+const normalize = t => (t || '')
+  .replace(/\r\n/g, '\n')
+  .trim();
+
+const findText = patch.find;
+
+const normalizedContent = normalize(content);
+const normalizedFind = normalize(findText);
+
+if (normalizedContent.includes(normalizedFind)) {
+  content = content.split(findText).join(patch.replace);
+
+  results.push({
+    ok: true,
+    msg: `✅ Applied: ${findText.trim().slice(0, 60)}...`
+  });
+
+} else {
       results.push({ ok: true, msg: `✅ Applied: ${findText.trim().slice(0, 60)}...` });
     } else {
       // Fuzzy: try trimmed lines match
