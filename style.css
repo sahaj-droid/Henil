@@ -498,10 +498,10 @@ code { font-family: var(--mono); font-size: 13px; }
 
 /* ── Premium Footer ── */
 .inp-foot {
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: flex-start;
   margin-top: 12px; font-family: var(--sans); font-size: 11px;
   color: var(--text-muted); gap: 16px;
-  opacity: 0.6; transition: opacity 0.25s;
+  opacity: 1; transition: opacity 0.25s;
 }
 .input-zone:hover .inp-foot { opacity: 1; }
 
