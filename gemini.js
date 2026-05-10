@@ -109,38 +109,48 @@ async function _openaiCall(cfg, messages, onChunk) {
   throw new Error('No choices in response');
 }
 
-// ── Search Engine (DuckDuckGo ONLY) ──
+// ── ENGINE 1: Yahoo Finance (Stocks) ──
+async function executeYahooFinance(symbol) {
+  try {
+    const formattedSymbol = symbol.toUpperCase().includes('.') ? symbol.toUpperCase() : `${symbol.toUpperCase()}.NS`;
+    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${formattedSymbol}?interval=1d&range=1d`);
+    const data = await res.json();
+    const meta = data.chart.result[0].meta;
+    return `Stock: ${meta.symbol} | Currency: ${meta.currency} | Price: ${meta.regularMarketPrice} | Prev Close: ${meta.previousClose} | Exchange: ${meta.exchangeName}`;
+  } catch (e) { return "Stock not found. Try tickers like RELIANCE or TCS."; }
+}
+
+// ── ENGINE 2: DuckDuckGo (General) ──
 async function executeDuckDuckGoSearch(query) {
   try {
     const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
     const data = await res.json();
-    if (data.AbstractText) return data.AbstractText;
-    if (data.RelatedTopics && data.RelatedTopics.length > 0) return data.RelatedTopics.slice(0, 3).map(t => t.Text).join('\n');
-    return "No general results found.";
-  } catch (e) { return "General search failed."; }
+    return data.AbstractText || (data.RelatedTopics?.[0]?.Text) || "No results found.";
+  } catch (e) { return "Search failed."; }
 }
 
 const niviSearchTools = [{
   functionDeclarations: [
     { 
+      name: "get_stock_price", 
+      description: "Get real-time stock price data. Use symbols like RELIANCE, TCS, or TATAMOTORS.", 
+      parameters: { type: "OBJECT", properties: { symbol: { type: "STRING" } }, required: ["symbol"] } 
+    },
+    { 
       name: "search_general_web", 
-      description: "Use for general facts, news, and web searches.", 
+      description: "Use for general news, history, or facts.", 
       parameters: { type: "OBJECT", properties: { query: { type: "STRING" } }, required: ["query"] } 
     }
   ]
 }];
 
-// ── Recursive Stream Sequence with Signature Fix ──
+// ── Recursive Gemini Stream Sequence ──
 async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
   const currentDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${cfg.key}`;
   
   const payload = {
-    systemInstruction: { 
-      parts: [{ 
-        text: `You are Nivi, an advanced AI Assistant. Today's date is ${currentDate}. Answer user queries accurately. If you need information from the web, use the search_general_web tool.` 
-      }] 
-    },
+    systemInstruction: { parts: [{ text: `You are Nivi Pro. Today is ${currentDate}. For stocks use get_stock_price, for general info use search_general_web.` }] },
     contents: contents,
     tools: niviSearchTools
   };
@@ -152,18 +162,12 @@ async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
     body: JSON.stringify(payload)
   });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini ${response.status}: ${errText}`);
-  }
-
   const reader = response.body.getReader();
   let fullText = existingText;
   let modelParts = [];
   let funcCallPart = null;
 
   while (true) {
-    if (window.AppState?._abortController?.signal.aborted) break;
     const { value, done } = await reader.read();
     if (done) break;
     const chunk = new TextDecoder().decode(value);
@@ -174,13 +178,8 @@ async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
         if (data.candidates?.[0]?.content?.parts) {
           for (const part of data.candidates[0].content.parts) {
             modelParts.push(part);
-            if (part.text) { 
-              fullText += part.text; 
-              _emitChunk(onChunk, fullText); 
-              window.scrollToBottom?.(); 
-            } else if (part.functionCall) { 
-              funcCallPart = part; 
-            }
+            if (part.text) { fullText += part.text; _emitChunk(onChunk, fullText); } 
+            else if (part.functionCall) funcCallPart = part;
           }
         }
       } catch(e) {}
@@ -190,21 +189,16 @@ async function _runGeminiStreamSequence(cfg, contents, onChunk, existingText) {
   if (funcCallPart) {
     const fName = funcCallPart.functionCall.name;
     const fArgs = funcCallPart.functionCall.args;
-    
-    // DuckDuckGo UI Indicator
-    _emitChunk(onChunk, fullText + `\n\n> 🦆 **DuckDuckGo:** *"${fArgs.query}"*...\n\n`);
-    
     let result = "";
-    if (fName === 'search_general_web') {
+    if (fName === 'get_stock_price') {
+      _emitChunk(onChunk, fullText + `\n\n> 📈 **Yahoo Finance:** *"${fArgs.symbol}"*...\n\n`);
+      result = await executeYahooFinance(fArgs.symbol);
+    } else {
+      _emitChunk(onChunk, fullText + `\n\n> 🦆 **DuckDuckGo:** *"${fArgs.query}"*...\n\n`);
       result = await executeDuckDuckGoSearch(fArgs.query);
     }
-
-    const followUpContents = [
-      ...contents,
-      { role: 'model', parts: modelParts },
-      { role: 'function', parts: [{ functionResponse: { name: fName, response: { result: result } } }] }
-    ];
-    return await _runGeminiStreamSequence(cfg, followUpContents, onChunk, fullText);
+    const followUp = [...contents, { role: 'model', parts: modelParts }, { role: 'function', parts: [{ functionResponse: { name: fName, response: { result: result } } }] }];
+    return await _runGeminiStreamSequence(cfg, followUp, onChunk, fullText);
   }
   return { ok: true, text: fullText };
 }
