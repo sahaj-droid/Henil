@@ -245,29 +245,23 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 function updateActiveModelUI(respondingModel) {
     let models = [];
     try { models = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
-    const wrap = document.getElementById('activeModelDisplay');
-    if (!wrap) return;
-    if (!models.length) {
-        wrap.innerHTML = `<span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">No model</span>`;
-        return;
-    }
-    const activeModelName = respondingModel || (models[0].model || models[0].provider || '');
-    wrap.innerHTML = models.map((m, i) => {
-        const name = m.model || m.provider || '';
-        const shortName = name.replace('gemini-', '').replace('-preview','').replace('-flash-lite','-fl').replace('-flash','-f').replace('-pro','-p');
-        const isActive = (name === activeModelName) || (!respondingModel && i === 0);
-        const activeStyle = isActive
-            ? `background:var(--accent-dim);color:var(--accent);border-color:rgba(99,102,241,.4);`
-            : `background:transparent;color:var(--text-muted);border-color:var(--border);`;
-        return `<button onclick="switchActiveModel(${i})" title="${escapeHTML(name)}" style="font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid;cursor:pointer;transition:all .2s;${activeStyle}">${escapeHTML(shortName)}</button>`;
-    }).join('');
+    const btn = document.getElementById('modelPickerBtn');
+    const lbl = document.getElementById('modelPickerLabel');
+    if (!lbl) return;
+    if (!models.length) { lbl.textContent = 'No model'; return; }
+    const active = respondingModel
+        ? models.find(m => (m.model || m.provider) === respondingModel)
+        : models[0];
+    const name = active ? (active.model || active.provider || '') : '';
+    const short = name.replace('gemini-','').replace('-preview','').replace('-latest','');
+    lbl.textContent = short || 'No model';
+    if (btn) btn.style.borderColor = respondingModel ? 'rgba(109,40,217,.5)' : 'rgba(255,255,255,.12)';
 }
-window.switchActiveModel = function(idx) {
+window.cycleModel = function() {
     let chain = [];
     try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
-    if (idx === 0 || idx >= chain.length) return;
-    const selected = chain.splice(idx, 1)[0];
-    chain.unshift(selected);
+    if (chain.length <= 1) return;
+    chain.push(chain.shift());
     localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
     updateActiveModelUI();
     renderSidebarData();
