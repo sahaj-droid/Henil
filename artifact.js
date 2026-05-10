@@ -431,38 +431,52 @@ function _applyPatches(originalContent, patches, targetFilename) {
     return { content, results: [{ ok: false, msg: `No patches found for "${targetFilename}" in chat history.` }] };
   }
 
-  for (const patch of relevant) {
-const normalize = t => (t || '')
-  .replace(/\r\n/g, '\n')
-  .trim();
+for (const patch of relevant) {
 
-const findText = patch.find;
+  const normalize = t => (t || '')
+    .replace(/\r\n/g, '\n')
+    .trim();
 
-const normalizedContent = normalize(content);
-const normalizedFind = normalize(findText);
+  const findText = patch.find;
 
-if (normalizedContent.includes(normalizedFind)) {
-  content = content.split(findText).join(patch.replace);
+  const normalizedContent = normalize(content);
+  const normalizedFind = normalize(findText);
 
-  results.push({
-    ok: true,
-    msg: `✅ Applied: ${findText.trim().slice(0, 60)}...`
-  });
+  if (normalizedContent.includes(normalizedFind)) {
 
-} else {
-      results.push({ ok: true, msg: `✅ Applied: ${findText.trim().slice(0, 60)}...` });
+    content = content.split(findText).join(patch.replace);
+
+    results.push({
+      ok: true,
+      msg: `✅ Applied: ${findText.trim().slice(0, 60)}...`
+    });
+
+  } else {
+
+    // Fallback trimmed match
+    const findTrimmed = findText.trim();
+
+    if (content.includes(findTrimmed)) {
+
+      content = content.split(findTrimmed).join(
+        patch.replace.trim()
+      );
+
+      results.push({
+        ok: true,
+        msg: `✅ Applied (trimmed): ${findTrimmed.slice(0, 60)}...`
+      });
+
     } else {
-      // Fuzzy: try trimmed lines match
-      const findTrimmed = findText.trim();
-      if (content.includes(findTrimmed)) {
-        content = content.replace(findTrimmed, patch.replace.trim());
-        results.push({ ok: true, msg: `✅ Applied (trimmed): ${findTrimmed.slice(0, 60)}...` });
-      } else {
-        results.push({ ok: false, msg: `❌ Not found: ${findText.trim().slice(0, 60)}...` });
-      }
+
+      results.push({
+        ok: false,
+        msg: `❌ Not found: ${findText.trim().slice(0, 60)}...`
+      });
+
     }
   }
-
+}
   return { content, results };
 }
 
