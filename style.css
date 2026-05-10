@@ -259,7 +259,7 @@ html, body {
 /* ══════════════════════════════
    CHAT
 ══════════════════════════════ */
-.chat-inner { max-width: 840px; margin: 0 auto; padding: 0 22px; overflow: hidden; }
+.chat-wrap { flex: 1; overflow-y: auto; padding: 32px 0 150px; }
 .chat-inner { max-width: 840px; margin: 0 auto; padding: 0 22px; }
 
 /* ══════════════════════════════
