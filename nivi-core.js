@@ -367,16 +367,23 @@ function createNewProject(){
 // ── CHAT ENGINE ──
 const HERO_HTML=`<div id="heroSection"><div class="hero-icon">N</div><h1 class="hero-title">Nivi Workspace</h1><p class="hero-sub">Multi-model AI · Live file preview · Firebase sync</p><div class="hero-chips"><div class="hchip" onclick="qp('Explain my codebase structure')">Analyze codebase</div><div class="hchip" onclick="qp('Summarize the uploaded document')">Summarize doc</div><div class="hchip" onclick="qp('Debug this error and suggest fixes')">Debug code</div><div class="hchip" onclick="qp('/image futuristic city at night, neon lights')">Generate image</div></div></div>`;
 
+// ✅ FIX 3: New Chat દબાવતી વખતે જૂનું બધું રોકી દો
 function clearChat(){
+  // બેકગ્રાઉન્ડ પ્રોસેસ રોકો
+  if(window.AppState?._abortController) {
+    window.AppState._abortController.abort();
+    window.AppState._abortController = null;
+    if(typeof toggleGen === 'function') toggleGen(false);
+  }
+
   const history = window.AppState?._tabChatHistory || [];
   const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  
   if(history.length > 0){
     if (activeProj !== 'default') {
-      // Project chat archive
       if(typeof archiveProjectChat === 'function') archiveProjectChat(activeProj, history);
       if(typeof clearProjectSession === 'function') clearProjectSession(activeProj);
     } else {
-      // Default chat archive (existing logic)
       if(typeof archiveNiviChat === 'function') archiveNiviChat(history);
       const _archKey = `nivi_chat_archives_default`;
       let a=JSON.parse(localStorage.getItem(_archKey)||'[]');
@@ -387,12 +394,17 @@ function clearChat(){
   }
   if(window.AppState) AppState._tabChatHistory=[];
   localStorage.setItem('niviTabChat','[]');
-  localStorage.setItem('nivi_current_session_id', 'session_' + Date.now()); // navi ID
+  localStorage.setItem('nivi_current_session_id', 'session_' + Date.now()); 
   if(typeof closeArt === 'function') closeArt(); 
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML=HERO_HTML;
   renderSidebarData();
-  if(typeof saveNiviChat === 'function') saveNiviChat([]);
+  // Firebase ક્લીનઅપ
+  if(typeof syncNiviChat === 'function') {
+      syncNiviChat([]);
+  } else if(typeof saveNiviChat === 'function') {
+      saveNiviChat([]);
+  }
   if(typeof saveUserData === 'function') saveUserData('history');
 }
 function _fmt(text) {
@@ -467,7 +479,7 @@ function restoreChat(){
   }catch(e){}
 }
 function cpMsg(id){const el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"'));}
-// ── DELETE MESSAGE (nivi-core.js ma replace karo) ──
+// ✅ FIX 2: સિંગલ મેસેજ ડીલીટ અને સાચું Firebase Sync
 async function delMsg(id){
   if(!confirm('Delete this message?')) return;
   const row = document.getElementById('row-'+id);
@@ -475,24 +487,24 @@ async function delMsg(id){
   if(!el) return;
   const raw = el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
   if(row) row.remove();
+  
   if(window.AppState?._tabChatHistory){
-    // 1. State Update
     AppState._tabChatHistory = AppState._tabChatHistory.filter(m => m.text !== raw);
-    // 2. LocalStorage Meta Update
     localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
-    // 3. UNIFIED SYNC (Firebase + IDB)
+    
     const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
     if (activeProj !== 'default') {
-        // Project Mode Sync
         if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(activeProj, AppState._tabChatHistory);
         if (typeof saveProjectChat === 'function') await saveProjectChat(activeProj, AppState._tabChatHistory);
     } else {
-        // Default Mode Sync (Firebase par overwrite karo jethi delete thayelo message udadi jay)
-        if(typeof saveNiviChat === 'function') {
+        // અહીં નામ સુધાર્યું છે જેથી Firebase અપડેટ થાય
+        if(typeof syncNiviChat === 'function') {
+            await syncNiviChat(AppState._tabChatHistory);
+        } else if(typeof saveNiviChat === 'function') {
             await saveNiviChat(AppState._tabChatHistory);
         }
     }
-    console.log("🗑️ Message deleted & synced across all DBs");
+    console.log("🗑️ Message permanently deleted from all DBs");
   }
 }
 function loadArchivedChat(id){
@@ -524,16 +536,29 @@ async function deleteProject(id, name){
   if(document.getElementById('activeProjectSelect').value === id){ setProj('default'); } 
   else { renderProjectsUI(); }
 }
-function deleteCurrentChat(){
+// ✅ FIX 1: સંપૂર્ણ ડીલીટ અને એબોર્ટ (Abort) સિસ્ટમ
+async function deleteCurrentChat() {
   if(!confirm('Delete current chat?')) return;
+  // 1. બેકગ્રાઉન્ડમાં ચાલતી પ્રોસેસ તરત રોકી દો
+  if(window.AppState?._abortController) {
+    window.AppState._abortController.abort();
+    window.AppState._abortController = null;
+    if(typeof toggleGen === 'function') toggleGen(false);
+  }
+  // 2. લોકલ UI અને ડેટા સાફ કરો
   if(window.AppState) AppState._tabChatHistory = [];
   localStorage.setItem('niviTabChat', '[]');
   if(typeof closeArt === 'function') closeArt(); 
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML = HERO_HTML;
-  renderSidebarData();
-  if(typeof saveNiviChat === 'function') saveNiviChat([]);
+  // 3. Firebase માં પ્રોપર Sync ફંક્શન વાપરો
+  if(typeof syncNiviChat === 'function') {
+      await syncNiviChat([]);
+  } else if(typeof saveNiviChat === 'function') {
+      saveNiviChat([]);
+  }
   if(typeof saveUserData === 'function') saveUserData('history');
+  renderSidebarData();
 }
 function deleteArchivedChat(id){
   if(!confirm('Delete this archived chat?')) return;
