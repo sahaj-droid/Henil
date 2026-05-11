@@ -19,8 +19,14 @@ const ART = { cur: null, tab: 'code', isMob: () => window.innerWidth < 600 };
       font-size:12px; line-height:1.6;
       border:none !important; border-radius:0 !important;
     }
-    #viewCode .CodeMirror-scroll { min-height:200px; overflow-y:auto !important; }
-    #viewCode .CodeMirror-sizer { min-height:200px !important; }
+    #viewCode .CodeMirror-scroll {
+      height:100% !important;
+      min-height:300px;
+      overflow-y:auto !important;
+      overflow-x:auto !important;
+    }
+    #viewCode .CodeMirror-sizer { min-height:300px !important; }
+    #viewCode .CodeMirror-gutters { min-height:300px !important; }
     #artTabBar::-webkit-scrollbar { height:3px; }
     #artTabBar::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08);border-radius:10px; }
     #artSearchBar input::placeholder { color:var(--text-muted); }
@@ -96,8 +102,10 @@ const CM = (() => {
 
   // --- CodeMirror availability guard (core + search addon) ---
   function _available() {
-    return typeof CodeMirror !== 'undefined' &&
-           typeof CodeMirror.createSearchCursor === 'function';
+    return typeof CodeMirror !== 'undefined';
+  }
+  function _searchAvailable() {
+    return _available() && typeof CodeMirror.createSearchCursor === 'function';
   }
 
   // --- Resolve CM mode from ext ---
@@ -124,6 +132,12 @@ const CM = (() => {
   function _mount(container, txt, ext, readOnly) {
     _destroy();
     if (!_available()) return null;
+    // Ensure container has measurable height before CM mounts
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.flex = '1';
+    container.style.minHeight = '0';
+    container.style.overflow = 'hidden';
     _instance = CodeMirror(container, {
       value: txt || '',
       mode: _resolveMode(ext),
@@ -136,6 +150,9 @@ const CM = (() => {
       autofocus: !readOnly,
       cursorBlinkRate: readOnly ? -1 : 530,
     });
+    // Force CM wrapper to fill container
+    const wrapper = _instance.getWrapperElement();
+    wrapper.style.cssText = 'flex:1;min-height:0;height:100%;overflow:hidden;';
     _mode = readOnly ? 'view' : 'edit';
     return _instance;
   }
@@ -172,7 +189,7 @@ const CM = (() => {
 
   function search(query, direction, onResult) {
     _clearSearchMarkers();
-    if (!_instance || !query) {
+    if (!_instance || !query || !_searchAvailable()) {
       onResult && onResult(0, 0);
       return;
     }
