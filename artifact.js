@@ -20,7 +20,11 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
     #artSearchBar input::placeholder { color:var(--text-muted); }
     #artSearchBar button:hover { background:var(--bg-hover)!important;color:var(--text)!important; }
     #viewEditor .CodeMirror,
-    #viewEditor .CodeMirror-scroll { user-select: text; -webkit-user-select: text;} `;
+    #viewEditor .CodeMirror-scroll { user-select: text; -webkit-user-select: text;}
+    /* ફક્ત એડિટ મોડ (CodeMirror) માં સિલેક્શન હાઇલાઇટ માટે */
+    #viewEditor .CodeMirror-selected {background: rgba(135, 175, 255, 0.4) !important;}
+    #viewEditor .CodeMirror-line::selection,
+    #viewEditor .CodeMirror-line *::selection {background: rgba(135, 175, 255, 0.4) !important;}`;
     document.head.appendChild(s);
 })();
 function artEscapeHTML(value) {
