@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════
 //  ARTIFACT ENGINE (artifact.js)
 // ═══════════════════════════════════════════════════
-const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<=768};
+const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
 
 // ── Inject CM viewer styles once ──
 (function(){
@@ -401,9 +401,10 @@ function _tabsRender() {
 }
 
 function _tabAdd(fileObj) {
-  // Avoid duplicates
+  // Avoid duplicates — but update content if same file re-opened
   const existing = ART_TABS.list.findIndex(t => t.name === fileObj.name);
   if (existing !== -1) {
+    ART_TABS.list[existing] = { ...fileObj }; // update with latest content
     ART_TABS.active = existing;
     _tabsRender();
     return;
@@ -426,6 +427,8 @@ function _tabClose(i) {
   ART_TABS.list.splice(i, 1);
   if (ART_TABS.list.length === 0) {
     ART_TABS.active = -1;
+    _tabsRender();
+    // Call full closeArt to clean up CM, search, panel
     closeArt();
     return;
   }
