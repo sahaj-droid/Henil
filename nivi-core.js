@@ -535,9 +535,10 @@ async function delMsg(id) {
     }
     if (matchIdx > -1) {
       AppState._tabChatHistory.splice(matchIdx, 1);
+      console.log('✅ Matched at index:', matchIdx, '| Remaining:', AppState._tabChatHistory.length);
     } else {
-      // Last resort: nothing matched, history unchanged — don't corrupt data
-      console.warn('[delMsg] No matching history entry found for id:', id);
+      console.warn('❌ NO MATCH — decodedRaw preview:', decodedRaw.slice(0, 80));
+      console.warn('❌ History texts:', AppState._tabChatHistory.map(m => m.text?.slice(0,40)));
     }
 
     // 4. localStorage + Firebase / IDB sync
