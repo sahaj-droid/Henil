@@ -15,13 +15,25 @@ const projId = document.getElementById('activeProjectSelect')?.value ||
   const _fileKey = `nivi_file_memory_${projId}`;
   let files = JSON.parse(localStorage.getItem(_fileKey) || '[]');
   const idx = files.findIndex(f => f.name === filename);
-  // ✅ FIX: data pan save karo (IDB fallback mate) — entry ma data:base64Data
-  const entry = { name: filename, ts: Date.now(), data: base64Data, 
-                  mimeType: mimeType || 'text/plain', projId };  
+  // ✅ FIX: Large files (>500KB) — data IDB-only rakho, localStorage ma null
+  const isLarge = base64Data && base64Data.length > 500000;
+  const entry = {
+    name: filename, ts: Date.now(),
+    data: isLarge ? null : base64Data,   // Large file = IDB-only, no localStorage bloat
+    mimeType: mimeType || 'text/plain', projId,
+    idbOnly: isLarge
+  };
   if (idx >= 0) files[idx] = entry;
   else files.push(entry);
-  localStorage.setItem(_fileKey, JSON.stringify(files));
-  // Firebase cloud backup (project only)
+  try {
+    localStorage.setItem(_fileKey, JSON.stringify(files));
+  } catch(e) {
+    // localStorage full — emergency: strip all data fields, keep only metadata
+    console.warn('localStorage full, stripping file data to metadata only:', e);
+    files = files.map(f => ({ ...f, data: null, idbOnly: true }));
+    try { localStorage.setItem(_fileKey, JSON.stringify(files)); } catch(_) {}
+  }
+  // Firebase cloud backup (project only — default project = IDB sufficient)
   if (projId !== 'default' && typeof saveFileToCloudWorkspace === 'function') {
     saveFileToCloudWorkspace(projId, filename, mimeType, base64Data);
   }
@@ -133,19 +145,29 @@ window.onload = async () => {
   renderProjectsUI();
   updateActiveModelUI();
 
-  // 1. FILES RESTORE (IndexedDB First)
-  if (_initProj !== 'default' && window.NiviDB) {
+  // 1. FILES RESTORE (IndexedDB First — ALL projects including default)
+  if (window.NiviDB) {
     try {
       const idbFiles = await NiviDB.getProjectFiles(_initProj);
       if (idbFiles && idbFiles.length > 0) {
-        localStorage.setItem(`nivi_file_memory_${_initProj}`, JSON.stringify(idbFiles));
-        console.log(`✅ Files restored from IndexedDB on load: ${idbFiles.length}`);
-      } else {
+        // ✅ FIX: Merge IDB files with existing localStorage metadata (preserve idbOnly flags)
+        const existing = JSON.parse(localStorage.getItem(`nivi_file_memory_${_initProj}`) || '[]');
+        const merged = idbFiles.map(f => {
+          const ex = existing.find(e => e.name === f.name);
+          return ex ? { ...f, idbOnly: ex.idbOnly } : f;
+        });
+        localStorage.setItem(`nivi_file_memory_${_initProj}`, JSON.stringify(merged));
+        console.log(`✅ Files restored from IndexedDB on load: ${idbFiles.length} [${_initProj}]`);
+      } else if (_initProj !== 'default') {
+        // Non-default project: Firebase fallback
         if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
       }
     } catch(e) {
-      if (typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
+      console.warn('IDB file restore failed:', e);
+      if (_initProj !== 'default' && typeof syncWorkspaceFiles === 'function') syncWorkspaceFiles(_initProj);
     }
+  } else if (_initProj !== 'default' && typeof syncWorkspaceFiles === 'function') {
+    syncWorkspaceFiles(_initProj);
   }
 renderSidebarData();
 
@@ -484,31 +506,55 @@ function restoreChat(){
   }catch(e){}
 }
 function cpMsg(id){const el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.getAttribute('data-raw').replace(/&#39;/g,"'").replace(/&quot;/g,'"'));}
-// ✅ BULLETPROOF DELETE FUNCTION
+// ✅ BULLETPROOF DELETE — text-match based (DOM index drift fix)
 async function delMsg(id) {
   if(!confirm('Delete this message?')) return;
   const row = document.getElementById('row-'+id);
+  const bubble = document.getElementById(id);
   if(!row) return;
-  // 1. સ્ક્રીન પરથી મેસેજનો નંબર શોધો
-  const chatWindow = document.getElementById('chatWindow');
-  const allRows = Array.from(chatWindow.querySelectorAll('.msg-row'));
-  const index = allRows.indexOf(row);
-  if (index > -1 && window.AppState?._tabChatHistory) {
-      // 2. UI માંથી કાઢી નાખો
-      row.remove();
-      // 3. મેમરીમાંથી એ જ નંબરનો મેસેજ કાઢી નાખો (Text matching ની મગજમારી ખતમ!)
-      AppState._tabChatHistory.splice(index, 1);
-      localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
-      // 4. Firebase ને લેટેસ્ટ હિસ્ટ્રી મોકલો
-      const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-      if (activeProj !== 'default') {
-          if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(activeProj, AppState._tabChatHistory);
-          if (typeof saveProjectChat === 'function') await saveProjectChat(activeProj, AppState._tabChatHistory);
-      } else {
-          if(typeof syncNiviChat === 'function') await syncNiviChat(AppState._tabChatHistory);
-          else if(typeof saveNiviChat === 'function') await saveNiviChat(AppState._tabChatHistory);
-      }
-      console.log("💥 Target Destroyed: Message deleted perfectly!");
+
+  // 1. data-raw thi exact text extract karo
+  const rawAttr = bubble ? bubble.getAttribute('data-raw') || '' : '';
+  const decodedRaw = rawAttr
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+
+  // 2. UI thi remove karo
+  row.remove();
+
+  if (window.AppState?._tabChatHistory) {
+    // 3. ✅ Text-match thi exact entry shodo — DOM index nahi (drift-proof)
+    let matchIdx = AppState._tabChatHistory.findIndex(m => (m.text || '') === decodedRaw);
+    // Fallback: partial match (first 120 chars) for very long messages
+    if (matchIdx === -1 && decodedRaw.length > 0) {
+      const shortKey = decodedRaw.slice(0, 120);
+      matchIdx = AppState._tabChatHistory.findIndex(m => (m.text || '').startsWith(shortKey));
+    }
+    if (matchIdx > -1) {
+      AppState._tabChatHistory.splice(matchIdx, 1);
+    } else {
+      // Last resort: nothing matched, history unchanged — don't corrupt data
+      console.warn('[delMsg] No matching history entry found for id:', id);
+    }
+
+    // 4. localStorage + Firebase / IDB sync
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+    const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+    // ✅ IDB pan update karo — nahi to restart par deleted message wapas aave
+    if (window.NiviDB) {
+      try { await NiviDB.saveChat(activeProj, AppState._tabChatHistory); } catch(e) {}
+    }
+    if (activeProj !== 'default') {
+      if (typeof saveProjectChatLocal === 'function') saveProjectChatLocal(activeProj, AppState._tabChatHistory);
+      if (typeof saveProjectChat === 'function') await saveProjectChat(activeProj, AppState._tabChatHistory);
+    } else {
+      if (typeof syncNiviChat === 'function') await syncNiviChat(AppState._tabChatHistory);
+      else if (typeof saveNiviChat === 'function') await saveNiviChat(AppState._tabChatHistory);
+    }
+    console.log('✅ Message deleted & synced. History length:', AppState._tabChatHistory.length);
   }
 }
 function loadArchivedChat(id){
@@ -552,6 +598,11 @@ async function deleteCurrentChat() {
   // 2. લોકલ UI અને ડેટા સાફ કરો
   if(window.AppState) AppState._tabChatHistory = [];
   localStorage.setItem('niviTabChat', '[]');
+  // ✅ FIX: IDB ma pan chat clear karo — nahi to restart par wapas aave
+  if (window.NiviDB) {
+    const _delProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+    try { await NiviDB.saveChat(_delProj, []); } catch(e) {}
+  }
   if(typeof closeArt === 'function') closeArt(); 
   if(typeof closeSheet === 'function') closeSheet();
   document.getElementById('chatWindow').innerHTML = HERO_HTML;
@@ -633,6 +684,19 @@ function openSavedFile(name){
   const _pId = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
   const files=JSON.parse(localStorage.getItem(`nivi_file_memory_${_pId}`)||'[]');
   const f=files.find(x=>x.name===name);
+  if(!f) { alert('File not found.'); return; }
+  // ✅ FIX: idbOnly files — IDB thi data fetch karo (localStorage ma null hoy)
+  if(f.idbOnly && window.NiviDB) {
+    NiviDB.getProjectFiles(_pId).then(idbFiles => {
+      const idbFile = idbFiles.find(x => x.name === name);
+      if(idbFile?.data && typeof openArt === 'function') {
+        openArt({name: idbFile.name, type: idbFile.mimeType || 'text/plain'}, idbFile.data);
+      } else {
+        alert('File data not found in storage. Please re-attach the file.');
+      }
+    }).catch(() => alert('Could not read file from storage. Please re-attach.'));
+    return;
+  }
   if(f?.data && typeof openArt === 'function') openArt({name:f.name,type:f.mimeType||'text/plain'},f.data);
   else alert('File data not found. Re-attach the file.');
 }
@@ -822,7 +886,12 @@ async function handleSend(){
       const el = document.getElementById(resId);
         let rawText = '';
         if (el && el.getAttribute('data-raw')) {
-          rawText = el.getAttribute('data-raw').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+          rawText = el.getAttribute('data-raw')
+            .replace(/&#39;/g, "'")
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
         } else if (el) {
           rawText = el.innerText || '';
         }
