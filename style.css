@@ -153,7 +153,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .nav { background: linear-gradient(135deg, var(--accent), #8b5cf6); box-shadow: 0 0 0 2px rgba(109,40,217,.3), 0 0 12px rgba(109,40,217,.18); color: #fff; transition: box-shadow .3s; }
 
 /* Bubble base */
-.bubble { font-size: 15px; line-height: 1.75; font-family: var(--sans); white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; display: block; min-width: 0; max-width: 100%; }
+.bubble { font-size: 15px; line-height: 1.75; font-family: var(--sans); white-space: pre-wrap; overflow-wrap: break-word; display: block; min-width: 0; max-width: 100%;}
 
 /* User bubble */
 .ur .bubble { background: linear-gradient(135deg, #1e1e26 0%, rgba(109,40,217,0.06) 100%); border: 1px solid rgba(255,255,255,0.06); padding: 12px 18px; border-radius: 16px 16px 4px 16px; color: var(--text); max-width: 82%; width: fit-content; width: -moz-fit-content; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: box-shadow 0.2s, border-color 0.2s; }
