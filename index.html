@@ -105,34 +105,34 @@
 
       <div class="input-zone">
         <div class="input-wrap">
-          
-          <div class="input-pill" id="inputPill">
-            <button class="pbtn" onclick="document.getElementById('fileInp').click()" title="Attach File">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-            </button>
-            <input type="file" id="fileInp" multiple style="display:none" onchange="handleFileSelectNew(this)" accept=".html,.js,.css,.json,.txt,.py,.csv,.md,.png,.jpg,.jpeg,.webp,.gif,.pdf">
-            
-            <div class="input-content-col">
-              <div class="file-prev" id="filePreview">
-                <span id="filePreviewName"></span>
-              </div>
-              
-              <textarea id="mainInput" placeholder="Ask Nivi anything..." rows="1" onkeydown="handleKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,170)+'px'"></textarea>
-            </div>
-
-            <div class="input-actions-right">
-              <button id="modelPickerBtn" onclick="cycleModel()" title="Switch model" style="display:flex;align-items:center;gap:5px;height:34px;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#ccc;font-family:var(--mono);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">
-                <span id="modelPickerLabel">No model</span>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <button id="stopBtn" class="pbtn stop" onclick="stopGeneration()">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-              </button>
-              <button id="sendBtn" class="pbtn send" onclick="handleSend()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-              </button>
-            </div>
-          </div>
+<div class="input-pill" id="inputPill">
+  <div class="input-content-col">
+    <div class="file-prev" id="filePreview">
+      <span id="filePreviewName"></span>
+    </div>
+    <textarea id="mainInput" placeholder="Ask Nivi anything..." rows="1" onkeydown="handleKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,170)+'px'"></textarea>
+  </div>
+  <div class="input-actions-right">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button class="pbtn" onclick="document.getElementById('fileInp').click()" title="Attach File">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <input type="file" id="fileInp" multiple style="display:none" onchange="handleFileSelectNew(this)" accept=".html,.js,.css,.json,.txt,.py,.csv,.md,.png,.jpg,.jpeg,.webp,.gif,.pdf">
+      <button id="modelPickerBtn" onclick="cycleModel()" title="Switch model" style="display:flex;align-items:center;gap:5px;height:34px;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#ccc;font-family:var(--mono);font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">
+        <span id="modelPickerLabel">No model</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button id="stopBtn" class="pbtn stop" onclick="stopGeneration()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+      </button>
+      <button id="sendBtn" class="pbtn send" onclick="handleSend()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
 
           <div class="inp-foot">
             <span><kbd>↵</kbd> Send</span>
