@@ -842,32 +842,28 @@ async function handleSend(){
       // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
       const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-      // Always read from IDB (has full base64 data) — all projects including default
       if (window.NiviDB) {
-        try {
-          memFiles = await NiviDB.getProjectFiles(_ctxProj);
-        } catch(e) {
-          memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
-        }
+        try { memFiles = await NiviDB.getProjectFiles(_ctxProj); } 
+        catch(e) { memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]'); }
       } else {
         memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
       }
       let fileContext = '';
-      // Always inject file context if files exist — not just first message
-      if (memFiles.length > 0) {
+      // ✅ FIX: ફક્ત જો યુઝરનો મેસેજ લાંબો હોય અથવા કોડ રિલેટેડ હોય તો જ ફાઇલ કોન્ટેક્ટ મોકલો
+      const isGeneralGreeting = text.length < 15 && !text.includes('code') && !text.includes('debug') && !text.includes('fix');
+      if (memFiles.length > 0 && !isGeneralGreeting) {
         const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
         const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
         if (textFiles.length > 0) {
           const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
           fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
-            textFiles.slice(0, 8).map(f => {
-              const content = decodeB64Text(f.data).slice(0, 3000);
+            textFiles.slice(0, 5).map(f => { // 8 ને બદલે 5 ફાઇલ કરી દીધી
+              const content = decodeB64Text(f.data).slice(0, 1500); // 3000 ને બદલે 1500 કરી દીધું
               return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
             }).join('\n\n');
         }
       }
-      
-      const finalPrompt = fileContext ? apiText + fileContext : apiText;
+     const finalPrompt = fileContext ? apiText + fileContext : apiText;
       const _result = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!AppState?._abortController?.signal.aborted)updateMsg(resId,chunk);});
       if (_result?.model && typeof updateActiveModelUI === 'function') updateActiveModelUI(_result.model);
     }
