@@ -848,24 +848,30 @@ async function handleSend(){
       } else {
         memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
       }
-      let fileContext = '';
-      // ✅ અહીં શરત ઉમેરો: જો પ્રોજેક્ટ 'default' હોય, તો જ આ નિયમો લાગુ પડશે
-      if (_ctxProj === 'default') {
-          // Default ચેટ માટે ટૂંકા મેસેજમાં ફાઇલ ડમ્પ ન મોકલો
-          const isSimpleGreeting = text.toLowerCase().trim().length < 20 && 
-                                   !text.toLowerCase().includes('code') && 
-                                   !text.toLowerCase().includes('debug');
-          if (memFiles.length > 0 && !isSimpleGreeting) {
-              // માત્ર જરૂર હોય તો જ ફાઇલ કોન્ટેક્ટ મોકલો
-              const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-              const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
-          if (textFiles.length > 0) {
-                  fileContext = `\n\n---\n[Files in Nivi Memory]\n` +
-                    textFiles.slice(0, 3).map(f => {
-                      return `File: ${f.name}\n\`\`\`\n${decodeB64Text(f.data).slice(0, 1000)}\n\`\`\``;
-                    }).join('\n\n');
-              }
-          }
+let fileContext = '';
+    
+    // ✅ ફિક્સ: TEXT_MIMES અને textFiles ને અહીં બહાર ફિલ્ટર કરો 
+    // જેથી તે 'default' અને 'project' બંને મોડમાં એક્સેસ થઈ શકે.
+    const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+    const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
+    if (_ctxProj === 'default') {
+      const isSimpleGreeting = text.toLowerCase().trim().length < 20 && !text.toLowerCase().includes('code') && !text.toLowerCase().includes('debug');
+      // અહીં memFiles ને બદલે textFiles વાપરો
+      if (textFiles.length > 0 && !isSimpleGreeting) {
+        fileContext = `\n\n---\n[Files in Nivi Memory]\n` + textFiles.slice(0, 3).map(f => {
+          return `File: ${f.name}\n\`\`\`\n${decodeB64Text(f.data).slice(0, 1000)}\n\`\`\``;
+        }).join('\n\n');
+      }
+    } else {
+      // પ્રોજેક્ટ મોડ માટે હવે textFiles અહીં એરર વગર મળશે
+      if (textFiles.length > 0) {
+        const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
+        fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` + textFiles.slice(0, 5).map(f => { 
+          const content = decodeB64Text(f.data).slice(0, 1500); 
+          return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
+        }).join('\n\n');
+      }
+    }
       } else {
           // પ્રોજેક્ટ મોડ માટે (જ્યારે default ન હોય), ત્યારે બધી ફાઇલ મોકલો (જેમ પહેલા હતું)
           if (memFiles.length > 0) {
@@ -889,10 +895,19 @@ async function handleSend(){
     const _artOpen = document.getElementById('artPanel')?.style.width !== '0px' && document.getElementById('artPanel')?.style.width !== '';
     const _wasAborted = AppState?._abortController?.signal.aborted;
     if(window.AppState) AppState._abortController = null;  // clear after each call
-    // ✅ FIX: જો મોડલ જવાબ ના આપે અને થિંકિંગ ચોંટી જાય, તો તેને કાઢો
-    const el = document.getElementById(resId);
-    if (el && el.innerHTML.includes('class="thinking"')) {
-        updateMsg(resId, '<span style="color:var(--red);">⚠ No response from model.</span>');
+// ✅ FIX: જો મોડલ જવાબ ના આપે અને થિંકિંગ ચોંટી જાય, તો સ્માર્ટ એરર મેસેજ બતાવો
+const el = document.getElementById(resId);
+if (el && (el.getAttribute('data-raw') || '').includes('class="thinking"')) {
+    const errorHTML = `
+        <div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--red); padding: 10px 12px; border-radius: 4px; margin-top: 5px;">
+            <strong style="color:var(--red); font-size:13px;">⚠ Request Failed or Timed Out</strong>
+            <div style="color:var(--text-sub); font-size:11.5px; margin-top:4px; line-height:1.4;">
+                Nivi didn't receive a valid response. Please check if the <b>Model Name</b> is correct, or try typing <b>"continue"</b> if the file was too large.
+            </div>
+        </div>
+    `;
+    updateMsg(resId, errorHTML);
+}
     }
     let chatTitle = "Current Session"; 
     if(!_wasAborted) {
