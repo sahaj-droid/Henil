@@ -2,6 +2,25 @@
 //  ARTIFACT ENGINE (artifact.js)
 // ═══════════════════════════════════════════════════
 const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<=768};
+
+// ── Inject CM viewer styles once ──
+(function(){
+  if(document.getElementById('artCmStyles'))return;
+  const s=document.createElement('style');
+  s.id='artCmStyles';
+  s.textContent=`
+    #viewCode .CodeMirror { height:100%;min-height:200px;font-size:12px;line-height:1.6;font-family:'JetBrains Mono',monospace;background:transparent; }
+    #viewCode .CodeMirror-scroll { overflow-y:auto!important;overflow-x:auto!important; }
+    #viewCode .CodeMirror-gutters { background:#1e1f2a;border-right:1px solid rgba(255,255,255,.07); }
+    #viewCode .CodeMirror-linenumber { color:#4a4a6a;font-size:11px;padding:0 8px 0 6px; }
+    #viewCode { flex-direction:column; }
+    #artTabBar::-webkit-scrollbar { height:3px; }
+    #artTabBar::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08);border-radius:10px; }
+    #artSearchBar input::placeholder { color:var(--text-muted); }
+    #artSearchBar button:hover { background:var(--bg-hover)!important;color:var(--text)!important; }
+  `;
+  document.head.appendChild(s);
+})();
 function artEscapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -58,15 +77,8 @@ function openArt(file,b64){
 }
 
 function _openPanel(){
-  const{name,ext,txt,objUrl,cfg}=ART.cur;
-  document.getElementById('artBadge').innerHTML=`<span class="ftbdg ${cfg.cls}">${cfg.badge}</span>`;
-  document.getElementById('artTitle').textContent=name;
-  document.getElementById('tabPreview').style.display=cfg.canPrev?'flex':'none';
-  document.getElementById('openTabBtn').style.display=ext==='html'?'flex':'none';
-  if(txt){const l=txt.split('\n').length,c=txt.length;document.getElementById('artMeta').textContent=`${l} lines · ${(c/1024).toFixed(1)}kb`;}
-  else document.getElementById('artMeta').textContent='';
-  switchTab(cfg.isImg||cfg.isPdf?'preview':'code');
-  document.getElementById('artPanel').classList.add('open');
+  _tabAdd(ART.cur);
+  _openPanelRender();
 }
 
 function switchTab(t){
@@ -78,10 +90,17 @@ function switchTab(t){
   ['viewCode','viewPreview','viewImg','viewPdf'].forEach(id=>document.getElementById(id).style.display='none');
   if(t==='code'&&txt!==null){
     document.getElementById('viewCode').style.display='flex';
-    const el=document.getElementById('codeEl');
-    el.textContent=txt;el.className=`language-${cfg.hl||'plaintext'}`;
-    if(typeof hljs!=='undefined')hljs.highlightElement(el);
+    // Use CodeMirror if available, fallback to hljs
+    if(typeof CodeMirror!=='undefined'){
+      _initCmViewer(txt, ext);
+    } else {
+      document.getElementById('viewCode').innerHTML='<pre style="margin:0;border-radius:0;border:none;min-height:100%;font-size:12px;line-height:1.6;"><code id="codeEl"></code></pre>';
+      const el=document.getElementById('codeEl');
+      el.textContent=txt; el.className=`language-${cfg.hl||'plaintext'}`;
+      if(typeof hljs!=='undefined')hljs.highlightElement(el);
+    }
   }else if(t==='preview'){
+    _destroyCmViewer();
     if(cfg.isImg){document.getElementById('viewImg').style.display='flex';document.getElementById('imgEl').src=objUrl;}
     else if(cfg.isPdf){document.getElementById('viewPdf').style.display='flex';document.getElementById('pdfEl').setAttribute('src',objUrl);}
     else if(ext==='html'){document.getElementById('viewPreview').style.display='flex';document.getElementById('previewIframe').srcdoc=txt;}
@@ -299,6 +318,305 @@ async function artAction(action) {
     renderSidebarData();
   }
 }
+// ═══════════════════════════════════════════════════
+//  IDE VIEWER — CodeMirror read-only with line numbers
+// ═══════════════════════════════════════════════════
+
+// Single CM viewer instance — destroyed before each new file
+let _cmViewer = null;
+
+const CM_MODE_MAP = {
+  js: 'javascript', html: 'htmlmixed',
+  css: 'css', py: 'python', json: 'javascript',
+  md: 'markdown', txt: 'plaintext', csv: 'plaintext'
+};
+
+function _destroyCmViewer() {
+  if (_cmViewer) {
+    try { _cmViewer.toTextArea(); } catch(e) {}
+    _cmViewer = null;
+  }
+}
+
+function _initCmViewer(txt, ext) {
+  _destroyCmViewer();
+  const mode = CM_MODE_MAP[ext] || 'plaintext';
+  // Ensure viewCode container has a fresh textarea for CM to attach to
+  const wrap = document.getElementById('viewCode');
+  wrap.innerHTML = '<textarea id="cmViewerTA"></textarea>';
+  const ta = document.getElementById('cmViewerTA');
+  ta.value = txt;
+  _cmViewer = CodeMirror.fromTextArea(ta, {
+    value: txt,
+    mode: mode,
+    theme: 'dracula',
+    lineNumbers: true,
+    readOnly: true,
+    lineWrapping: false,
+    tabSize: 2,
+    viewportMargin: Infinity,
+    extraKeys: {
+      'Ctrl-F': function(cm) { _artSearchOpen(); },
+      'Escape': function(cm) { _artSearchClose(); }
+    }
+  });
+  _cmViewer.setValue(txt);
+  setTimeout(() => _cmViewer && _cmViewer.refresh(), 60);
+}
+
+// ═══════════════════════════════════════════════════
+//  FILE TABS
+// ═══════════════════════════════════════════════════
+// Tab store: [{name, ext, b64, mime, objUrl, cfg, txt}]
+const ART_TABS = { list: [], active: -1 };
+
+function _tabsRender() {
+  let bar = document.getElementById('artTabBar');
+  if (!bar) {
+    // Inject tab bar above artTabs (code/preview tab row)
+    bar = document.createElement('div');
+    bar.id = 'artTabBar';
+    bar.style.cssText = 'display:flex;align-items:center;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--border);padding:0 4px;flex-shrink:0;min-height:36px;scrollbar-width:none;';
+    const artHdr = document.getElementById('artTabs');
+    artHdr.parentNode.insertBefore(bar, artHdr);
+  }
+  bar.innerHTML = '';
+  ART_TABS.list.forEach((t, i) => {
+    const tab = document.createElement('div');
+    const isActive = i === ART_TABS.active;
+    tab.style.cssText = `display:flex;align-items:center;gap:6px;padding:5px 10px;cursor:pointer;font-family:var(--mono);font-size:11px;white-space:nowrap;flex-shrink:0;border-bottom:2px solid ${isActive ? 'var(--accent)' : 'transparent'};color:${isActive ? 'var(--accent-text)' : 'var(--text-sub)'};background:${isActive ? 'var(--accent-dim)' : 'transparent'};transition:all .15s;`;
+    const cfg = t.cfg;
+    tab.innerHTML = `<span class="ftbdg ${cfg.cls}" style="font-size:9px;padding:1px 5px;">${cfg.badge}</span><span>${t.name}</span><span data-tabclose="${i}" style="opacity:.5;font-size:13px;line-height:1;padding:0 2px;border-radius:3px;margin-left:2px;" onmouseover="this.style.opacity=1;this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.opacity=.5;this.style.background='transparent'">×</span>`;
+    tab.addEventListener('click', (e) => {
+      if (e.target.dataset.tabclose !== undefined) {
+        _tabClose(parseInt(e.target.dataset.tabclose));
+      } else {
+        _tabSwitch(i);
+      }
+    });
+    bar.appendChild(tab);
+  });
+  // Show/hide tab bar
+  bar.style.display = ART_TABS.list.length > 0 ? 'flex' : 'none';
+}
+
+function _tabAdd(fileObj) {
+  // Avoid duplicates
+  const existing = ART_TABS.list.findIndex(t => t.name === fileObj.name);
+  if (existing !== -1) {
+    ART_TABS.active = existing;
+    _tabsRender();
+    return;
+  }
+  ART_TABS.list.push({ ...fileObj });
+  ART_TABS.active = ART_TABS.list.length - 1;
+  _tabsRender();
+}
+
+function _tabSwitch(i) {
+  if (i < 0 || i >= ART_TABS.list.length) return;
+  ART_TABS.active = i;
+  const t = ART_TABS.list[i];
+  ART.cur = t;
+  _tabsRender();
+  _openPanelRender();
+}
+
+function _tabClose(i) {
+  ART_TABS.list.splice(i, 1);
+  if (ART_TABS.list.length === 0) {
+    ART_TABS.active = -1;
+    closeArt();
+    return;
+  }
+  // Switch to previous or first
+  ART_TABS.active = Math.max(0, i - 1);
+  ART.cur = ART_TABS.list[ART_TABS.active];
+  _tabsRender();
+  _openPanelRender();
+}
+
+// ═══════════════════════════════════════════════════
+//  SEARCH UI
+// ═══════════════════════════════════════════════════
+let _artSearchActive = false;
+let _artSearchLastQuery = '';
+
+function _artSearchInject() {
+  if (document.getElementById('artSearchBar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'artSearchBar';
+  bar.style.cssText = 'display:none;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-panel);border-bottom:1px solid var(--border-a);flex-shrink:0;';
+  bar.innerHTML = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="artSearchInput" placeholder="Search in file…" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:12px;min-width:0;" autocomplete="off" spellcheck="false">
+    <span id="artSearchCount" style="font-family:var(--mono);font-size:10px;color:var(--text-muted);flex-shrink:0;"></span>
+    <button id="artSearchPrev" title="Previous (Shift+Enter)" style="background:transparent;border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:11px;">▲</button>
+    <button id="artSearchNext" title="Next (Enter)" style="background:transparent;border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:11px;">▼</button>
+    <button id="artSearchClose" title="Close (Esc)" style="background:transparent;border:none;color:var(--text-sub);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;">×</button>
+  `;
+  // Insert after artTabBar (or before artTabs if no tab bar yet)
+  const ref = document.getElementById('artTabs');
+  ref.parentNode.insertBefore(bar, ref);
+
+  // Wire events
+  const inp = document.getElementById('artSearchInput');
+  inp.addEventListener('input', () => _artSearchRun(inp.value, 0));
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); e.shiftKey ? _artSearchStep(-1) : _artSearchStep(1); }
+    if (e.key === 'Escape') { e.preventDefault(); _artSearchClose(); }
+  });
+  document.getElementById('artSearchClose').addEventListener('click', _artSearchClose);
+  document.getElementById('artSearchNext').addEventListener('click', () => _artSearchStep(1));
+  document.getElementById('artSearchPrev').addEventListener('click', () => _artSearchStep(-1));
+}
+
+let _artSearchCursor = null;
+let _artSearchMatches = [];
+let _artSearchMatchIdx = 0;
+
+function _artSearchOpen() {
+  _artSearchInject();
+  const bar = document.getElementById('artSearchBar');
+  bar.style.display = 'flex';
+  _artSearchActive = true;
+  const inp = document.getElementById('artSearchInput');
+  inp.focus();
+  inp.select();
+  if (_artSearchLastQuery) _artSearchRun(_artSearchLastQuery, 0);
+}
+
+function _artSearchClose() {
+  const bar = document.getElementById('artSearchBar');
+  if (bar) bar.style.display = 'none';
+  _artSearchActive = false;
+  // Clear CM highlights
+  if (_cmViewer) {
+    if (_artSearchCursor) { try { _artSearchCursor.clear(); } catch(e) {} _artSearchCursor = null; }
+    _artSearchMatches.forEach(m => { try { m.clear(); } catch(e) {} });
+    _artSearchMatches = [];
+  }
+  document.getElementById('artSearchCount') && (document.getElementById('artSearchCount').textContent = '');
+}
+
+function _artSearchRun(query, startIdx) {
+  if (!_cmViewer || !query) {
+    if (document.getElementById('artSearchCount')) document.getElementById('artSearchCount').textContent = '';
+    return;
+  }
+  _artSearchLastQuery = query;
+  // Clear previous marks
+  _artSearchMatches.forEach(m => { try { m.clear(); } catch(e) {} });
+  _artSearchMatches = [];
+  _artSearchMatchIdx = startIdx || 0;
+
+  const content = _cmViewer.getValue();
+  const lower = content.toLowerCase();
+  const q = query.toLowerCase();
+  let pos = 0;
+  const positions = [];
+  while (true) {
+    const idx = lower.indexOf(q, pos);
+    if (idx === -1) break;
+    positions.push(idx);
+    pos = idx + 1;
+  }
+
+  if (positions.length === 0) {
+    if (document.getElementById('artSearchCount')) document.getElementById('artSearchCount').textContent = 'No results';
+    return;
+  }
+
+  // Mark all matches with dim highlight
+  positions.forEach((charIdx, i) => {
+    const from = _cmViewer.posFromIndex(charIdx);
+    const to = _cmViewer.posFromIndex(charIdx + query.length);
+    const mark = _cmViewer.markText(from, to, {
+      css: i === _artSearchMatchIdx
+        ? 'background:rgba(109,40,217,.6);color:#fff;border-radius:2px;'
+        : 'background:rgba(109,40,217,.25);border-radius:2px;'
+    });
+    _artSearchMatches.push(mark);
+  });
+
+  // Scroll to active match
+  if (_artSearchMatchIdx < positions.length) {
+    const from = _cmViewer.posFromIndex(positions[_artSearchMatchIdx]);
+    _cmViewer.scrollIntoView({ line: from.line, ch: from.ch }, 80);
+    _cmViewer.setCursor(from);
+  }
+
+  if (document.getElementById('artSearchCount'))
+    document.getElementById('artSearchCount').textContent = `${_artSearchMatchIdx + 1}/${positions.length}`;
+
+  // Store positions for step navigation
+  _cmViewer._searchPositions = positions;
+  _cmViewer._searchQuery = query;
+}
+
+function _artSearchStep(dir) {
+  if (!_cmViewer || !_cmViewer._searchPositions) return;
+  const positions = _cmViewer._searchPositions;
+  const query = _cmViewer._searchQuery || _artSearchLastQuery;
+  _artSearchMatchIdx = (_artSearchMatchIdx + dir + positions.length) % positions.length;
+  _artSearchRun(query, _artSearchMatchIdx);
+  const inp = document.getElementById('artSearchInput');
+  if (inp) inp.value = query;
+}
+
+// ═══════════════════════════════════════════════════
+//  SEARCH BUTTON — inject into art-toolbar
+// ═══════════════════════════════════════════════════
+function _injectSearchBtn() {
+  if (document.getElementById('artSearchBtn')) return;
+  const toolbar = document.querySelector('.art-toolbar');
+  if (!toolbar) return;
+  const btn = document.createElement('button');
+  btn.id = 'artSearchBtn';
+  btn.className = 'tbtn';
+  btn.title = 'Search in file (Ctrl+F)';
+  btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search`;
+  btn.onclick = _artSearchOpen;
+  // Insert at beginning of toolbar before first button
+  toolbar.insertBefore(btn, toolbar.firstChild);
+  // Separator after it
+  const sep = document.createElement('span');
+  sep.style.cssText = 'width:1px;height:14px;background:var(--border);margin:0 2px;';
+  toolbar.insertBefore(sep, btn.nextSibling);
+}
+
+// ═══════════════════════════════════════════════════
+//  CTRL+F global intercept when panel is open
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    const panel = document.getElementById('artPanel');
+    if (panel && panel.classList.contains('open')) {
+      e.preventDefault();
+      _artSearchOpen();
+    }
+  }
+}, true);
+
+// ═══════════════════════════════════════════════════
+//  PANEL RENDER — extracted so tabs can reuse it
+// ═══════════════════════════════════════════════════
+function _openPanelRender() {
+  const { name, ext, txt, objUrl, cfg } = ART.cur;
+  document.getElementById('artBadge').innerHTML = `<span class="ftbdg ${cfg.cls}">${cfg.badge}</span>`;
+  document.getElementById('artTitle').textContent = name;
+  document.getElementById('tabPreview').style.display = cfg.canPrev ? 'flex' : 'none';
+  document.getElementById('openTabBtn').style.display = ext === 'html' ? 'flex' : 'none';
+  if (txt) {
+    const l = txt.split('\n').length, c = txt.length;
+    document.getElementById('artMeta').textContent = `${l} lines · ${(c / 1024).toFixed(1)}kb`;
+  } else document.getElementById('artMeta').textContent = '';
+  switchTab(cfg.isImg || cfg.isPdf ? 'preview' : 'code');
+  document.getElementById('artPanel').classList.add('open');
+  _injectSearchBtn();
+  _artSearchClose(); // reset search on file switch
+}
+
 // ── CODEMIRROR EDITOR ──
 let _cmInstance = null;
 
@@ -383,6 +701,12 @@ function saveArtEdit() {
 // ── CLOSE ART — editor pan reset karo ──
 const _origCloseArt = closeArt;
 closeArt = function() {
+  _destroyCmViewer();
+  _artSearchClose();
+  // Reset tab bar
+  ART_TABS.list = []; ART_TABS.active = -1;
+  const bar = document.getElementById('artTabBar');
+  if (bar) bar.style.display = 'none';
   if (_cmInstance) { _cmInstance.toTextArea(); _cmInstance = null; }
   const editBtn = document.getElementById('editArtBtn');
   const saveBtn = document.getElementById('saveArtBtn');
