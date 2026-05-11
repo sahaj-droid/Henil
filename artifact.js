@@ -12,14 +12,15 @@ const ART = { cur: null, tab: 'code', isMob: () => window.innerWidth < 600 };
   const s = document.createElement('style');
   s.id = 'artCmStyles';
   s.textContent = `
-    #viewCode { flex-direction:column; overflow:hidden; }
+    #viewCode { flex-direction:column; overflow:hidden; flex:1; min-height:0; }
     #viewCode .CodeMirror {
       height:100%; width:100%;
       font-family:'JetBrains Mono',monospace;
       font-size:12px; line-height:1.6;
       border:none !important; border-radius:0 !important;
     }
-    #viewCode .CodeMirror-scroll { min-height:100%; }
+    #viewCode .CodeMirror-scroll { min-height:200px; overflow-y:auto !important; }
+    #viewCode .CodeMirror-sizer { min-height:200px !important; }
     #artTabBar::-webkit-scrollbar { height:3px; }
     #artTabBar::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08);border-radius:10px; }
     #artSearchBar input::placeholder { color:var(--text-muted); }
@@ -157,7 +158,11 @@ const CM = (() => {
   }
 
   // --- Force re-layout (needed after display:none → flex) ---
-  function refresh() { if (_instance) setTimeout(() => _instance.refresh(), 10); }
+  function refresh() {
+    if (!_instance) return;
+    setTimeout(() => { _instance.refresh(); }, 30);
+    setTimeout(() => { _instance.refresh(); }, 150); // second pass for old PCs
+  }
 
   // --- Native CM search via SearchCursor ---
   function _clearSearchMarkers() {
