@@ -830,8 +830,11 @@ async function handleSend(){
           return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: msgText }] };
         });
         // Directive faqt history khali hoy tyare (navi chat) inject karo
-        const niviDirective = `SYSTEM DIRECTIVE: You are Nivi AI. NEVER guess code replacements. Always provide targeted, exact code replacements with: Line Number, File Name, Existing Content/Block, Proposed Content/Block.`;
-        if (hist.length === 0) {
+          const niviDirective = `SYSTEM DIRECTIVE: You are Nivi AI. 
+          1. If the user asks general questions, chat naturally and briefly.
+          2. Only provide exact code replacements (Line Number, File Name, Existing Content/Block, Proposed Content/Block) when the user specifically asks for code, debugging, or optimization.
+          3. If no specific coding task is requested, maintain a helpful and conversational tone.`;
+          if (hist.length === 0) {
           hist.unshift({ role: 'user', parts: [{ text: niviDirective }] });
           hist.push({ role: 'model', parts: [{ text: 'Understood. I am Nivi AI. I will always provide exact, targeted code replacements with line numbers and file names.' }] });
         }
