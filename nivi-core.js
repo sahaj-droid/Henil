@@ -849,40 +849,28 @@ async function handleSend(){
         memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
       }
 let fileContext = '';
-    
-    // ✅ ફિક્સ: TEXT_MIMES અને textFiles ને અહીં બહાર ફિલ્ટર કરો 
-    // જેથી તે 'default' અને 'project' બંને મોડમાં એક્સેસ થઈ શકે.
-    const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-    const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
+
     if (_ctxProj === 'default') {
       const isSimpleGreeting = text.toLowerCase().trim().length < 20 && !text.toLowerCase().includes('code') && !text.toLowerCase().includes('debug');
-      // અહીં memFiles ને બદલે textFiles વાપરો
+      
+      const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+      const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
+
       if (textFiles.length > 0 && !isSimpleGreeting) {
         fileContext = `\n\n---\n[Files in Nivi Memory]\n` + textFiles.slice(0, 3).map(f => {
           return `File: ${f.name}\n\`\`\`\n${decodeB64Text(f.data).slice(0, 1000)}\n\`\`\``;
         }).join('\n\n');
       }
     } else {
-      // પ્રોજેક્ટ મોડ માટે હવે textFiles અહીં એરર વગર મળશે
-      if (textFiles.length > 0) {
+      if (memFiles.length > 0) {
         const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
-        fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` + textFiles.slice(0, 5).map(f => { 
+        // જૂના કોડ મુજબની ગોઠવણ 
+        fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` + memFiles.slice(0, 5).map(f => { 
           const content = decodeB64Text(f.data).slice(0, 1500); 
           return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
         }).join('\n\n');
       }
     }
-      } else {
-          // પ્રોજેક્ટ મોડ માટે (જ્યારે default ન હોય), ત્યારે બધી ફાઇલ મોકલો (જેમ પહેલા હતું)
-          if (memFiles.length > 0) {
-          const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
-          fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
-            textFiles.slice(0, 5).map(f => { // 8 ને બદલે 5 ફાઇલ કરી દીધી
-              const content = decodeB64Text(f.data).slice(0, 1500); // 3000 ને બદલે 1500 કરી દીધું
-              return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
-            }).join('\n\n');
-        }
-      }
      const finalPrompt = fileContext ? apiText + fileContext : apiText;
       const _result = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!AppState?._abortController?.signal.aborted)updateMsg(resId,chunk);});
       if (_result?.model && typeof updateActiveModelUI === 'function') updateActiveModelUI(_result.model);
