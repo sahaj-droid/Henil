@@ -22,11 +22,16 @@ async function saveNiviChat(chatHistory) {
     }
     
 // Empty array Firebase par save na karo — accidental overwrite rokvo
-    const validChat = chatHistory ? chatHistory : [];
-    if (validChat.length === 0) {
-      console.warn('saveNiviChat: empty array — skip karyun');
-      return;
-    }
+if (validChat.length === 0) {
+  // Empty = Firebase par delete karo, skip nahi
+  if (window.NiviDB) {
+    try { await NiviDB.saveChat('default', []); } catch(e) {}
+  }
+  await db.collection('users').doc(userId)
+          .collection('niviChats').doc(chatId).delete();
+  console.log('✅ Chat cleared from Firebase');
+  return;
+}
 
     // Save to IndexedDB first
     if (window.NiviDB) {
