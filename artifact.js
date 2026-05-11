@@ -267,8 +267,17 @@ async function artAction(action) {
     if(window.AppState) AppState._abortController = null;
     if(!_wasAborted) {
       if(window.AppState) {
-        const el = document.getElementById(resId);
-        let rawText = el?.getAttribute('data-raw')?.replace(/&#39;/g, "'").replace(/&quot;/g, '"') || el?.innerText || '';
+       // Use dataset or innerText only as last resort — prefer structured data
+          const bubble = document.getElementById(resId);
+          let rawText = '';
+          if (bubble) {
+            const attr = bubble.getAttribute('data-raw');
+            if (attr) {
+              rawText = attr.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+            } else {
+              rawText = bubble.innerText || '';
+            }
+          }
         AppState._tabChatHistory.push({role:'nivi', text: rawText});
         localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
 
@@ -496,9 +505,15 @@ function _showPatchToast(results, filename) {
 
 // ── Trigger file picker ──
 window.triggerPatchUpload = function() {
+  const history = window.AppState?._tabChatHistory || [];
+  if (history.length === 0) {
+    _showPatchToast([{ ok: false, msg: 'Chat history empty. Ask Nivi to fix your code first!' }], '');
+    return;
+  }
   const patches = _parsePatchBlocks();
   if (patches.length === 0) {
-    alert('No FILE/FIND/REPLACE patches found in current chat.\n\nAsk Nivi to fix your code first!');
+    // Show toast instead of blocking alert
+    _showPatchToast([{ ok: false, msg: 'No FILE/FIND/REPLACE patch blocks in chat. Ask Nivi using patch format.' }], '');
     return;
   }
   document.getElementById('patchFileInp').click();
