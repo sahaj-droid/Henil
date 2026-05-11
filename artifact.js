@@ -19,8 +19,9 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
     #artTabBar::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08);border-radius:10px; }
     #artSearchBar input::placeholder { color:var(--text-muted); }
     #artSearchBar button:hover { background:var(--bg-hover)!important;color:var(--text)!important; }
-  `;
-  document.head.appendChild(s);
+    #viewEditor .CodeMirror,
+    #viewEditor .CodeMirror-scroll { user-select: text; -webkit-user-select: text;} `;
+    document.head.appendChild(s);
 })();
 function artEscapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -791,10 +792,17 @@ function saveArtEdit() {
   saveBtn.style.display = 'none';
 
   // Highlight updated code
-  const el = document.getElementById('codeEl');
-  el.textContent = newCode;
-  el.className = `language-${ART.cur.cfg.hl || 'plaintext'}`;
-  if (typeof hljs !== 'undefined') hljs.highlightElement(el);
+    if (typeof CodeMirror !== 'undefined' && document.querySelector('.cm-line-table')) {
+    // જો કસ્ટમ ટેબલ વ્યુઅર એક્ટિવ હોય તો તેને રિફ્રેશ કરો
+    _initCmViewer(newCode, ART.cur.ext);
+    } else {
+    // જો સાદો વ્યુઅર એક્ટિવ હોય તો તેને અપડેટ કરો
+    const el = document.getElementById('codeEl');
+    if (el) { el.textContent = newCode;
+        el.className = `language-${ART.cur.cfg.hl || 'plaintext'}`;
+        if (typeof hljs !== 'undefined') hljs.highlightElement(el);
+    }
+}
 
   // Success feedback
   const sb = document.getElementById('saveArtBtn');
