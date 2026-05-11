@@ -497,8 +497,18 @@ async syncToLocalMemory(projId) {
       req.onsuccess = () => resolve(req.result ? req.result.messages : null);
       req.onerror   = (e) => reject(e.target.error);
     });
-  }
-};
+  },
+// ── Delete chat from IndexedDB ──
+async deleteChat(projId) {
+  const db = await this.open();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(this.STORE_CHATS, 'readwrite');
+    tx.objectStore(this.STORE_CHATS).delete(projId);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror    = (e) => reject(e.target.error);
+  });
+}   // ← last method — comma નહીં
+};  // ← NiviDB object બંધ
 
 // ── Export ──
 window.NiviDB = NiviDB;
