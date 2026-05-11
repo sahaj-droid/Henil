@@ -12,7 +12,7 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
     #viewCode { flex-direction:column;overflow:auto; }
     #viewCode .cm-viewer-pre { margin:0;padding:0;border:none!important;border-radius:0!important;background:#282a36;min-height:100%;width:100%; }
     #viewCode .cm-line-table { border-collapse:collapse;width:100%;table-layout:fixed; }
-    #viewCode .cm-line-cell { padding:0 0 0 12px;white-space:pre;line-height:1.6;font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all; }
+    #viewCode .cm-line-cell { padding:0 0 0 12px;white-space:pre;line-height:1.6;font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all; user-select: text; -webkit-user-select: text; }
     #viewCode .cm-line-table tr:hover { background:rgba(255,255,255,.03); }
     #viewCode mark.art-search-mark { border-radius:2px;padding:0 1px; }
     #artTabBar::-webkit-scrollbar { height:3px; }
