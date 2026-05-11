@@ -30,8 +30,10 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
     #viewEditor .CodeMirror-line::-moz-selection,
     #viewEditor .CodeMirror-line > span::-moz-selection,
     #viewEditor .CodeMirror-line > span > span::-moz-selection { background: rgba(135, 175, 255, 0.4) !important; color: inherit !important;}
+    #viewEditor .CodeMirror { height: 100% !important; flex: 1 !important; font-family: 'JetBrains Mono', monospace !important;}
     /* આને artCmStyles ની અંદર છેલ્લે ઉમેરો */
-    .CodeMirror-activeline-background { background: rgba(255, 255, 255, 0.05) !important;}
+    .CodeMirror-activeline-background,
+    .CodeMirror-activeline .CodeMirror-line {background: rgba(255, 255, 255, 0.08) !important;
     .CodeMirror-foldgutter { width: .7em;}
     .CodeMirror-foldgutter-open, .CodeMirror-foldgutter-folded { cursor: pointer; color: #6272a4;}
     `;
