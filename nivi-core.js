@@ -849,12 +849,26 @@ async function handleSend(){
         memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
       }
       let fileContext = '';
-      // ✅ FIX: ફક્ત જો યુઝરનો મેસેજ લાંબો હોય અથવા કોડ રિલેટેડ હોય તો જ ફાઇલ કોન્ટેક્ટ મોકલો
-      const isGeneralGreeting = text.length < 15 && !text.includes('code') && !text.includes('debug') && !text.includes('fix');
-      if (memFiles.length > 0 && !isGeneralGreeting) {
-        const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-        const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
-        if (textFiles.length > 0) {
+      // ✅ અહીં શરત ઉમેરો: જો પ્રોજેક્ટ 'default' હોય, તો જ આ નિયમો લાગુ પડશે
+      if (_ctxProj === 'default') {
+          // Default ચેટ માટે ટૂંકા મેસેજમાં ફાઇલ ડમ્પ ન મોકલો
+          const isSimpleGreeting = text.toLowerCase().trim().length < 20 && 
+                                   !text.toLowerCase().includes('code') && 
+                                   !text.toLowerCase().includes('debug');
+          if (memFiles.length > 0 && !isSimpleGreeting) {
+              // માત્ર જરૂર હોય તો જ ફાઇલ કોન્ટેક્ટ મોકલો
+              const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+              const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
+          if (textFiles.length > 0) {
+                  fileContext = `\n\n---\n[Files in Nivi Memory]\n` +
+                    textFiles.slice(0, 3).map(f => {
+                      return `File: ${f.name}\n\`\`\`\n${decodeB64Text(f.data).slice(0, 1000)}\n\`\`\``;
+                    }).join('\n\n');
+              }
+          }
+      } else {
+          // પ્રોજેક્ટ મોડ માટે (જ્યારે default ન હોય), ત્યારે બધી ફાઇલ મોકલો (જેમ પહેલા હતું)
+          if (memFiles.length > 0) {
           const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
           fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` +
             textFiles.slice(0, 5).map(f => { // 8 ને બદલે 5 ફાઇલ કરી દીધી
