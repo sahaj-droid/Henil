@@ -21,10 +21,16 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
     #artSearchBar button:hover { background:var(--bg-hover)!important;color:var(--text)!important; }
     #viewEditor .CodeMirror,
     #viewEditor .CodeMirror-scroll { user-select: text; -webkit-user-select: text;}
-    /* ફક્ત એડિટ મોડ (CodeMirror) માં સિલેક્શન હાઇલાઇટ માટે */
-    #viewEditor .CodeMirror-selected {background: rgba(135, 175, 255, 0.4) !important;}
+    /* CodeMirror ના કસ્ટમ સિલેક્શન લેયર (div) માટે હાઇલાઇટ કલર */
+    #viewEditor div.CodeMirror-selected { background: rgba(135, 175, 255, 0.4) !important; z-index: 1 !important;}
+    /* જો બ્રાઉઝર કોઈ રીતે નેટિવ સિલેક્શન ટ્રિગર કરે તો એના માટેના સેફ્ટી રૂલ્સ */
     #viewEditor .CodeMirror-line::selection,
-    #viewEditor .CodeMirror-line *::selection {background: rgba(135, 175, 255, 0.4) !important;}`;
+    #viewEditor .CodeMirror-line > span::selection,
+    #viewEditor .CodeMirror-line > span > span::selection { background: rgba(135, 175, 255, 0.4) !important; color: inherit !important;}
+    #viewEditor .CodeMirror-line::-moz-selection,
+    #viewEditor .CodeMirror-line > span::-moz-selection,
+    #viewEditor .CodeMirror-line > span > span::-moz-selection { background: rgba(135, 175, 255, 0.4) !important; color: inherit !important;}
+    `;
     document.head.appendChild(s);
 })();
 function artEscapeHTML(value) {
