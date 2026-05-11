@@ -45,7 +45,7 @@ if (chatHistory.length === 0) {
       msgCount: chatHistory.length
     });
     
-    console.log('✅ Nivi chat saved to Firebase (Count: ' + validChat.length + ')');
+    console.log('✅ Nivi chat saved to Firebase (Count: ' + chatHistory.length + ')');
     _updateSyncUI('connected');
   } catch(e) {
     console.error('saveNiviChat error:', e);
