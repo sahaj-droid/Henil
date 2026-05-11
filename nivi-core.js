@@ -193,35 +193,35 @@ renderSidebarData();
     document.getElementById('mainInput').focus();
   });
 
-  // 2. CHAT RESTORE
-  if (_initProj !== 'default') {
-      try {
-          // Use IDB/Firebase load wrapper instead of LocalStorage only
-          let projChat = typeof loadProjectChat === 'function' ? await loadProjectChat(_initProj) : loadProjectChatLocal(_initProj);
-          if (projChat && projChat.length > 0) {
-              if(window.AppState) AppState._tabChatHistory = projChat;
-              localStorage.setItem('niviTabChat', JSON.stringify(projChat));
-              projChat.forEach(msg => appendMsg(msg.role, msg.text));
-          }
-      } catch(e) { console.warn('Project chat init failed:', e); }
-  } else {
-      // Default Nivi Chat Restore
-      try {
-          // Use IDB/Firebase load wrapper instead of LocalStorage only
-          let localHistory = typeof loadNiviChat === 'function' ? await loadNiviChat() : JSON.parse(localStorage.getItem('niviTabChat') || '[]');
-          if (localHistory && localHistory.length > 0) {
-              if(window.AppState) AppState._tabChatHistory = localHistory;
-              localStorage.setItem('niviTabChat', JSON.stringify(localHistory));
-              localHistory.forEach(msg => appendMsg(msg.role, msg.text));
-              console.log('✅ Chat restored from IDB/Firebase');
-          } else {
-              if(window.AppState) AppState._tabChatHistory = [];
-          }
-      } catch(e){
-          console.warn('Chat init failed, fallback:', e);
-          restoreChat();
-      }
-  }
+// 2. CHAT RESTORE
+if (_initProj !== 'default') {
+    try {
+        let projChat = typeof loadProjectChat === 'function' ? await loadProjectChat(_initProj) : loadProjectChatLocal(_initProj);
+        if (projChat && projChat.length > 0) {
+            if(window.AppState) AppState._tabChatHistory = projChat;
+            localStorage.setItem('niviTabChat', JSON.stringify(projChat));
+            projChat.forEach(msg => appendMsg(msg.role, msg.text));
+        }
+    } catch(e) { console.warn('Project chat init failed:', e); }
+} else {
+    try {
+        let localHistory = typeof loadNiviChat === 'function' ? await loadNiviChat() : JSON.parse(localStorage.getItem('niviTabChat') || '[]');
+        if (localHistory && localHistory.length > 0) {
+            if(window.AppState) AppState._tabChatHistory = localHistory;
+            localStorage.setItem('niviTabChat', JSON.stringify(localHistory));
+            // ✅ FIX: chatWindow clear karo pehla — duplicate append rokvo
+            document.getElementById('chatWindow').innerHTML = HERO_HTML;
+            localHistory.forEach(msg => appendMsg(msg.role, msg.text));
+            console.log('✅ Chat restored from IDB/Firebase');
+        } else {
+            if(window.AppState) AppState._tabChatHistory = [];
+        }
+    } catch(e){
+        console.warn('Chat init failed, fallback:', e);
+        // ✅ FIX: restoreChat() call NAHI — duplicate thase
+        if(window.AppState) AppState._tabChatHistory = [];
+    }
+}
 };
 
 // ── UI HELPERS ──
