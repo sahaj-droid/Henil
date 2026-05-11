@@ -90,10 +90,13 @@ const CM = (() => {
   let _mode = 'view';     // 'view' | 'edit'
   let _overlayMarkers = [];
   let _searchCursor = null;
+  let _searchIdx = 0;     // private — replaces CM._searchIdx
+  const _MAX_MARKERS = 500; // cap for large files to prevent marker accumulation
 
-  // --- CodeMirror availability guard ---
+  // --- CodeMirror availability guard (core + search addon) ---
   function _available() {
-    return typeof CodeMirror !== 'undefined';
+    return typeof CodeMirror !== 'undefined' &&
+           typeof CodeMirror.createSearchCursor === 'function';
   }
 
   // --- Resolve CM mode from ext ---
@@ -103,14 +106,17 @@ const CM = (() => {
 
   // --- Destroy existing instance safely ---
   function _destroy() {
+    _clearSearchMarkers();
     if (_instance) {
-      _clearSearchMarkers();
-      const wrap = _instance.getWrapperElement();
-      wrap.parentNode && wrap.parentNode.removeChild(wrap);
+      try {
+        const wrap = _instance.getWrapperElement();
+        if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap);
+      } catch (_) {}
       _instance = null;
     }
     _mode = 'view';
     _searchCursor = null;
+    _searchIdx = 0;
   }
 
   // --- Mount CM into a container div ---
@@ -180,30 +186,30 @@ const CM = (() => {
       return;
     }
 
-    // Apply dim markers to all
-    allMatches.forEach(m => {
+    // Cap markers for large files — mark only first _MAX_MARKERS matches
+    const markable = allMatches.slice(0, _MAX_MARKERS);
+    markable.forEach(m => {
       const marker = doc.markText(m.from, m.to, { className: 'art-cm-search-match' });
       _overlayMarkers.push(marker);
     });
 
-    // Track active index
-    if (!CM._searchIdx) CM._searchIdx = 0;
-    if (direction === 'reset') CM._searchIdx = 0;
-    else if (direction === 1) CM._searchIdx = (CM._searchIdx + 1) % allMatches.length;
-    else if (direction === -1) CM._searchIdx = (CM._searchIdx - 1 + allMatches.length) % allMatches.length;
+    // Track active index (private closure var)
+    if (direction === 'reset') _searchIdx = 0;
+    else if (direction === 1) _searchIdx = (_searchIdx + 1) % allMatches.length;
+    else if (direction === -1) _searchIdx = (_searchIdx - 1 + allMatches.length) % allMatches.length;
 
     // Highlight active
-    const active = allMatches[CM._searchIdx];
+    const active = allMatches[_searchIdx];
     const activeMarker = doc.markText(active.from, active.to, { className: 'art-cm-search-match-active' });
     _overlayMarkers.push(activeMarker);
     _instance.scrollIntoView({ from: active.from, to: active.to }, 80);
 
-    onResult && onResult(CM._searchIdx + 1, allMatches.length);
+    onResult && onResult(_searchIdx + 1, allMatches.length);
   }
 
   function clearSearch() {
     _clearSearchMarkers();
-    CM._searchIdx = 0;
+    _searchIdx = 0;
   }
 
   function isReady() { return !!_instance; }
@@ -301,7 +307,9 @@ function switchTab(t) {
       document.getElementById('pdfEl').setAttribute('src', objUrl);
     } else if (ext === 'html') {
       document.getElementById('viewPreview').style.display = 'flex';
-      document.getElementById('previewIframe').srcdoc = txt;
+      const iframe = document.getElementById('previewIframe');
+      iframe.setAttribute('sandbox', 'allow-scripts');
+      iframe.srcdoc = txt;
     }
   }
 }
@@ -367,8 +375,10 @@ function _uiEditMode(editing) {
 }
 
 // ═══════════════════════════════════════════════════
-//  MOBILE SHEET — hljs is fine here (no search, no edit)
+//  MOBILE SHEET — CM viewer (unified, no hljs dual system)
 // ═══════════════════════════════════════════════════
+
+let _shCmInstance = null; // separate lightweight CM instance for mobile sheet
 
 function _openSheet() {
   const { name, cfg } = ART.cur;
@@ -383,25 +393,47 @@ function _openSheet() {
 function _renderSheet(t) {
   const { ext, txt, objUrl, cfg } = ART.cur;
   const c = document.getElementById('shContent');
+  // Destroy any previous mobile CM instance
+  if (_shCmInstance) {
+    try { const w = _shCmInstance.getWrapperElement(); if (w && w.parentNode) w.parentNode.removeChild(w); } catch(_) {}
+    _shCmInstance = null;
+  }
   c.innerHTML = '';
   document.getElementById('shTabCode').classList.toggle('active', t === 'code');
   document.getElementById('shTabPreview').classList.toggle('active', t === 'preview');
   if (t === 'code' && txt !== null) {
-    _shRenderCode(c, txt, cfg);
+    _shRenderCode(c, txt, cfg, ext);
   } else if (t === 'preview') {
     _shRenderPreview(c, cfg, ext, objUrl, txt);
   }
 }
 
-function _shRenderCode(container, txt, cfg) {
-  const pre = document.createElement('pre');
-  pre.style.cssText = 'margin:0;border-radius:0;border:none;min-height:200px;font-size:12px;line-height:1.6;';
-  const code = document.createElement('code');
-  code.className = `language-${cfg.cmMode || 'plaintext'}`;
-  code.textContent = txt;
-  pre.appendChild(code);
-  container.appendChild(pre);
-  if (typeof hljs !== 'undefined') hljs.highlightElement(code);
+function _shRenderCode(container, txt, cfg, ext) {
+  // Use CM if available (unified architecture), fallback to hljs for very old browsers
+  if (typeof CodeMirror !== 'undefined') {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'min-height:200px;font-size:12px;line-height:1.6;';
+    container.appendChild(wrap);
+    _shCmInstance = CodeMirror(wrap, {
+      value: txt || '',
+      mode: cfg.cmMode || 'plaintext',
+      theme: 'dracula',
+      lineNumbers: true,
+      lineWrapping: true,
+      readOnly: 'nocursor',
+      cursorBlinkRate: -1,
+    });
+  } else {
+    // hljs fallback (graceful degradation)
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'margin:0;border-radius:0;border:none;min-height:200px;font-size:12px;line-height:1.6;';
+    const code = document.createElement('code');
+    code.className = `language-${cfg.cmMode || 'plaintext'}`;
+    code.textContent = txt;
+    pre.appendChild(code);
+    container.appendChild(pre);
+    if (typeof hljs !== 'undefined') hljs.highlightElement(code);
+  }
 }
 
 function _shRenderPreview(container, cfg, ext, objUrl, txt) {
@@ -421,7 +453,8 @@ function _shRenderPreview(container, cfg, ext, objUrl, txt) {
   } else if (ext === 'html') {
     const ifr = document.createElement('iframe');
     ifr.style.cssText = 'width:100%;height:60vh;border:none;background:#fff;';
-    ifr.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    // Safer sandbox: allow-scripts only — no allow-same-origin to prevent iframe escaping sandbox
+    ifr.setAttribute('sandbox', 'allow-scripts');
     ifr.srcdoc = txt;
     container.appendChild(ifr);
   }
@@ -456,7 +489,10 @@ function dlArt() {
 
 function openArtTab() {
   if (!ART.cur?.txt) return;
-  window.open(URL.createObjectURL(new Blob([ART.cur.txt], { type: 'text/html' })), '_blank');
+  const blobUrl = URL.createObjectURL(new Blob([ART.cur.txt], { type: 'text/html' }));
+  window.open(blobUrl, '_blank');
+  // Revoke after short delay to allow the new tab to load
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
 }
 
 // ═══════════════════════════════════════════════════
