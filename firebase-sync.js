@@ -22,10 +22,10 @@ async function saveNiviChat(chatHistory) {
     }
     
 // Empty array Firebase par save na karo — accidental overwrite rokvo
-if (validChat.length === 0) {
+if (chatHistory.length === 0) {
   // Empty = Firebase par delete karo, skip nahi
   if (window.NiviDB) {
-    try { await NiviDB.saveChat('default', []); } catch(e) {}
+    try { await NiviDB.saveChat('default', chatHistory); } catch(e) { console.warn('IDB chat save failed', e); }
   }
   await db.collection('users').doc(userId)
           .collection('niviChats').doc(chatId).delete();
@@ -35,14 +35,14 @@ if (validChat.length === 0) {
 
     // Save to IndexedDB first
     if (window.NiviDB) {
-      try { await NiviDB.saveChat('default', validChat); } catch(e) { console.warn('IDB chat save failed', e); }
+      try { await NiviDB.saveChat('default', chatHistory); } catch(e) { console.warn('IDB chat save failed', e); }
     }
 
     await db.collection('users').doc(userId)
             .collection('niviChats').doc(chatId).set({
-      messages: validChat,
+      messages: chatHistory,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      msgCount: validChat.length
+      msgCount: chatHistory.length
     });
     
     console.log('✅ Nivi chat saved to Firebase (Count: ' + validChat.length + ')');
