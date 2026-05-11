@@ -9,13 +9,12 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
   const s=document.createElement('style');
   s.id='artCmStyles';
   s.textContent=`
-    #viewCode .CodeMirror { height:100%;min-height:200px;font-size:12px;line-height:1.6;font-family:'JetBrains Mono',monospace;background:transparent;user-select:text!important;-webkit-user-select:text!important; }
-    #viewCode .CodeMirror-scroll { overflow-y:auto!important;overflow-x:auto!important;user-select:text!important;-webkit-user-select:text!important; }
-    #viewCode .CodeMirror-code { user-select:text!important;-webkit-user-select:text!important; }
-    #viewCode .CodeMirror-line { user-select:text!important;-webkit-user-select:text!important; }
-    #viewCode .CodeMirror-gutters { background:#1e1f2a;border-right:1px solid rgba(255,255,255,.07); }
-    #viewCode .CodeMirror-linenumber { color:#4a4a6a;font-size:11px;padding:0 8px 0 6px; }
-    #viewCode { flex-direction:column; }
+    #viewCode { flex-direction:column;overflow:auto; }
+    #viewCode .cm-viewer-pre { margin:0;padding:0;border:none!important;border-radius:0!important;background:#282a36;min-height:100%;width:100%; }
+    #viewCode .cm-line-table { border-collapse:collapse;width:100%;table-layout:fixed; }
+    #viewCode .cm-line-cell { padding:0 0 0 12px;white-space:pre;line-height:1.6;font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all; }
+    #viewCode .cm-line-table tr:hover { background:rgba(255,255,255,.03); }
+    #viewCode mark.art-search-mark { border-radius:2px;padding:0 1px; }
     #artTabBar::-webkit-scrollbar { height:3px; }
     #artTabBar::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08);border-radius:10px; }
     #artSearchBar input::placeholder { color:var(--text-muted); }
@@ -325,7 +324,12 @@ async function artAction(action) {
 // ═══════════════════════════════════════════════════
 
 // Single CM viewer instance — destroyed before each new file
-let _cmViewer = null;
+// ═══════════════════════════════════════════════════
+//  IDE VIEWER — hljs with line numbers (read-only, fully selectable)
+//  CM is only used for edit mode (_cmInstance)
+// ═══════════════════════════════════════════════════
+
+let _cmViewer = null; // kept as null — no read-only CM viewer
 
 const CM_MODE_MAP = {
   js: 'javascript', html: 'htmlmixed',
@@ -334,48 +338,51 @@ const CM_MODE_MAP = {
 };
 
 function _destroyCmViewer() {
-  if (_cmViewer) {
-    try { _cmViewer.toTextArea(); } catch(e) {}
-    _cmViewer = null;
-  }
+  // No CM viewer instance to destroy — placeholder kept for compatibility
+  _cmViewer = null;
 }
 
 function _initCmViewer(txt, ext) {
   _destroyCmViewer();
-  const mode = CM_MODE_MAP[ext] || 'plaintext';
   const wrap = document.getElementById('viewCode');
-  wrap.innerHTML = '<textarea id="cmViewerTA"></textarea>';
-  const ta = document.getElementById('cmViewerTA');
-  ta.value = txt;
-  _cmViewer = CodeMirror.fromTextArea(ta, {
-    value: txt,
-    mode: mode,
-    theme: 'dracula',
-    lineNumbers: true,
-    readOnly: true,
-    cursorBlinkRate: 0,
-    lineWrapping: false,
-    tabSize: 2,
-    viewportMargin: 50,
-    extraKeys: {
-      'Ctrl-F': function(cm) { _artSearchOpen(); },
-      'Cmd-F':  function(cm) { _artSearchOpen(); },
-      'Escape': function(cm) { _artSearchClose(); }
+  const cfg = ART.cur?.cfg || {};
+  const hl = cfg.hl || 'plaintext';
+
+  // Build line-numbered table
+  const lines = txt.split('\n');
+  const totalLines = lines.length;
+  const padLen = String(totalLines).length;
+
+  // Syntax highlight the whole block first
+  let highlighted = txt;
+  if (typeof hljs !== 'undefined') {
+    try {
+      const lang = hljs.getLanguage(hl) ? hl : 'plaintext';
+      highlighted = hljs.highlight(txt, { language: lang, ignoreIllegals: true }).value;
+    } catch(e) {
+      highlighted = txt.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
     }
+  } else {
+    highlighted = txt.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  }
+
+  // Split highlighted HTML by newlines carefully
+  const hlLines = highlighted.split('\n');
+
+  let tableHTML = '<table class="cm-line-table" style="border-collapse:collapse;width:100%;table-layout:fixed;">';
+  hlLines.forEach((line, i) => {
+    const lineNum = i + 1;
+    tableHTML += `<tr>
+      <td class="cm-gutter" style="width:${padLen*8+16}px;min-width:${padLen*8+16}px;text-align:right;padding:0 10px 0 6px;color:#4a4a6a;font-size:11px;font-family:'JetBrains Mono',monospace;user-select:none;-webkit-user-select:none;border-right:1px solid rgba(255,255,255,.07);background:#1e1f2a;vertical-align:top;line-height:1.6;">${lineNum}</td>
+      <td class="cm-line-cell" style="padding:0 0 0 12px;white-space:pre;line-height:1.6;font-family:'JetBrains Mono',monospace;font-size:12px;">${line || ' '}</td>
+    </tr>`;
   });
-  _cmViewer.setValue(txt);
-  // Allow text selection — CM readOnly blocks pointer events on content
-  setTimeout(() => {
-    if (!_cmViewer) return;
-    _cmViewer.refresh();
-    const cmEl = _cmViewer.getWrapperElement();
-    // Re-enable selection on the code area
-    const content = cmEl.querySelector('.CodeMirror-code');
-    const scroll  = cmEl.querySelector('.CodeMirror-scroll');
-    if (content) content.style.userSelect = 'text';
-    if (scroll)  scroll.style.userSelect  = 'text';
-    cmEl.style.userSelect = 'text';
-  }, 60);
+  tableHTML += '</table>';
+
+  wrap.innerHTML = `<pre class="cm-viewer-pre" style="margin:0;padding:0;border:none;border-radius:0;background:#282a36;overflow:auto;min-height:100%;width:100%;"><code class="hljs language-${hl}" style="padding:0;background:transparent;font-size:12px;">${tableHTML}</code></pre>`;
+
+  // Store for search
+  _cmViewer = { _txt: txt, _wrap: wrap, _searchPositions: null, _searchQuery: null };
 }
 
 // ═══════════════════════════════════════════════════
@@ -507,31 +514,36 @@ function _artSearchClose() {
   const bar = document.getElementById('artSearchBar');
   if (bar) bar.style.display = 'none';
   _artSearchActive = false;
-  // Clear CM highlights
-  if (_cmViewer) {
-    if (_artSearchCursor) { try { _artSearchCursor.clear(); } catch(e) {} _artSearchCursor = null; }
-    _artSearchMatches.forEach(m => { try { m.clear(); } catch(e) {} });
-    _artSearchMatches = [];
-  }
-  document.getElementById('artSearchCount') && (document.getElementById('artSearchCount').textContent = '');
+  _artSearchClearMarks();
+  if (document.getElementById('artSearchCount')) document.getElementById('artSearchCount').textContent = '';
+}
+
+function _artSearchClearMarks() {
+  // Remove all highlight spans injected by search
+  const wrap = document.getElementById('viewCode');
+  if (!wrap) return;
+  wrap.querySelectorAll('mark.art-search-mark').forEach(m => {
+    m.replaceWith(document.createTextNode(m.textContent));
+  });
+  // Re-normalize text nodes
+  wrap.querySelectorAll('.cm-line-cell').forEach(td => td.normalize());
+  _artSearchMatches = [];
 }
 
 function _artSearchRun(query, startIdx) {
-  if (!_cmViewer || !query) {
+  _artSearchClearMarks();
+  if (!query || !ART.cur?.txt) {
     if (document.getElementById('artSearchCount')) document.getElementById('artSearchCount').textContent = '';
     return;
   }
   _artSearchLastQuery = query;
-  // Clear previous marks
-  _artSearchMatches.forEach(m => { try { m.clear(); } catch(e) {} });
-  _artSearchMatches = [];
   _artSearchMatchIdx = startIdx || 0;
 
-  const content = _cmViewer.getValue();
-  const lower = content.toLowerCase();
+  const txt = ART.cur.txt;
+  const lower = txt.toLowerCase();
   const q = query.toLowerCase();
-  let pos = 0;
   const positions = [];
+  let pos = 0;
   while (true) {
     const idx = lower.indexOf(q, pos);
     if (idx === -1) break;
@@ -544,35 +556,74 @@ function _artSearchRun(query, startIdx) {
     return;
   }
 
-  // Mark all matches with dim highlight
-  positions.forEach((charIdx, i) => {
-    const from = _cmViewer.posFromIndex(charIdx);
-    const to = _cmViewer.posFromIndex(charIdx + query.length);
-    const mark = _cmViewer.markText(from, to, {
-      css: i === _artSearchMatchIdx
-        ? 'background:rgba(109,40,217,.6);color:#fff;border-radius:2px;'
-        : 'background:rgba(109,40,217,.25);border-radius:2px;'
-    });
-    _artSearchMatches.push(mark);
+  // Highlight matches in the line table
+  // Each match: find which line it's on, wrap in <mark>
+  const lines = txt.split('\n');
+  const lineCells = document.querySelectorAll('#viewCode .cm-line-cell');
+  // Build cumulative line start positions
+  const lineStarts = [];
+  let cum = 0;
+  lines.forEach(l => { lineStarts.push(cum); cum += l.length + 1; });
+
+  positions.forEach((charIdx, mIdx) => {
+    // Find which line
+    let lineIdx = lineStarts.findLastIndex(s => s <= charIdx);
+    if (lineIdx < 0) lineIdx = 0;
+    const cell = lineCells[lineIdx];
+    if (!cell) return;
+    const offsetInLine = charIdx - lineStarts[lineIdx];
+    const len = query.length;
+    // Highlight inside cell — walk text nodes
+    _highlightInCell(cell, offsetInLine, len, mIdx === _artSearchMatchIdx);
+    _artSearchMatches.push({ lineIdx, mIdx });
   });
 
-  // Scroll to active match
+  // Scroll active match into view
   if (_artSearchMatchIdx < positions.length) {
-    const from = _cmViewer.posFromIndex(positions[_artSearchMatchIdx]);
-    _cmViewer.scrollIntoView({ line: from.line, ch: from.ch }, 80);
-    _cmViewer.setCursor(from);
+    const lineIdx = _artSearchMatches[_artSearchMatchIdx]?.lineIdx;
+    const cell = document.querySelectorAll('#viewCode .cm-line-cell')[lineIdx];
+    cell?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   if (document.getElementById('artSearchCount'))
     document.getElementById('artSearchCount').textContent = `${_artSearchMatchIdx + 1}/${positions.length}`;
 
-  // Store positions for step navigation
-  _cmViewer._searchPositions = positions;
-  _cmViewer._searchQuery = query;
+  // Store for step nav
+  if (_cmViewer) { _cmViewer._searchPositions = positions; _cmViewer._searchQuery = query; }
+}
+
+function _highlightInCell(cell, offset, len, isActive) {
+  // Walk text nodes in cell, find offset position, wrap match in <mark>
+  let remaining = offset;
+  const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (remaining > node.textContent.length) {
+      remaining -= node.textContent.length;
+      continue;
+    }
+    // Split at offset
+    const before = node.textContent.slice(0, remaining);
+    const matchTxt = node.textContent.slice(remaining, remaining + len);
+    const after = node.textContent.slice(remaining + len);
+    const mark = document.createElement('mark');
+    mark.className = 'art-search-mark';
+    mark.textContent = matchTxt;
+    mark.style.cssText = isActive
+      ? 'background:rgba(109,40,217,.75);color:#fff;border-radius:2px;padding:0 1px;'
+      : 'background:rgba(109,40,217,.3);color:inherit;border-radius:2px;padding:0 1px;';
+    const parent = node.parentNode;
+    const ref = node.nextSibling;
+    parent.removeChild(node);
+    if (before) parent.insertBefore(document.createTextNode(before), ref);
+    parent.insertBefore(mark, ref);
+    if (after) parent.insertBefore(document.createTextNode(after), ref);
+    return;
+  }
 }
 
 function _artSearchStep(dir) {
-  if (!_cmViewer || !_cmViewer._searchPositions) return;
+  if (!_cmViewer?._searchPositions) return;
   const positions = _cmViewer._searchPositions;
   const query = _cmViewer._searchQuery || _artSearchLastQuery;
   _artSearchMatchIdx = (_artSearchMatchIdx + dir + positions.length) % positions.length;
