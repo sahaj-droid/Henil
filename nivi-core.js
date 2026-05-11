@@ -940,7 +940,7 @@ if (el && (el.getAttribute('data-raw') || '').includes('class="thinking"')) {
     }
     renderSidebarData();
   }
-}
+
 // ── SETTINGS MODAL ──
 window.openSettings = function() {
   const c = document.getElementById('modelChainContainer');
