@@ -30,6 +30,10 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
     #viewEditor .CodeMirror-line::-moz-selection,
     #viewEditor .CodeMirror-line > span::-moz-selection,
     #viewEditor .CodeMirror-line > span > span::-moz-selection { background: rgba(135, 175, 255, 0.4) !important; color: inherit !important;}
+    /* આને artCmStyles ની અંદર છેલ્લે ઉમેરો */
+    .CodeMirror-activeline-background { background: rgba(255, 255, 255, 0.05) !important;}
+    .CodeMirror-foldgutter { width: .7em;}
+    .CodeMirror-foldgutter-open, .CodeMirror-foldgutter-folded { cursor: pointer; color: #6272a4;}
     `;
     document.head.appendChild(s);
 })();
@@ -735,39 +739,37 @@ function _openPanelRender() {
 let _cmInstance = null;
 
 function toggleArtEdit() {
-  if (!ART.cur || !ART.cur.txt) return;
-  const viewCode = document.getElementById('viewCode');
-  const viewEditor = document.getElementById('viewEditor');
-  const editBtn = document.getElementById('editArtBtn');
-  const saveBtn = document.getElementById('saveArtBtn');
+    if (!ART.cur || !ART.cur.txt) return;
+    const viewCode = document.getElementById('viewCode');
+    const viewEditor = document.getElementById('viewEditor');
+    const editBtn = document.getElementById('editArtBtn');
+    const saveBtn = document.getElementById('saveArtBtn');
 
-  // Editor open karo
-  viewCode.style.display = 'none';
-  viewEditor.style.display = 'flex';
-  editBtn.style.display = 'none';
-  saveBtn.style.display = 'flex';
+    viewCode.style.display = 'none';
+    viewEditor.style.display = 'flex';
+    editBtn.style.display = 'none';
+    saveBtn.style.display = 'flex';
 
-  // CodeMirror mode detect karo
-  const modeMap = {
-    js: 'javascript', html: 'htmlmixed',
-    css: 'css', py: 'python', json: 'javascript'
-  };
-  const mode = modeMap[ART.cur.ext] || 'plaintext';
+    const modeMap = {js: 'javascript', html: 'htmlmixed', css: 'css', py: 'python', json: 'javascript' };
+    const mode = modeMap[ART.cur.ext] || 'plaintext';
 
-  // CodeMirror init
-  if (_cmInstance) _cmInstance.toTextArea();
-  _cmInstance = CodeMirror.fromTextArea(document.getElementById('cmEditor'), {
-    value: ART.cur.txt,
-    mode: mode,
-    theme: 'dracula',
-    lineNumbers: true,
-    lineWrapping: true,
-    indentUnit: 2,
-    tabSize: 2,
-    autofocus: true
-  });
-  _cmInstance.setValue(ART.cur.txt);
-  _cmInstance.refresh();
+    if (_cmInstance) _cmInstance.toTextArea();
+    // --- આ સેટિંગ્સ અપડેટ કર્યા છે ---
+    _cmInstance = CodeMirror.fromTextArea(document.getElementById('cmEditor'), {
+        value: ART.cur.txt,
+        mode: mode,
+        theme: 'dracula',
+        lineNumbers: true,
+        lineWrapping: true,
+        indentUnit: 2,
+        tabSize: 2,
+        autofocus: true,
+        styleActiveLine: true, // આ લાઈન હાઈલાઈટ કરશે
+        foldGutter: true,      // આ ફોલ્ડિંગ એરો બતાવશે
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"] // બંને વસ્તુઓ બતાવવા માટે
+    });
+    _cmInstance.setValue(ART.cur.txt);
+    _cmInstance.refresh();
 }
 
 function saveArtEdit() {
