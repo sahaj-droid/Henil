@@ -519,15 +519,35 @@ function _artSearchClose() {
 }
 
 function _artSearchClearMarks() {
-  // Remove all highlight spans injected by search
   const wrap = document.getElementById('viewCode');
   if (!wrap) return;
-  wrap.querySelectorAll('mark.art-search-mark').forEach(m => {
-    m.replaceWith(document.createTextNode(m.textContent));
+  // Re-render all marked lines back to clean state
+  if (!ART.cur?.txt) return;
+  const txt = ART.cur.txt;
+  const cfg = ART.cur.cfg || {};
+  const hl = cfg.hl || 'plaintext';
+  const lines = txt.split('\n');
+  const lineCells = wrap.querySelectorAll('.cm-line-cell');
+  lineCells.forEach((cell, i) => {
+    if (cell.querySelector('mark.art-search-mark')) {
+      // Re-highlight just this line
+      cell.innerHTML = _hlLine(lines[i] || '', hl);
+    }
   });
-  // Re-normalize text nodes
-  wrap.querySelectorAll('.cm-line-cell').forEach(td => td.normalize());
   _artSearchMatches = [];
+}
+
+function _hlLine(lineText, lang) {
+  if (!lineText) return ' ';
+  if (typeof hljs === 'undefined') {
+    return lineText.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  }
+  try {
+    // highlight single line — wrap in context to avoid partial token issues
+    return hljs.highlight(lineText, { language: hljs.getLanguage(lang) ? lang : 'plaintext', ignoreIllegals: true }).value || '&nbsp;';
+  } catch(e) {
+    return lineText.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  }
 }
 
 function _artSearchRun(query, startIdx) {
@@ -540,93 +560,108 @@ function _artSearchRun(query, startIdx) {
   _artSearchMatchIdx = startIdx || 0;
 
   const txt = ART.cur.txt;
-  const lower = txt.toLowerCase();
+  const cfg = ART.cur.cfg || {};
+  const hl = cfg.hl || 'plaintext';
+  const lines = txt.split('\n');
   const q = query.toLowerCase();
-  const positions = [];
-  let pos = 0;
-  while (true) {
-    const idx = lower.indexOf(q, pos);
-    if (idx === -1) break;
-    positions.push(idx);
-    pos = idx + 1;
-  }
 
-  if (positions.length === 0) {
+  // Find ALL matches: {lineIdx, colStart, colEnd}
+  const allMatches = [];
+  lines.forEach((line, lineIdx) => {
+    let col = 0;
+    const lower = line.toLowerCase();
+    while (true) {
+      const idx = lower.indexOf(q, col);
+      if (idx === -1) break;
+      allMatches.push({ lineIdx, colStart: idx, colEnd: idx + query.length });
+      col = idx + 1;
+    }
+  });
+
+  if (allMatches.length === 0) {
     if (document.getElementById('artSearchCount')) document.getElementById('artSearchCount').textContent = 'No results';
     return;
   }
 
-  // Highlight matches in the line table
-  // Each match: find which line it's on, wrap in <mark>
-  const lines = txt.split('\n');
-  const lineCells = document.querySelectorAll('#viewCode .cm-line-cell');
-  // Build cumulative line start positions
-  const lineStarts = [];
-  let cum = 0;
-  lines.forEach(l => { lineStarts.push(cum); cum += l.length + 1; });
+  // Clamp index
+  _artSearchMatchIdx = ((_artSearchMatchIdx % allMatches.length) + allMatches.length) % allMatches.length;
 
-  positions.forEach((charIdx, mIdx) => {
-    // Find which line
-    let lineIdx = lineStarts.findLastIndex(s => s <= charIdx);
-    if (lineIdx < 0) lineIdx = 0;
+  // Group matches by line, render each affected line with <mark>s
+  const byLine = {};
+  allMatches.forEach((m, globalIdx) => {
+    if (!byLine[m.lineIdx]) byLine[m.lineIdx] = [];
+    byLine[m.lineIdx].push({ ...m, globalIdx });
+  });
+
+  const lineCells = document.querySelectorAll('#viewCode .cm-line-cell');
+
+  Object.entries(byLine).forEach(([lineIdxStr, matches]) => {
+    const lineIdx = parseInt(lineIdxStr);
     const cell = lineCells[lineIdx];
     if (!cell) return;
-    const offsetInLine = charIdx - lineStarts[lineIdx];
-    const len = query.length;
-    // Highlight inside cell — walk text nodes
-    _highlightInCell(cell, offsetInLine, len, mIdx === _artSearchMatchIdx);
-    _artSearchMatches.push({ lineIdx, mIdx });
+    const rawLine = lines[lineIdx] || '';
+
+    // Build marked HTML by inserting <mark> into RAW text, then escaping + re-highlighting per segment
+    // Approach: split raw line at match boundaries, escape each segment, wrap matches
+    const boundaries = [];
+    matches.forEach(m => { boundaries.push({ pos: m.colStart, open: true, active: m.globalIdx === _artSearchMatchIdx });
+                           boundaries.push({ pos: m.colEnd,   open: false }); });
+    boundaries.sort((a, b) => a.pos - b.pos || (a.open ? -1 : 1));
+
+    let result = '';
+    let cur = 0;
+    let depth = 0;
+    let isActive = false;
+    boundaries.forEach(b => {
+      if (b.pos > cur) {
+        const seg = rawLine.slice(cur, b.pos).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+        result += seg;
+      }
+      cur = b.pos;
+      if (b.open) {
+        depth++;
+        isActive = b.active;
+        const bg = b.active ? 'rgba(109,40,217,.8)' : 'rgba(109,40,217,.35)';
+        const col = b.active ? '#fff' : 'inherit';
+        result += `<mark class="art-search-mark" style="background:${bg};color:${col};border-radius:2px;padding:0 1px;">`;
+      } else {
+        depth--;
+        result += '</mark>';
+      }
+    });
+    if (cur < rawLine.length) {
+      result += rawLine.slice(cur).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    }
+    cell.innerHTML = result || '&nbsp;';
   });
 
   // Scroll active match into view
-  if (_artSearchMatchIdx < positions.length) {
-    const lineIdx = _artSearchMatches[_artSearchMatchIdx]?.lineIdx;
-    const cell = document.querySelectorAll('#viewCode .cm-line-cell')[lineIdx];
-    cell?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const activeMatch = allMatches[_artSearchMatchIdx];
+  if (activeMatch) {
+    const cell = lineCells[activeMatch.lineIdx];
+    if (cell) {
+      const mark = cell.querySelector('mark.art-search-mark[style*="rgba(109,40,217,.8)"]');
+      (mark || cell).scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
   }
 
-  if (document.getElementById('artSearchCount'))
-    document.getElementById('artSearchCount').textContent = `${_artSearchMatchIdx + 1}/${positions.length}`;
+  const countEl = document.getElementById('artSearchCount');
+  if (countEl) countEl.textContent = `${_artSearchMatchIdx + 1}/${allMatches.length}`;
 
   // Store for step nav
-  if (_cmViewer) { _cmViewer._searchPositions = positions; _cmViewer._searchQuery = query; }
+  _cmViewer = _cmViewer || {};
+  _cmViewer._allMatches = allMatches;
+  _cmViewer._searchQuery = query;
+  _cmViewer._searchPositions = allMatches; // compat
 }
 
-function _highlightInCell(cell, offset, len, isActive) {
-  // Walk text nodes in cell, find offset position, wrap match in <mark>
-  let remaining = offset;
-  const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
-  let node;
-  while ((node = walker.nextNode())) {
-    if (remaining > node.textContent.length) {
-      remaining -= node.textContent.length;
-      continue;
-    }
-    // Split at offset
-    const before = node.textContent.slice(0, remaining);
-    const matchTxt = node.textContent.slice(remaining, remaining + len);
-    const after = node.textContent.slice(remaining + len);
-    const mark = document.createElement('mark');
-    mark.className = 'art-search-mark';
-    mark.textContent = matchTxt;
-    mark.style.cssText = isActive
-      ? 'background:rgba(109,40,217,.75);color:#fff;border-radius:2px;padding:0 1px;'
-      : 'background:rgba(109,40,217,.3);color:inherit;border-radius:2px;padding:0 1px;';
-    const parent = node.parentNode;
-    const ref = node.nextSibling;
-    parent.removeChild(node);
-    if (before) parent.insertBefore(document.createTextNode(before), ref);
-    parent.insertBefore(mark, ref);
-    if (after) parent.insertBefore(document.createTextNode(after), ref);
-    return;
-  }
-}
+function _highlightInCell() {} // no-op — kept for compat
 
 function _artSearchStep(dir) {
-  if (!_cmViewer?._searchPositions) return;
-  const positions = _cmViewer._searchPositions;
+  const matches = _cmViewer?._allMatches;
+  if (!matches?.length) return;
   const query = _cmViewer._searchQuery || _artSearchLastQuery;
-  _artSearchMatchIdx = (_artSearchMatchIdx + dir + positions.length) % positions.length;
+  _artSearchMatchIdx = (_artSearchMatchIdx + dir + matches.length) % matches.length;
   _artSearchRun(query, _artSearchMatchIdx);
   const inp = document.getElementById('artSearchInput');
   if (inp) inp.value = query;
