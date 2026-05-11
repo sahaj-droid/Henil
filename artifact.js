@@ -9,8 +9,10 @@ const ART={cur:null,tab:'code',isMob:()=>window.innerWidth<600};
   const s=document.createElement('style');
   s.id='artCmStyles';
   s.textContent=`
-    #viewCode .CodeMirror { height:100%;min-height:200px;font-size:12px;line-height:1.6;font-family:'JetBrains Mono',monospace;background:transparent; }
-    #viewCode .CodeMirror-scroll { overflow-y:auto!important;overflow-x:auto!important; }
+    #viewCode .CodeMirror { height:100%;min-height:200px;font-size:12px;line-height:1.6;font-family:'JetBrains Mono',monospace;background:transparent;user-select:text!important;-webkit-user-select:text!important; }
+    #viewCode .CodeMirror-scroll { overflow-y:auto!important;overflow-x:auto!important;user-select:text!important;-webkit-user-select:text!important; }
+    #viewCode .CodeMirror-code { user-select:text!important;-webkit-user-select:text!important; }
+    #viewCode .CodeMirror-line { user-select:text!important;-webkit-user-select:text!important; }
     #viewCode .CodeMirror-gutters { background:#1e1f2a;border-right:1px solid rgba(255,255,255,.07); }
     #viewCode .CodeMirror-linenumber { color:#4a4a6a;font-size:11px;padding:0 8px 0 6px; }
     #viewCode { flex-direction:column; }
@@ -341,7 +343,6 @@ function _destroyCmViewer() {
 function _initCmViewer(txt, ext) {
   _destroyCmViewer();
   const mode = CM_MODE_MAP[ext] || 'plaintext';
-  // Ensure viewCode container has a fresh textarea for CM to attach to
   const wrap = document.getElementById('viewCode');
   wrap.innerHTML = '<textarea id="cmViewerTA"></textarea>';
   const ta = document.getElementById('cmViewerTA');
@@ -352,16 +353,29 @@ function _initCmViewer(txt, ext) {
     theme: 'dracula',
     lineNumbers: true,
     readOnly: true,
+    cursorBlinkRate: 0,
     lineWrapping: false,
     tabSize: 2,
-    viewportMargin: Infinity,
+    viewportMargin: 50,
     extraKeys: {
       'Ctrl-F': function(cm) { _artSearchOpen(); },
+      'Cmd-F':  function(cm) { _artSearchOpen(); },
       'Escape': function(cm) { _artSearchClose(); }
     }
   });
   _cmViewer.setValue(txt);
-  setTimeout(() => _cmViewer && _cmViewer.refresh(), 60);
+  // Allow text selection — CM readOnly blocks pointer events on content
+  setTimeout(() => {
+    if (!_cmViewer) return;
+    _cmViewer.refresh();
+    const cmEl = _cmViewer.getWrapperElement();
+    // Re-enable selection on the code area
+    const content = cmEl.querySelector('.CodeMirror-code');
+    const scroll  = cmEl.querySelector('.CodeMirror-scroll');
+    if (content) content.style.userSelect = 'text';
+    if (scroll)  scroll.style.userSelect  = 'text';
+    cmEl.style.userSelect = 'text';
+  }, 60);
 }
 
 // ═══════════════════════════════════════════════════
