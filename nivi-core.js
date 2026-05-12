@@ -845,18 +845,20 @@ async function handleSend(){
         memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
       }
 let fileContext = '';
-
-    if (_ctxProj === 'default') {
-      const isSimpleGreeting = text.toLowerCase().trim().length < 20 && !text.toLowerCase().includes('code') && !text.toLowerCase().includes('debug');
-      
-      const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-      const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
-
-      if (textFiles.length > 0 && !isSimpleGreeting) {
-        fileContext = `\n\n---\n[Files in Nivi Memory]\n` + textFiles.slice(0, 3).map(f => {
-          return `File: ${f.name}\n\`\`\`\n${decodeB64Text(f.data).slice(0, 1000)}\n\`\`\``;
+    const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+    const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
+    if (textFiles.length > 0) {
+        const isDefault = _ctxProj === 'default';
+        const projLabel = !isDefault ? `[Project: ${_ctxProj}] ` : '';
+        const fileLimit = isDefault ? 3 : 5;
+        const charLimit = isDefault ? 1000 : 1500;
+        // ✅ SOLID FIX: લંબાઈ ચેક કરવાને બદલે મોડેલને જ સીધી અને કડક સૂચના આપી દો
+        const strictInstruction = `\n\n---\n[WORKSPACE CONTEXT: The following files are currently open. IMPORTANT: DO NOT review, analyze, or mention these files unless the user's message explicitly asks about code, errors, or file content. If the user is just greeting (e.g., "Hi", "How are you") or chatting naturally, completely IGNORE these files and reply to them normally.]\n${projLabel}\n`;
+        fileContext = strictInstruction + textFiles.slice(0, fileLimit).map(f => {
+            const content = decodeB64Text(f.data).slice(0, charLimit);
+            return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
         }).join('\n\n');
-      }
+    }
     } else {
       if (memFiles.length > 0) {
         const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
