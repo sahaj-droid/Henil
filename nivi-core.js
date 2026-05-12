@@ -560,22 +560,27 @@ async function delMsg(id) {
   }
 }
 function loadArchivedChat(id){
-  const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-  const _archKey = `nivi_chat_archives_${_activeProj}`;
-  const archives = JSON.parse(localStorage.getItem(_archKey)||'[]');
-  const archive = archives.find(a => String(a.id) === String(id));
-  if(!archive) { console.log("Archive not found!"); return; }
-  if(!archive.chat || archive.chat.length === 0) { alert("No data in this chat"); return; }
-  if(window.AppState) AppState._tabChatHistory = JSON.parse(JSON.stringify(archive.chat));
-  localStorage.setItem('niviTabChat', JSON.stringify(archive.chat));
-  localStorage.setItem('nivi_current_title', archive.title || 'Archived Chat');
-  const win = document.getElementById('chatWindow');
-  const bubbles = win.querySelectorAll('.msg-row');
-  bubbles.forEach(b => b.remove());
-  const hero = document.getElementById('heroSection');
-  if(hero) hero.style.display = 'none';
-  archive.chat.forEach(msg => { appendMsg(msg.role, msg.text); });
-  renderSidebarData();
+    const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+    const _archKey = `nivi_chat_archives_${_activeProj}`;
+    let archives = JSON.parse(localStorage.getItem(_archKey)||'[]');
+    const archive = archives.find(a => String(a.id) === String(id));
+    if(!archive) { console.log("Archive not found!"); return; }
+    if(!archive.chat || archive.chat.length === 0) { alert("No data in this chat"); return; }
+    // ✅ FIX: ચેટ એક્ટિવ થઈ ગઈ, એટલે તેને આર્કાઇવમાંથી કાઢી નાખો (Duplicate ન થાય તે માટે)
+    archives = archives.filter(a => String(a.id) !== String(id));
+    localStorage.setItem(_archKey, JSON.stringify(archives));
+    if(window.AppState) AppState._tabChatHistory = JSON.parse(JSON.stringify(archive.chat));
+    localStorage.setItem('niviTabChat', JSON.stringify(archive.chat));
+    localStorage.setItem('nivi_current_title', archive.title || 'Archived Chat');
+    const win = document.getElementById('chatWindow');
+    const bubbles = win.querySelectorAll('.msg-row');
+    bubbles.forEach(b => b.remove());
+    const hero = document.getElementById('heroSection');
+    if(hero) hero.style.display = 'none';
+    archive.chat.forEach(msg => {
+        appendMsg(msg.role, msg.text);
+    });
+    renderSidebarData();
 }
 async function deleteProject(id, name){
   if(!confirm(`Delete workspace "${name}"? This removes its local files and chat backup.`)) return;
