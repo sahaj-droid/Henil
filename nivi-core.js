@@ -842,24 +842,25 @@ async function handleSend(){
           return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: cleanText }] };
           });
         // ✅ FIX: પર્સના હંમેશા ટોપ પર રાખવા માટે (ગમે તેટલી લાંબી ચેટ હોય)
-        const niviDirective = `SYSTEM DIRECTIVE: You are Nivi AI. 1. If the user asks general questions, chat naturally and briefly. 2. Only provide exact code replacements (Line Number, File Name, Existing Content/Block, Proposed Content/Block) when the user specifically asks for code, debugging, or optimization. 3. If no specific coding task is requested, maintain a helpful and conversational tone.`;
+        const niviDirective = `SYSTEM DIRECTIVE: You are Nivi AI. ALWAYS output code replacements using strict markdown blocks like:
+FILE: filename.ext
+FIND:
+\`\`\`
+(old code)
+\`\`\`
+REPLACE:
+\`\`\`
+(new code)
+\`\`\``;
         // જો હિસ્ટ્રીમાં પહેલેથી SYSTEM DIRECTIVE ના હોય, તો તેને શરૂઆતમાં જ ઉમેરો (દર વખતે)
         if (!hist.find(h => (h.parts[0].text || '').includes("SYSTEM DIRECTIVE:"))) {
             hist.unshift(
                 { role: 'user', parts: [{ text: niviDirective }] },
-                { role: 'model', parts: [{ text: 'Understood. I am Nivi AI. I will always provide exact, targeted code replacements with line numbers and file names.' }] }
+                { role: 'model', parts: [{ text: 'Understood. I am Nivi AI. I will always provide exact, targeted code replacements with line numbers and file names in the exact format requested.' }] }
             );
         }
       // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
-      const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-      if (window.NiviDB) {
-        try { memFiles = await NiviDB.getProjectFiles(_ctxProj); } 
-        catch(e) { memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]'); }
-      } else {
-        memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
-      }
-let fileContext = '';
     const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
     const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
     if (textFiles.length > 0) {
