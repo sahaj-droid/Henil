@@ -818,27 +818,23 @@ async function handleSend(){
       if(text.toLowerCase().startsWith('/song ')){
         apiText=`You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
       }
-
-      // directive ne hist na shuruat ma system message tarke mukho:
-        const _rawHist = window.AppState ? AppState._tabChatHistory.slice(0, -1) : [];
-        const _trimHist = _rawHist.slice(-20);
-        const hist = _trimHist.map(m => {
-          let msgText = m.text;
-          if (m.role === 'nivi') {
-            msgText = msgText.replace(/\n\n---\n(?:\[Project:[^\]]+\] )?\[Files in Nivi Memory\][\s\S]*$/m, '').trim();
-          }
-          return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: msgText }] };
-        });
-        // Directive faqt history khali hoy tyare (navi chat) inject karo
-          const niviDirective = `SYSTEM DIRECTIVE: You are Nivi AI. 
-          1. If the user asks general questions, chat naturally and briefly.
-          2. Only provide exact code replacements (Line Number, File Name, Existing Content/Block, Proposed Content/Block) when the user specifically asks for code, debugging, or optimization.
-          3. If no specific coding task is requested, maintain a helpful and conversational tone.`;
-          if (hist.length === 0) {
-          hist.unshift({ role: 'user', parts: [{ text: niviDirective }] });
-          hist.push({ role: 'model', parts: [{ text: 'Understood. I am Nivi AI. I will always provide exact, targeted code replacements with line numbers and file names.' }] });
+          // ✅ FIX: હિસ્ટ્રીમાંથી જૂની ફાઈલોનો કચરો સાફ કરો અને પર્સના લોક કરો
+          const _rawHist = window.AppState ? AppState._tabChatHistory.slice(0, -1) : [];
+          const _trimHist = _rawHist.slice(-15); // છેલ્લી ૧૫ વાતચીત યાદ રાખશે
+          const hist = _trimHist.map(m => {
+          // યુઝર અને નિવી બંનેના મેસેજમાંથી જૂની ફાઈલનો કોન્ટેક્સ્ટ કાઢી નાખો
+          const cleanText = (m.text || '').replace(/\n\n---\n(?:\[Project:[^\]]+\] )?\[Files in Nivi Memory\][\s\S]*$/m, '').trim();
+          return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: cleanText }] };
+          });
+        // ✅ FIX: પર્સના હંમેશા ટોપ પર રાખવા માટે (ગમે તેટલી લાંબી ચેટ હોય)
+        const niviDirective = `SYSTEM DIRECTIVE: You are Nivi AI. 1. If the user asks general questions, chat naturally and briefly. 2. Only provide exact code replacements (Line Number, File Name, Existing Content/Block, Proposed Content/Block) when the user specifically asks for code, debugging, or optimization. 3. If no specific coding task is requested, maintain a helpful and conversational tone.`;
+        // જો હિસ્ટ્રીમાં પહેલેથી SYSTEM DIRECTIVE ના હોય, તો તેને શરૂઆતમાં જ ઉમેરો (દર વખતે)
+        if (!hist.find(h => (h.parts[0].text || '').includes("SYSTEM DIRECTIVE:"))) {
+            hist.unshift(
+                { role: 'user', parts: [{ text: niviDirective }] },
+                { role: 'model', parts: [{ text: 'Understood. I am Nivi AI. I will always provide exact, targeted code replacements with line numbers and file names.' }] }
+            );
         }
-
       // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
       const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
