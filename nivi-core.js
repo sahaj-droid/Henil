@@ -860,22 +860,35 @@ REPLACE:
             );
         }
       // Active project files — IndexedDB first, localStorage fallback
+      // Active project files — IndexedDB first, localStorage fallback
       let memFiles = [];
-    const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-    const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
-    if (textFiles.length > 0) {
-        const isDefault = _ctxProj === 'default';
-        const projLabel = !isDefault ? `[Project: ${_ctxProj}] ` : '';
-        const fileLimit = isDefault ? 3 : 5;
-        const charLimit = isDefault ? 1000 : 1500;
-        // ✅ SOLID FIX: લંબાઈ ચેક કરવાને બદલે મોડેલને જ સીધી અને કડક સૂચના આપી દો
-        const strictInstruction = `\n\n---\n[WORKSPACE CONTEXT: The following files are currently open. IMPORTANT: DO NOT review, analyze, or mention these files unless the user's message explicitly asks about code, errors, or file content. If the user is just greeting (e.g., "Hi", "How are you") or chatting naturally, completely IGNORE these files and reply to them normally.]\n${projLabel}\n`;
-        fileContext = strictInstruction + textFiles.slice(0, fileLimit).map(f => {
-            const content = decodeB64Text(f.data).slice(0, charLimit);
-            return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
-        }).join('\n\n');
-    }
-    const finalPrompt = fileContext ? apiText + fileContext : apiText;
+      const _ctxProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+      
+      // ફાઈલો ફેચ કરો
+      if (window.NiviDB) {
+        try { memFiles = await NiviDB.getProjectFiles(_ctxProj); } 
+        catch(e) { memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]'); }
+      } else {
+        memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
+      }
+
+      let fileContext = ''; // ✅ અહીંયા આપણે fileContext ડિક્લેર કરી દીધું 
+
+      const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+      const textFiles = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
+      
+      if (textFiles.length > 0) {
+          const isDefault = _ctxProj === 'default';
+          const projLabel = !isDefault ? `[Project: ${_ctxProj}] ` : '';
+          const fileLimit = isDefault ? 3 : 5;
+          const charLimit = isDefault ? 1000 : 1500;
+          const strictInstruction = `\n\n---\n[WORKSPACE CONTEXT: The following files are currently open. IMPORTANT: DO NOT review, analyze, or mention these files unless the user's message explicitly asks about code, errors, or file content. If the user is just greeting (e.g., "Hi", "How are you") or chatting naturally, completely IGNORE these files and reply to them normally.]\n${projLabel}\n`;
+          fileContext = strictInstruction + textFiles.slice(0, fileLimit).map(f => {
+              const content = decodeB64Text(f.data).slice(0, charLimit);
+              return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
+          }).join('\n\n');
+      }
+      const finalPrompt = fileContext ? apiText + fileContext : apiText;
     const _result = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk) => {
         if(!AppState?._abortController?.signal.aborted) updateMsg(resId, chunk);
     });
