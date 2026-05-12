@@ -859,16 +859,6 @@ let fileContext = '';
             return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
         }).join('\n\n');
     }
-    } else {
-      if (memFiles.length > 0) {
-        const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}] ` : '';
-        // જૂના કોડ મુજબની ગોઠવણ 
-        fileContext = `\n\n---\n${projLabel}[Files in Nivi Memory]\n` + memFiles.slice(0, 5).map(f => { 
-          const content = decodeB64Text(f.data).slice(0, 1500); 
-          return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
-        }).join('\n\n');
-      }
-    }
      const finalPrompt = fileContext ? apiText + fileContext : apiText;
       const _result = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!AppState?._abortController?.signal.aborted)updateMsg(resId,chunk);});
       if (_result?.model && typeof updateActiveModelUI === 'function') updateActiveModelUI(_result.model);
