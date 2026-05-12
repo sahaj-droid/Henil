@@ -191,9 +191,16 @@ code { font-family: var(--mono); font-size: 13px; }
 .thinking span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes think { 0%,100% { opacity:.25; transform:scale(.75); box-shadow:0 0 4px rgba(109,40,217,.3); } 50% { opacity:1; transform:scale(1.15); box-shadow:0 0 10px rgba(109,40,217,.6); } }
 
-/* Run button in code blocks */
-.run-art-btn { position: absolute; top: 8px; right: 8px; z-index: 10; opacity: 0; transition: opacity .2s; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-pre:hover .run-art-btn { opacity: 1; }
+/* ── Code Block Action Buttons (Copy & Artifact) ── */
+.code-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 10; opacity: 0; transition: opacity .2s ease; } pre:hover .code-actions { opacity: 1; }
+.copy-code-btn { background: rgba(30, 30, 38, 0.85); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.run-art-btn { background: var(--accent-dim); backdrop-filter: blur(4px); position: relative !important; /* જૂના absolute ને ઓવરરાઈડ કરવા */ top: 0 !important; right: 0 !important; opacity: 1 !important; }
+
+/* ── Mobile Optimization (Always visible) ── */
+@media(max-width: 768px) {
+.code-actions { opacity: 1;}
+.copy-code-btn, 
+.run-art-btn { padding: 4px 8px; font-size: 10px; min-height: 28px; background: rgba(20, 20, 24, 0.95); border-color: rgba(255,255,255,0.15);}}
 
 /* ══════════════════════════════
    INPUT ZONE
@@ -378,6 +385,23 @@ pre:hover .run-art-btn { opacity: 1; }
   .hchip:hover { transform: none; box-shadow: none; }
   .art-card:hover { transform: none; }
   .si:hover { transform: none; }
+}
+
+/* 🔥 ગેમભાઈનું સ્પેશિયલ MOBILE UI ઓપ્ટિમાઇઝેશન 🔥 */
+@media(max-width: 768px) {
+  .nr .bubble { padding: 4px 0 !important; }
+  .nr .bubble pre { margin-left: -10px; margin-right: -10px; border-radius: 0 !important; border-left: none !important; border-right: none !important; max-height: 60vh; }
+  .code-actions { right: 6px !important; }
+  .input-zone { padding: 6px 6px 10px !important; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important; }
+  .input-pill { border-radius: 16px !important; padding: 6px 10px !important; }
+  .input-pill textarea { font-size: 15px !important; padding: 4px 0 !important; }
+  .input-actions-right { padding-top: 5px !important; margin-top: 5px !important; }
+  .pbtn { width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 10px !important; }
+  .sh-toolbar { scrollbar-width: none; padding: 12px 10px !important; border-top: 1px solid rgba(255,255,255,0.05) !important; }
+  .sh-toolbar::-webkit-scrollbar { display: none; }
+  .sh-toolbar .tbtn { border-radius: 20px !important; background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.08) !important; font-weight: 500; padding: 6px 14px !important; font-size: 13px !important; }
+  .sh-toolbar .tbtn.prim { background: var(--accent-dim) !important; border-color: var(--border-a) !important; }
+  .ur .bubble { padding: 8px 12px !important; font-size: 14.5px; }
 }
 
 @media(max-width: 420px) {
