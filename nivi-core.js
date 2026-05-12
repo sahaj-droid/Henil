@@ -874,12 +874,14 @@ let fileContext = '';
             return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
         }).join('\n\n');
     }
-     const finalPrompt = fileContext ? apiText + fileContext : apiText;
-      const _result = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk)=>{if(!AppState?._abortController?.signal.aborted)updateMsg(resId,chunk);});
-      if (_result?.model && typeof updateActiveModelUI === 'function') updateActiveModelUI(_result.model);
-    }
-  }catch(err){
-    if(!AppState?._abortController?.signal.aborted)updateMsg(resId,'⚠ Connection Error: '+err.message);
+    const finalPrompt = fileContext ? apiText + fileContext : apiText;
+    const _result = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk) => {
+        if(!AppState?._abortController?.signal.aborted) updateMsg(resId, chunk);
+    });
+    if (_result?.model && typeof updateActiveModelUI === 'function') updateActiveModelUI(_result.model);
+      }
+    } catch(err) {
+      if(!AppState?._abortController?.signal.aborted) updateMsg(resId,'⚠ Connection Error: '+err.message);
     } finally {
     toggleGen(false);
     // Artifact panel open hoy to close na karvo
