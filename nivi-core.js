@@ -421,6 +421,7 @@ function clearChat(){
   }
   if(window.AppState) AppState._tabChatHistory=[];
   localStorage.setItem('niviTabChat','[]');
+  localStorage.removeItem('nivi_current_title');
   localStorage.setItem('nivi_current_session_id', 'session_' + Date.now()); 
   if(typeof closeArt === 'function') closeArt(); 
   if(typeof closeSheet === 'function') closeSheet();
@@ -567,6 +568,7 @@ function loadArchivedChat(id){
   if(!archive.chat || archive.chat.length === 0) { alert("No data in this chat"); return; }
   if(window.AppState) AppState._tabChatHistory = JSON.parse(JSON.stringify(archive.chat));
   localStorage.setItem('niviTabChat', JSON.stringify(archive.chat));
+  localStorage.setItem('nivi_current_title', archive.title || 'Archived Chat');
   const win = document.getElementById('chatWindow');
   const bubbles = win.querySelectorAll('.msg-row');
   bubbles.forEach(b => b.remove());
@@ -599,6 +601,7 @@ async function deleteCurrentChat() {
   // 2. લોકલ UI અને ડેટા સાફ કરો
   if(window.AppState) AppState._tabChatHistory = [];
   localStorage.setItem('niviTabChat', '[]');
+  localStorage.removeItem('nivi_current_title');
   // ✅ FIX: IDB ma pan chat clear karo — nahi to restart par wapas aave
   if (window.NiviDB) {
     const _delProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
@@ -653,28 +656,35 @@ const _renderSidebarNow = function() {
       fl.innerHTML = `<div class="si" style="opacity:.4;cursor:default;font-size:10px;">No files yet</div>`;
     }
   }
-  const ch = document.getElementById('chatHistory');
-  if (ch) {
+const ch = document.getElementById('chatHistory');
+if (ch) {
     const _activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
     const _archKey = `nivi_chat_archives_${_activeProj}`;
     const history = JSON.parse(localStorage.getItem('niviTabChat') || '[]');
     const archives = JSON.parse(localStorage.getItem(_archKey) || '[]');
     let html = '';
+
     if (history.length) {
-      const curTitle = localStorage.getItem('nivi_current_title') || 'Current Session';
-html += `<div class="si active" style="display:flex;align-items:center;gap:4px;">
-  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(curTitle)}</span>
-  <span class="bdg">${history.length}</span>
-  <button onclick="event.stopPropagation();deleteCurrentChat()" title="Delete" style="opacity:0.6;background:none;border:none;color:var(--red);cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0;">
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-  </button>
-</div>`;
+        // ✅ FIX: જો ટાઈટલ ના હોય તો ચેટ પરથી જાતે બનાવી લો
+        let curTitle = localStorage.getItem('nivi_current_title');
+        if (!curTitle) curTitle = history[0]?.text?.split(' ').slice(0,4).join(' ') + '...' || 'New Chat';
+        const pairCount = Math.ceil(history.length / 2); // ✅ માત્ર સવાલો ગણશે
+        html += `<div class="si active" style="display:flex;align-items:center;gap:4px;">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(curTitle)}</span>
+            <span class="bdg">${pairCount}</span>
+            <button onclick="event.stopPropagation();deleteCurrentChat()" title="Delete" style="opacity:0.6;background:none;border:none;color:var(--red);cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+        </div>`;
     }
     if (archives.length) {
-      html += archives.map(a => `<div class="si" onclick="loadArchivedChat(${a.id})" style="display:flex;align-items:center;gap:4px;"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(a.title || new Date(a.id).toLocaleDateString())}</span><span class="bdg">${a.msgCount}</span><button onclick="event.stopPropagation();deleteArchivedChat(${a.id})" style="opacity:0.6;background:none;border:none;color:var(--red);cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>`).join('');
+        html += archives.map(a => {
+            const aCount = Math.ceil((a.msgCount || a.chat?.length || 0) / 2); // ✅ આર્કાઇવ માટે પણ સાચું કાઉન્ટ
+            return `<div class="si" onclick="loadArchivedChat(${a.id})" style="display:flex;align-items:center;gap:4px;"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(a.title || new Date(a.id).toLocaleDateString())}</span><span class="bdg">${aCount}</span><button onclick="event.stopPropagation();deleteArchivedChat(${a.id})" style="opacity:0.6;background:none;border:none;color:var(--red);cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>`
+        }).join('');
     }
     ch.innerHTML = html || `<div class="si" style="opacity:.4;">Empty</div>`;
-  }
+}
 };
 // Debounced public API — max once per 150ms (prevents jank on rapid calls)
 window.renderSidebarData = function() {
