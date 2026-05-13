@@ -170,8 +170,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .nr .bubble pre { max-height: 360px; overflow-y: auto; scrollbar-width: thin; position: relative; background: #09090b !important; border: 1px solid var(--border); border-radius: 12px; }
 .nr .bubble pre::after { content: "Scroll to view more"; display: block; text-align: center; font-size: 10px; color: var(--text-muted); padding: 8px 0; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); opacity: 0.8; }
 
-/* Code blocks */
-pre { background: #09090b !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 12px !important; padding: 14px; margin: 12px 0; box-shadow: inset 0 2px 8px rgba(0,0,0,0.15); position: relative; }
+/* Clean Code Blocks */
+pre { background: #09090b !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 12px !important; padding: 42px 14px 14px 14px !important; margin: 12px 0; box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);}
 code { font-family: var(--mono); font-size: 13px; }
 .tbdg { font-family: var(--mono); font-size: 10px; background: rgba(255,255,255,0.04); color: var(--text-sub); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); margin-top: 8px; display: inline-block; }
 
@@ -386,12 +386,15 @@ code { font-family: var(--mono); font-size: 13px; }
   .art-card:hover { transform: none; }
   .si:hover { transform: none; }
 }
-
-/* 🔥 ગેમભાઈનું સ્પેશિયલ MOBILE UI ઓપ્ટિમાઇઝેશન 🔥 */
+/* ═════════════════════════════════════════
+   🔥 ગેમભાઈનું સ્પેશિયલ MOBILE UI ઓપ્ટિમાઇઝેશન 🔥
+═════════════════════════════════════════ */
 @media(max-width: 768px) {
+  /* 👈 Right-Left હલતું બંધ કરવા માટે */
+  .app, .main, .chat-wrap { overflow-x: hidden !important; width: 100%; max-width: 100vw; } 
+  .code-actions { right: 6px !important; top: 6px !important; background: rgba(9,9,11,0.9); padding-left: 8px; border-radius: 6px; }
   .nr .bubble { padding: 4px 0 !important; }
   .nr .bubble pre { margin-left: -10px; margin-right: -10px; border-radius: 0 !important; border-left: none !important; border-right: none !important; max-height: 60vh; }
-  .code-actions { right: 6px !important; }
   .input-zone { padding: 6px 6px 10px !important; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important; }
   .input-pill { border-radius: 16px !important; padding: 6px 10px !important; }
   .input-pill textarea { font-size: 15px !important; padding: 4px 0 !important; }
@@ -411,7 +414,7 @@ code { font-family: var(--mono); font-size: 13px; }
   .status-chip { max-width: 110px; overflow: hidden; }
   .ws-pill { max-width: 160px; }
   #activeModelDisplay { max-width: 110px; font-size: 9px; }
-  .chat-inner { padding: 0 6px; }
+  .chat-inner { padding: 0 6px; overflow-x: hidden; } /* 👈 અહીં પણ હલતું બંધ કરવા ફિક્સ છે */
   .ur .bubble { max-width: 88%; padding: 8px 11px; font-size: 14px; }
   .input-pill { padding: 8px 10px; border-radius: 18px; }
   .input-pill textarea { font-size: 16px; }
@@ -420,4 +423,4 @@ code { font-family: var(--mono); font-size: 13px; }
   .sh-toolbar .tbtn { min-height: 36px; padding: 6px 10px; font-size: 11px; }
   .art-sheet { max-height: 92vh; border-radius: 14px 14px 0 0; }
   .pbtn { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
-}
+   }
