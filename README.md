@@ -1,2 +1,1 @@
-# Henil
-Vidhya: Standard 6th
+Nivi AI - Personal Assistant
