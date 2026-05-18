@@ -271,3 +271,66 @@ window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
 
   return { ok: false, answer: 'File analysis failed. Ensure Gemini is configured with a valid API key.' };
 };
+
+// ══════════════════════════════════════════════════════════
+//  IMAGE GENERATION — Imagen 3 via Gemini API
+//  Uses the same Gemini API key already configured
+// ══════════════════════════════════════════════════════════
+window.generateImage = async function(prompt) {
+  // Get Gemini key from model chain
+  const chain = window.getModelChain ? getModelChain() : [];
+  const geminiRaw = chain.find(c => c.provider === 'gemini' || (c.model || '').startsWith('gemini-'));
+  const cfg = geminiRaw ? _resolveProvider(geminiRaw) : null;
+  const apiKey = cfg?.key || localStorage.getItem('nivi_key_gemini') || '';
+
+  if (!apiKey) {
+    return { ok: false, error: 'No Gemini API key configured. Go to Settings & Models → add Gemini key.' };
+  }
+
+  try {
+    // Imagen 3 endpoint
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        instances: [{ prompt }],
+        parameters: { sampleCount: 1, aspectRatio: '1:1', safetyFilterLevel: 'block_only_high' }
+      })
+    });
+
+    if (!resp.ok) {
+      // Fallback: try gemini-2.0-flash-preview-image-generation
+      const url2 = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+      const resp2 = await fetch(url2, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
+        })
+      });
+      if (!resp2.ok) {
+        const errText = await resp2.text();
+        return { ok: false, error: `Image generation failed: ${resp2.status} — ${errText.slice(0, 200)}` };
+      }
+      const data2 = await resp2.json();
+      const parts  = data2.candidates?.[0]?.content?.parts || [];
+      const imgPart = parts.find(p => p.inlineData);
+      if (imgPart) {
+        return { ok: true, b64: imgPart.inlineData.data, mimeType: imgPart.inlineData.mimeType || 'image/png' };
+      }
+      return { ok: false, error: 'No image returned from API.' };
+    }
+
+    const data = await resp.json();
+    const pred  = data.predictions?.[0];
+    if (pred?.bytesBase64Encoded) {
+      return { ok: true, b64: pred.bytesBase64Encoded, mimeType: pred.mimeType || 'image/png' };
+    }
+    return { ok: false, error: 'No image in response.' };
+
+  } catch(e) {
+    return { ok: false, error: 'Network error: ' + e.message };
+  }
+};
