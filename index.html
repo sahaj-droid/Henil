@@ -113,7 +113,7 @@
             Tasks <span id="tm-badge" style="padding:1px 5px;border-radius:10px;font-size:9px;background:rgba(255,255,255,.12);color:var(--text-muted);">0</span>
             <span id="task-fab-dot" style="display:none;position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent-lt);box-shadow:0 0 6px var(--accent-lt);"></span>
           </button>
-          <div class="status-chip on" id="syncStatusUI"><span class="sdot"></span>Firebase</div>
+          <div class="status-chip on" id="syncStatusUI"><span class="sdot"></span>Local IDB</div>
         </div>
       </div>
 
@@ -326,15 +326,7 @@
   <div class="tm-tip">Type <kbd>/bg your task</kbd> to run in background</div>
   <div id="tm-task-list" class="tm-task-list"></div>
 </div>
-
 <div class="mob-overlay" id="mobOverlay" onclick="closeMobSidebar()"></div>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script>
-const firebaseConfig={apiKey:"AIzaSyATS7Jw8Gek7sDEq8p19KkfwFe59cZYG8c",authDomain:"realtradepro-e5cf7.firebaseapp.com",projectId:"realtradepro-e5cf7",storageBucket:"realtradepro-e5cf7.firebasestorage.app",messagingSenderId:"869277689884",appId:"1:869277689884:web:561e33a1731acd384a17d9"};
-if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
-</script>
 <script src="nivi-core.js"></script>
 <script src="gemini.js"></script>
 <script src="firebase-sync.js"></script>
