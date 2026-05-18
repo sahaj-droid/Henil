@@ -941,6 +941,8 @@ async function _saveAndSync(resId, wasAborted) {
   }
   const isErrorMsg = rawText.includes('Connection Error') || rawText.includes('All models failed');
   if (rawText.trim() && !isErrorMsg) {
+    // Fire event for FSAgent auto-patch detection
+    document.dispatchEvent(new CustomEvent('nivi-message-final', { detail: { text: rawText } }));
     AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
     if (AppState._tabChatHistory.length === 2) {
       const title = await generateChatTitle(AppState._tabChatHistory[0].text) || 'New Chat';

@@ -68,6 +68,18 @@
       <div id="fileList"></div>
     </div>
 
+    <!-- ── LOCAL FOLDER (FSAgent) ── -->
+    <div class="sb-sec">
+      <details class="proj-dropdown" id="fs-agent-details" open>
+        <summary class="sb-action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Local Folder
+          <span id="fs-status-dot" class="fs-status-dot"></span>
+        </summary>
+        <div id="fs-agent-panel" style="padding-left:12px;margin-top:6px;"></div>
+      </details>
+    </div>
+
     <div class="sb-sec">
       <div class="sb-lbl">Recent</div>
       <div id="chatHistory"></div>
@@ -95,6 +107,12 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:9px;">
+          <!-- Task Manager FAB -->
+          <button id="task-fab" onclick="TaskManager.togglePanel()" title="Background Tasks" style="position:relative;display:flex;align-items:center;gap:5px;height:30px;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text-sub);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .18s;" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Tasks <span id="tm-badge" style="padding:1px 5px;border-radius:10px;font-size:9px;background:rgba(255,255,255,.12);color:var(--text-muted);">0</span>
+            <span id="task-fab-dot" style="display:none;position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent-lt);box-shadow:0 0 6px var(--accent-lt);"></span>
+          </button>
           <div class="status-chip on" id="syncStatusUI"><span class="sdot"></span>Firebase</div>
         </div>
       </div>
@@ -293,6 +311,22 @@
     <button class="mbtn sec" onclick="closeModal('manualArtModal')">Cancel</button>
   </div>
 </div>
+<!-- ── TASK MANAGER FLOATING PANEL ── -->
+<div id="task-manager-panel" class="tm-panel">
+  <div class="tm-header">
+    <span style="display:flex;align-items:center;gap:7px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Background Tasks
+    </span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button onclick="TaskManager.clearFinished()" title="Clear finished" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:4px;transition:.15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">Clear</button>
+      <button onclick="TaskManager.togglePanel()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px;border-radius:4px;transition:.15s;line-height:1;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">×</button>
+    </div>
+  </div>
+  <div class="tm-tip">Type <kbd>/bg your task</kbd> to run in background</div>
+  <div id="tm-task-list" class="tm-task-list"></div>
+</div>
+
 <div class="mob-overlay" id="mobOverlay" onclick="closeMobSidebar()"></div>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -305,5 +339,7 @@ const db=firebase.firestore();
 <script src="gemini.js"></script>
 <script src="firebase-sync.js"></script>
 <script src="artifact.js"></script>
+<script src="fs-agent.js"></script>
+<script src="agent.js"></script>
 </body>
 </html>
