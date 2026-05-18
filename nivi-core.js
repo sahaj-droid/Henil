@@ -869,15 +869,43 @@ async function _handleTextMessage(text, resId) {
     return { role: m.role === 'nivi' ? 'model' : 'user', parts: [{ text: cleanText }] };
   });
 
-  // Inject persona directive at the top of history (once per session)
-  const niviDirective = `SYSTEM DIRECTIVE: You are Nivi — a smart, friendly, and versatile personal AI assistant. You help with ANYTHING the user asks: coding, writing, math, general knowledge, advice, creative ideas, life questions, learning new topics, or just casual conversation. You are NOT limited to coding.
+  // ── Build workspace-aware system directive ──
+  const _ctxProj    = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  let memFiles      = [];
+  if (window.NiviDB) {
+    try { memFiles = await NiviDB.getProjectFiles(_ctxProj); }
+    catch(e) { memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]'); }
+  } else {
+    memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
+  }
+  const TEXT_MIMES  = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
+  const textFiles   = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
+
+  // FSAgent local folder status
+  const _fsStatus   = window.FSAgent ? FSAgent.getStatus() : { status: 'idle', folder: '', files: [] };
+  const _fsGranted  = _fsStatus.status === 'granted';
+  const _fsDirFiles = _fsGranted ? (_fsStatus.files || []).filter(f => f.kind === 'file') : [];
+
+  const uploadedList  = textFiles.length > 0 ? textFiles.map(f => f.name).join(', ') : 'None';
+  const localList     = _fsDirFiles.length > 0 ? _fsDirFiles.slice(0, 20).map(f => `${f.name} (${(f.size/1024).toFixed(1)}KB)`).join(', ') : 'None';
+
+  const niviDirective = `SYSTEM DIRECTIVE: You are Nivi — a smart, friendly, and versatile personal AI assistant built into the user's local workspace.
 
 Your personality:
 - Warm, clear, and direct — no unnecessary disclaimers
-- Match the user's language: if they write in Gujarati, reply in Gujarati; if Hindi, reply in Hindi; if English, reply in English
-- Be genuinely helpful across ALL topics — health, finance, history, science, relationships, career, creativity, etc.
+- Match the user's language: Gujarati → Gujarati, Hindi → Hindi, English → English
+- Help with ANYTHING: coding, writing, math, advice, creative, casual conversation
 
-When the user shares code or asks for code help, use this format:
+WORKSPACE STATUS (use this when user asks about files or project):
+- Active Project: "${_ctxProj}"
+- Uploaded project files: ${uploadedList}
+- Local folder: ${_fsGranted ? `"${_fsStatus.folder}" — ${_fsDirFiles.length} files: ${localList}` : 'Not connected (user can click Local Folder in sidebar to grant)'}
+
+BACKGROUND TASKS:
+- User can run any task in background by prefixing with /bg
+- Example: /bg summarize all files in this project
+
+When giving code edits:
 FILE: filename.ext
 FIND:
 \`\`\`
@@ -888,32 +916,23 @@ REPLACE:
 (new code)
 \`\`\`
 
-Most importantly: if the user is NOT asking about code, do NOT bring up code. Just answer their actual question like a knowledgeable friend would.`;
+IMPORTANT: Only bring up files/code if user explicitly asks. For casual/general questions just answer directly.`;
+
   if (!hist.find(h => (h.parts[0]?.text || '').includes('SYSTEM DIRECTIVE:'))) {
     hist.unshift(
       { role: 'user',  parts: [{ text: niviDirective }] },
-      { role: 'model', parts: [{ text: 'Understood! I am Nivi — your all-purpose personal assistant. I can help with anything: coding, writing, general questions, creative work, advice, or just a conversation. I will match your language and focus on what you actually need. How can I help?' }] }
+      { role: 'model', parts: [{ text: `Understood! I'm Nivi — your workspace assistant for project "${_ctxProj}".${_fsGranted ? ` Local folder "${_fsStatus.folder}" connected with ${_fsDirFiles.length} files.` : ''} How can I help?` }] }
     );
   }
 
-  // Attach workspace file context for text files only
-  const _ctxProj  = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
-  let memFiles    = [];
-  if (window.NiviDB) {
-    try { memFiles = await NiviDB.getProjectFiles(_ctxProj); }
-    catch(e) { memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]'); }
-  } else {
-    memFiles = JSON.parse(localStorage.getItem(`nivi_file_memory_${_ctxProj}`) || '[]');
-  }
-  const TEXT_MIMES = ['text/javascript','text/html','text/css','text/plain','application/json','text/csv'];
-  const textFiles  = memFiles.filter(f => TEXT_MIMES.includes(f.mimeType));
-  let fileContext  = '';
+
+  // Attach workspace file context (uploaded text files)
+  let fileContext = '';
   if (textFiles.length > 0) {
-    const isDefault  = _ctxProj === 'default';
-    const projLabel  = !isDefault ? `[Project: ${_ctxProj}] ` : '';
-    const fileLimit  = isDefault ? 3 : 5;
-    const charLimit  = isDefault ? 1000 : 1500;
-    fileContext = `\n\n---\n[WORKSPACE CONTEXT: Files below are open. ONLY mention them if the user explicitly asks about code or file content. Ignore them for greetings or casual chat.]\n${projLabel}\n` +
+    const fileLimit = _ctxProj === 'default' ? 3 : 6;
+    const charLimit = 1500;
+    const projLabel = _ctxProj !== 'default' ? `[Project: ${_ctxProj}]` : '[Default Workspace]';
+    fileContext = `\n\n---\n[WORKSPACE FILE CONTENTS — use only when user asks about code/files]\n${projLabel} — ${textFiles.length} uploaded file(s):\n` +
       textFiles.slice(0, fileLimit).map(f => {
         const content = decodeB64Text(f.data).slice(0, charLimit);
         return `File: ${f.name}\n\`\`\`\n${content}\n\`\`\``;
