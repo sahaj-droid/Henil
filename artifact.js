@@ -152,7 +152,7 @@ function _renderSheet(t){
   }else if(t==='preview'){
     if(cfg.isImg){const w=document.createElement('div');w.style.cssText='display:flex;align-items:center;justify-content:center;padding:16px;background:#111;min-height:200px;';const img=document.createElement('img');img.src=objUrl;img.style.cssText='max-width:100%;border-radius:8px;';w.appendChild(img);c.appendChild(w);}
     else if(cfg.isPdf){const em=document.createElement('embed');em.src=objUrl;em.type='application/pdf';em.style.cssText='width:100%;height:60vh;border:none;';c.appendChild(em);}
-    else if(ext==='html'){const ifr=document.createElement('iframe');ifr.style.cssText='width:100%;height:60vh;border:none;background:#fff;';ifr.setAttribute('sandbox','allow-scripts allow-same-origin');ifr.srcdoc=txt;c.appendChild(ifr);}
+    else if(ext==='html'){const ifr=document.createElement('iframe');ifr.style.cssText='width:100%;height:60vh;border:none;background:#fff;';ifr.setAttribute('sandbox','allow-scripts');ifr.srcdoc=txt;c.appendChild(ifr);}
   }
 }
 
@@ -196,7 +196,7 @@ function makeArtCard(name,ext,b64,fileMeta){
   title.textContent=name;
   const meta=document.createElement('div');
   meta.className='art-card-meta';
-  meta.innerHTML=`<span class="ftbdg ${cfg.cls}" style="font-size:9px;padding:1px 5px;">${cfg.badge}</span> · Click to view`;
+  meta.innerHTML=`<span class="ftbdg ${cfg.cls}" style="font-size:9px;padding:1px 5px;">${cfg.badge}</span> - Click to view`;
   info.appendChild(title); info.appendChild(meta);
   const arrow=document.createElement('span');
   arrow.style.cssText='color:var(--text-muted);flex-shrink:0;font-size:18px;line-height:1;';
@@ -245,7 +245,7 @@ function addArtifactButtons(el) {
       // 2. ARTIFACT VIEW BUTTON (Secondary)
       const runBtn = document.createElement('button');
       runBtn.className = 'tbtn prim run-art-btn';
-      runBtn.innerHTML = 'Artifact ↗';
+      runBtn.innerHTML = 'Open';
       runBtn.title = 'Open in Artifact Panel';
       runBtn.onclick = () => {
         const codeTxt = codeEl.textContent;
@@ -937,7 +937,7 @@ for (const patch of relevant) {
 
     results.push({
       ok: true,
-      msg: `✅ Applied: ${findText.trim().slice(0, 60)}...`
+      msg: `Applied: ${findText.trim().slice(0, 60)}...`
     });
 
   } else {
@@ -953,7 +953,7 @@ for (const patch of relevant) {
 
       results.push({
         ok: true,
-        msg: `✅ Applied (trimmed): ${findTrimmed.slice(0, 60)}...`
+        msg: `Applied (trimmed): ${findTrimmed.slice(0, 60)}...`
       });
 
     } else {
@@ -973,7 +973,7 @@ for (const patch of relevant) {
 function _showPatchToast(results, filename) {
   const ok = results.filter(r => r.ok).length;
   const fail = results.filter(r => !r.ok).length;
-  const msg = `Patch "${filename}": ${ok} applied${fail > 0 ? `, ${fail} not found` : ' ✅'}`;
+  const msg = `Patch "${filename}": ${ok} applied${fail > 0 ? `, ${fail} not found` : ''}`;
 
   // Simple toast
   const toast = document.createElement('div');

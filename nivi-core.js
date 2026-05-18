@@ -430,7 +430,7 @@ async function createNewProject() {
 }
 
 // ── CHAT CONSTANTS ──
-const HERO_HTML = `<div id="heroSection"><div class="hero-icon">N</div><h1 class="hero-title">Nivi Workspace</h1><p class="hero-sub">Multi-model AI · Live file preview · Firebase sync</p><div class="hero-chips"><div class="hchip" onclick="qp('Explain my codebase structure')">Analyze codebase</div><div class="hchip" onclick="qp('Summarize the uploaded document')">Summarize doc</div><div class="hchip" onclick="qp('Debug this error and suggest fixes')">Debug code</div><div class="hchip" onclick="qp('/image futuristic city at night, neon lights')">Generate image</div></div></div>`;
+const HERO_HTML = `<div id="heroSection"><div class="hero-icon">N</div><h1 class="hero-title">Nivi Workspace</h1><p class="hero-sub">Multi-model AI - Live file preview - Local workspace</p><div class="hero-chips"><div class="hchip" onclick="qp('Explain my codebase structure')">Analyze codebase</div><div class="hchip" onclick="qp('Summarize the active file')">Summarize file</div><div class="hchip" onclick="qp('Debug this error')">Debug code</div><div class="hchip" onclick="qp('/image futuristic city at night, neon lights')">Generate image</div></div></div>`;
 
 // ── CLEAR CHAT ──
 function clearChat() {
@@ -514,8 +514,8 @@ function appendMsg(role, text, id) {
         const b=this.previousElementSibling;
         const isCol=b.classList.contains('collapsed');
         b.classList.toggle('collapsed',!isCol);
-        this.textContent=isCol?'▲ Show less':'▼ Show more';
-      ">▼ Show more</div>`
+        this.textContent=isCol?'Show less':'Show more';
+      ">Show more</div>`
     : '';
   row.innerHTML = `${av}<div style="display:flex;flex-direction:column;align-items:${align};${mw}"><div class="${bubbleClass}" id="${msgId}" data-raw="${esc}">${fmt}</div>${expandBtn}${acts}</div>`;
   win.appendChild(row);
@@ -809,7 +809,7 @@ async function _handleImageCommand(text, inp) {
       onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
     >
     <div class="img-error" style="display:none;">
-      ⚠ Image failed to load. <a href="${url}" target="_blank" rel="noopener">Try opening directly</a>.
+      Image failed to load. <a href="${url}" target="_blank" rel="noopener">Try opening directly</a>.
     </div>
     <div class="img-actions">
       <a href="${url}" target="_blank" download class="tbtn prim img-dl">⬇ Download</a>
@@ -939,7 +939,7 @@ async function _saveAndSync(resId, wasAborted) {
   } else if (el) {
     rawText = el.innerText || '';
   }
-  const isErrorMsg = rawText.includes('⚠ Connection Error') || rawText.includes('All models failed');
+  const isErrorMsg = rawText.includes('Connection Error') || rawText.includes('All models failed');
   if (rawText.trim() && !isErrorMsg) {
     AppState._tabChatHistory.push({ role: 'nivi', text: rawText });
     if (AppState._tabChatHistory.length === 2) {
@@ -1001,7 +1001,7 @@ async function handleSend() {
     }
   } catch(err) {
     if (!AppState?._abortController?.signal.aborted) {
-      updateMsg(resId, '⚠ Connection Error: ' + err.message);
+      updateMsg(resId, 'Connection Error: ' + err.message);
     }
   } finally {
     _wasAborted = AppState?._abortController?.signal.aborted ?? false;
@@ -1011,7 +1011,7 @@ async function handleSend() {
     const el = document.getElementById(resId);
     if (el && (el.getAttribute('data-raw') || '').includes('class="thinking"')) {
       updateMsg(resId, `<div class="msg-error">
-        <strong>⚠ Request Failed or Timed Out</strong>
+        <strong>Request Failed or Timed Out</strong>
         <div>Check the <b>Model Name</b> in Settings, or type <b>"continue"</b> if the file was too large.</div>
       </div>`);
     }
@@ -1047,12 +1047,12 @@ window.addModelRow = function(config = { model: '', key: '', url: '' }) {
       </div>
       <div>
         <label class="flbl">API Key</label>
-        <input type="password" class="finput conf-key" placeholder="Paste API key…" value="${config.key || ''}" style="margin-bottom:0;">
+        <input type="password" class="finput conf-key" placeholder="Paste API key..." value="${config.key || ''}" style="margin-bottom:0;">
       </div>
     </div>
     <div style="margin-top:8px;">
-      <label class="flbl">API URL <span style="opacity:.5;">(optional — leave blank for Gemini)</span></label>
-      <input type="text" class="finput conf-url" placeholder="https://…" value="${config.url || ''}" style="margin-bottom:0;">
+      <label class="flbl">API URL <span style="opacity:.5;">(optional - leave blank for Gemini)</span></label>
+      <input type="text" class="finput conf-url" placeholder="https://..." value="${config.url || ''}" style="margin-bottom:0;">
     </div>
   `;
   c.appendChild(row);

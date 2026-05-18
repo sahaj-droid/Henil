@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090a12">
   
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -84,7 +85,7 @@
     <main class="main">
       <div class="topbar">
         <div style="display:flex;align-items:center;">
-          <button class="hamburger" onclick="toggleSidebar()">
+          <button class="hamburger" onclick="toggleSidebar()" title="Toggle sidebar" aria-label="Toggle sidebar">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div class="ws-pill">
@@ -103,7 +104,7 @@
           <div id="heroSection">
             <div class="hero-icon">N</div>
             <h1 class="hero-title">Nivi Workspace</h1>
-            <p class="hero-sub">Multi-model AI · Live file preview · Firebase sync</p>
+            <p class="hero-sub">Multi-model AI - Live file preview - Local workspace</p>
             <div class="hero-chips">
               <div class="hchip" onclick="qp('Explain my codebase structure')">Analyze codebase</div>
               <div class="hchip" onclick="qp('Summarize the uploaded document')">Summarize doc</div>
@@ -135,10 +136,10 @@
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
-      <button id="stopBtn" class="pbtn stop" onclick="stopGeneration()">
+      <button id="stopBtn" class="pbtn stop" onclick="stopGeneration()" title="Stop generation" aria-label="Stop generation">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
       </button>
-      <button id="sendBtn" class="pbtn send" onclick="handleSend()">
+      <button id="sendBtn" class="pbtn send" onclick="handleSend()" title="Send message" aria-label="Send message">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
     </div>
@@ -146,8 +147,8 @@
 </div>
 
           <div class="inp-foot">
-            <span><kbd>↵</kbd> Send</span>
-            <span><kbd>⇧</kbd> + <kbd>↵</kbd> New line</span>
+            <span><kbd>Enter</kbd> Send</span>
+            <span><kbd>Shift</kbd> + <kbd>Enter</kbd> New line</span>
             <span>Type <kbd>/</kbd> for commands</span>
             </div>
           </div>
@@ -159,7 +160,7 @@
       <div class="art-hdr">
         <span id="artBadge"></span>
         <span class="art-title" id="artTitle">Artifact</span>
-        <button class="art-close" onclick="closeArt()">x</button>
+        <button class="art-close" onclick="closeArt()" title="Close artifact" aria-label="Close artifact">x</button>
       </div>
       <div class="art-tabs" id="artTabs">
         <button class="art-tab active" id="tabCode" onclick="switchTab('code')">
@@ -176,7 +177,7 @@
   <textarea id="cmEditor"></textarea>
 </div>
       <div id="viewPreview" class="art-preview-wrap" style="display:none;">
-        <iframe id="previewIframe" sandbox="allow-scripts allow-same-origin"></iframe>
+        <iframe id="previewIframe" sandbox="allow-scripts"></iframe>
       </div>
       <div id="viewImg" class="art-img-wrap" style="display:none;">
         <img id="imgEl" src="" alt="Preview">
@@ -223,7 +224,7 @@
   <div class="sh-hdr">
     <span id="shBadge"></span>
     <span class="sh-title" id="shTitle">Artifact</span>
-    <button class="sh-close" onclick="closeSheet()">x</button>
+    <button class="sh-close" onclick="closeSheet()" title="Close artifact" aria-label="Close artifact">x</button>
   </div>
   <div class="sh-tabs">
     <button class="art-tab active" id="shTabCode" onclick="switchSheetTab('code')">
@@ -251,7 +252,7 @@
 
 <div class="modal" id="projectModal">
   <div class="mbox" style="width:360px;">
-    <button class="mclose" onclick="closeModal('projectModal')">x</button>
+    <button class="mclose" onclick="closeModal('projectModal')" title="Close" aria-label="Close">x</button>
     <div class="mtitle">Create Workspace</div>
     <div class="msub">Organize files and context per project</div>
     <label class="flbl">Workspace Name</label>
@@ -261,7 +262,7 @@
 </div>
 <div class="modal" id="settingsModal">
   <div class="mbox" style="width:500px;">
-    <button class="mclose" onclick="closeModal('settingsModal')">x</button>
+    <button class="mclose" onclick="closeModal('settingsModal')" title="Close" aria-label="Close">x</button>
     <div class="mtitle">AI Providers & Chain</div>
     <div class="msub">Nivi tries models in order - first success wins</div>
     <div id="modelChainContainer" style="max-height:44vh;overflow-y:auto;margin-bottom:11px;padding-right:3px;"></div>
@@ -275,9 +276,9 @@
   
 <div class="modal" id="manualArtModal">
   <div class="mbox" style="width:560px;">
-    <button class="mclose" onclick="closeModal('manualArtModal')">x</button>
+    <button class="mclose" onclick="closeModal('manualArtModal')" title="Close" aria-label="Close">x</button>
     <div class="mtitle">Paste Code</div>
-    <div class="msub">Review · Fix · Optimize — Nivi will open it in the artifact panel</div>
+    <div class="msub">Review - Fix - Optimize - Nivi will open it in the artifact panel</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
       <button class="tbtn" id="manArtLangJs"  onclick="setManLang('js')"  style="border-color:rgba(251,191,36,.4);color:var(--amber);">JS</button>
       <button class="tbtn" id="manArtLangHtml" onclick="setManLang('html')" style="">HTML</button>
