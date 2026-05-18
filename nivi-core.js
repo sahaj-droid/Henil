@@ -750,15 +750,6 @@ async function deleteFile(name) {
   if (!confirm(`Delete "${name}"?`)) return;
   const projId = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
   if (window.NiviDB) { try { await NiviDB.deleteFile(projId, name); } catch(e) {} }
-  if (projId !== 'default' && typeof db !== 'undefined') {
-    try {
-      const userId = localStorage.getItem('nivi_user_id') || 'user_1774995803095';
-      const snap   = await db.collection('users').doc(userId)
-        .collection('workspaces').doc(projId)
-        .collection('files').where('name', '==', name).get();
-      snap.forEach(doc => doc.ref.delete());
-    } catch(e) { console.warn('Firebase file delete failed:', e); }
-  }
   const _delKey = `nivi_file_memory_${projId}`;
   let files = JSON.parse(localStorage.getItem(_delKey) || '[]');
   files = files.filter(f => f.name !== name);
@@ -791,9 +782,17 @@ function generateChatTitle(firstMessage) {
 //  SEND MESSAGE — FIX 4: split into focused helpers
 // ════════════════════════════════════════════════════
 
-// Handles /image command — returns true so caller can bail out
+// Handles /image command OR natural image request — returns true so caller can bail out
 async function _handleImageCommand(text, inp) {
-  const prompt = text.substring(7).trim();
+  // Extract prompt — strip command prefix if present
+  let prompt = text;
+  if (text.toLowerCase().startsWith('/image ')) prompt = text.substring(7).trim();
+  else if (text.toLowerCase().startsWith('generate image ')) prompt = text.substring(15).trim();
+  else if (text.toLowerCase().startsWith('generate an image ')) prompt = text.substring(18).trim();
+  else if (text.toLowerCase().startsWith('create image ')) prompt = text.substring(13).trim();
+  else if (text.toLowerCase().startsWith('create an image ')) prompt = text.substring(16).trim();
+  prompt = prompt.trim();
+
   appendMsg('user', text);
   if (window.AppState) {
     AppState._tabChatHistory.push({ role: 'user', text });
@@ -801,28 +800,58 @@ async function _handleImageCommand(text, inp) {
   }
   inp.value = ''; inp.style.height = 'auto';
   const resId = 'nivi-' + Date.now();
-  const url   = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
-  // FIX 7: onerror handler so failed images give feedback instead of a broken icon
-  const imgHtml = `<div class="img-result">
-    <img src="${url}"
-      onload="document.getElementById('chatWrap').scrollTop=99999;"
-      onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
-    >
-    <div class="img-error" style="display:none;">
-      Image failed to load. <a href="${url}" target="_blank" rel="noopener">Try opening directly</a>.
-    </div>
-    <div class="img-actions">
-      <a href="${url}" target="_blank" download class="tbtn prim img-dl">⬇ Download</a>
-    </div>
-  </div>`;
-  appendMsg('nivi', imgHtml, resId);
-  if (window.AppState) {
-    AppState._tabChatHistory.push({ role: 'nivi', text: imgHtml });
-    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+
+  // Show loading state
+  appendMsg('nivi', `<div class="img-generating"><span class="tm-spinner" style="display:inline-block;margin-right:8px;"></span>Generating image: <em>${escapeHTML(prompt)}</em>…</div>`, resId);
+  scrollToBottom();
+
+  // Call Gemini Imagen
+  const result = window.generateImage ? await generateImage(prompt) : { ok: false, error: 'generateImage not loaded' };
+
+  if (result.ok) {
+    const dataUrl = `data:${result.mimeType};base64,${result.b64}`;
+    const imgHtml = `<div class="img-result">
+      <img src="${dataUrl}"
+        style="max-width:100%;border-radius:10px;margin-bottom:8px;"
+        onload="document.getElementById('chatWrap').scrollTop=99999;"
+      >
+      <div class="img-actions">
+        <a href="${dataUrl}" download="nivi-image.png" class="tbtn prim img-dl">⬇ Download</a>
+      </div>
+    </div>`;
+    updateMsg(resId, imgHtml);
+    if (window.AppState) {
+      AppState._tabChatHistory.push({ role: 'nivi', text: `[Image generated for: ${prompt}]` });
+      localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+    }
+  } else {
+    // Fallback: Pollinations.ai if Imagen fails
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
+    const fallbackHtml = `<div class="img-result">
+      <img src="${url}"
+        style="max-width:100%;border-radius:10px;"
+        onload="document.getElementById('chatWrap').scrollTop=99999;"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
+      >
+      <div class="img-error" style="display:none;">
+        ⚠️ Image generation failed: ${escapeHTML(result.error || 'Unknown error')}<br>
+        <small>Configure Gemini API key in Settings for better results.</small>
+      </div>
+      <div class="img-actions">
+        <a href="${url}" target="_blank" download class="tbtn prim img-dl">⬇ Download</a>
+      </div>
+    </div>`;
+    updateMsg(resId, fallbackHtml);
+    if (window.AppState) {
+      AppState._tabChatHistory.push({ role: 'nivi', text: `[Image generated for: ${prompt}]` });
+      localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+    }
   }
+
   renderSidebarData();
   return true;
 }
+
 
 // Reads all pending files, saves them, returns combined AI answer
 async function _handleFilesMessage(text, pendingFiles, resId) {
@@ -990,8 +1019,13 @@ async function handleSend() {
   const pendingFiles = window.AppState?._pendingFiles || [];
   if (!text && !pendingFiles.length) return;
 
-  // /image command — early return
-  if (text.toLowerCase().startsWith('/image ')) {
+  // Image command — /image or natural language triggers
+  const _txtLow = text.toLowerCase();
+  const _isImgCmd = _txtLow.startsWith('/image ') ||
+    _txtLow.startsWith('generate image ') || _txtLow.startsWith('generate an image ') ||
+    _txtLow.startsWith('create image ')   || _txtLow.startsWith('create an image ')  ||
+    _txtLow.startsWith('make image ')     || _txtLow.startsWith('make an image ');
+  if (_isImgCmd) {
     await _handleImageCommand(text, inp);
     return;
   }
