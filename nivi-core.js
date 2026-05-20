@@ -782,6 +782,87 @@ function generateChatTitle(firstMessage) {
 //  SEND MESSAGE — FIX 4: split into focused helpers
 // ════════════════════════════════════════════════════
 
+// ── POLLINATIONS.AI IMAGE GENERATION (Primary — no API key needed) ──
+const POLL_MODELS = [
+  { id: 'flux',         label: '✦ Flux',       desc: 'Best quality' },
+  { id: 'flux-realism', label: '📷 Realism',   desc: 'Photorealistic' },
+  { id: 'flux-anime',   label: '🎌 Anime',     desc: 'Anime style' },
+  { id: 'flux-3d',      label: '🧊 3D',        desc: '3D render' },
+  { id: 'turbo',        label: '⚡ Turbo',     desc: 'Ultra fast' },
+];
+
+const POLL_RATIOS = [
+  { id: 'square',    label: '⬛ 1:1',   w: 1024, h: 1024 },
+  { id: 'landscape', label: '▬ 16:9', w: 1360, h: 768  },
+  { id: 'portrait',  label: '▮ 9:16', w: 768,  h: 1360 },
+  { id: 'wide',      label: '◻ 4:3',  w: 1024, h: 768  },
+];
+
+window._pollImgModel  = window._pollImgModel  || 'flux';
+window._pollImgRatio  = window._pollImgRatio  || 'square';
+window._pollImgEnhance = window._pollImgEnhance !== false;
+
+function _buildPollinationsUrl(prompt, model, ratio, enhance, seed) {
+  const r   = POLL_RATIOS.find(x => x.id === ratio) || POLL_RATIOS[0];
+  const s   = seed || Math.floor(Math.random() * 9999999);
+  const enc = encodeURIComponent(prompt);
+  return `https://image.pollinations.ai/prompt/${enc}?model=${model}&width=${r.w}&height=${r.h}&seed=${s}&nologo=true${enhance ? '&enhance=true' : ''}`;
+}
+
+function _buildImgUI(prompt, model, ratio, enhance, seed, resId) {
+  const url      = _buildPollinationsUrl(prompt, model, ratio, enhance, seed);
+  const modelOpts = POLL_MODELS.map(m =>
+    `<option value="${m.id}" ${model === m.id ? 'selected' : ''}>${m.label} — ${m.desc}</option>`
+  ).join('');
+  const ratioOpts = POLL_RATIOS.map(r =>
+    `<option value="${r.id}" ${ratio === r.id ? 'selected' : ''}>${r.label}</option>`
+  ).join('');
+
+  return `<div class="img-result" id="imgblock-${resId}">
+    <div class="img-controls" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:10px;">
+      <select class="img-sel" onchange="window._pollImgModel=this.value;_regenImg('${resId}','${escapeHTML(prompt)}',this.value,document.getElementById('ratio-${resId}').value,window._pollImgEnhance)" style="font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e2e2;cursor:pointer;font-family:var(--mono);">${modelOpts}</select>
+      <select id="ratio-${resId}" class="img-sel" onchange="window._pollImgRatio=this.value;_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,this.value,window._pollImgEnhance)" style="font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e2e2;cursor:pointer;font-family:var(--mono);">${ratioOpts}</select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-sub);cursor:pointer;user-select:none;">
+        <input type="checkbox" ${enhance ? 'checked' : ''} onchange="window._pollImgEnhance=this.checked;_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,document.getElementById('ratio-${resId}').value,this.checked)" style="accent-color:var(--accent);">
+        Enhance
+      </label>
+      <button onclick="_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,document.getElementById('ratio-${resId}').value,window._pollImgEnhance)" class="tbtn" style="font-size:11px;padding:4px 10px;">🔄 Regen</button>
+    </div>
+    <div id="img-wrap-${resId}" style="position:relative;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);min-height:120px;display:flex;align-items:center;justify-content:center;">
+      <div id="img-loading-${resId}" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-sub);font-size:12px;z-index:2;">
+        <div class="tm-spinner"></div><span>Generating…</span>
+      </div>
+      <img src="${url}"
+        style="max-width:100%;border-radius:12px;display:block;opacity:0;transition:opacity .4s;"
+        onload="this.style.opacity='1';document.getElementById('img-loading-${resId}')?.remove();document.getElementById('chatWrap').scrollTop=99999;"
+        onerror="document.getElementById('img-loading-${resId}').innerHTML='<span style=color:var(--red)>⚠️ Generation failed. Try again or change model.</span>';"
+        alt="AI Generated: ${escapeHTML(prompt)}"
+      >
+    </div>
+    <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+      <a href="${url}" target="_blank" download="nivi-image.png" class="tbtn prim img-dl">⬇ Download</a>
+      <a href="${url}" target="_blank" class="tbtn">🔗 Open</a>
+      <span style="margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--text-muted);opacity:.6;">pollinations.ai • ${model}</span>
+    </div>
+  </div>`;
+}
+
+// Regenerate image with new settings — replaces existing img block
+window._regenImg = function(resId, prompt, model, ratio, enhance) {
+  const block = document.getElementById('imgblock-' + resId);
+  if (!block) return;
+  window._pollImgModel  = model;
+  window._pollImgRatio  = ratio;
+  window._pollImgEnhance = enhance;
+  const seed = Math.floor(Math.random() * 9999999);
+  const newHtml = _buildImgUI(prompt, model, ratio, enhance, seed, resId);
+  const bubble  = block.closest('.bubble');
+  if (bubble) {
+    bubble.innerHTML = newHtml;
+    bubble.setAttribute('data-raw', `[Image: ${prompt}]`);
+  }
+};
+
 // Handles /image command OR natural image request — returns true so caller can bail out
 async function _handleImageCommand(text, inp) {
   // Extract prompt — strip command prefix if present
@@ -801,56 +882,33 @@ async function _handleImageCommand(text, inp) {
   inp.value = ''; inp.style.height = 'auto';
   const resId = 'nivi-' + Date.now();
 
-  // Show loading state
+  // Show loading bubble immediately
   appendMsg('nivi', `<div class="img-generating"><span class="tm-spinner" style="display:inline-block;margin-right:8px;"></span>Generating image: <em>${escapeHTML(prompt)}</em>…</div>`, resId);
   scrollToBottom();
 
-  // Call Gemini Imagen
-  const result = window.generateImage ? await generateImage(prompt) : { ok: false, error: 'generateImage not loaded' };
+  // Small delay so loading bubble renders, then swap in full UI
+  await new Promise(r => setTimeout(r, 50));
 
-  if (result.ok) {
-    const dataUrl = `data:${result.mimeType};base64,${result.b64}`;
-    const imgHtml = `<div class="img-result">
-      <img src="${dataUrl}"
-        style="max-width:100%;border-radius:10px;margin-bottom:8px;"
-        onload="document.getElementById('chatWrap').scrollTop=99999;"
-      >
-      <div class="img-actions">
-        <a href="${dataUrl}" download="nivi-image.png" class="tbtn prim img-dl">⬇ Download</a>
-      </div>
-    </div>`;
-    updateMsg(resId, imgHtml);
-    if (window.AppState) {
-      AppState._tabChatHistory.push({ role: 'nivi', text: `[Image generated for: ${prompt}]` });
-      localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
-    }
-  } else {
-    // Fallback: Pollinations.ai if Imagen fails
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
-    const fallbackHtml = `<div class="img-result">
-      <img src="${url}"
-        style="max-width:100%;border-radius:10px;"
-        onload="document.getElementById('chatWrap').scrollTop=99999;"
-        onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
-      >
-      <div class="img-error" style="display:none;">
-        ⚠️ Image generation failed: ${escapeHTML(result.error || 'Unknown error')}<br>
-        <small>Configure Gemini API key in Settings for better results.</small>
-      </div>
-      <div class="img-actions">
-        <a href="${url}" target="_blank" download class="tbtn prim img-dl">⬇ Download</a>
-      </div>
-    </div>`;
-    updateMsg(resId, fallbackHtml);
-    if (window.AppState) {
-      AppState._tabChatHistory.push({ role: 'nivi', text: `[Image generated for: ${prompt}]` });
-      localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
-    }
+  const imgHtml = _buildImgUI(
+    prompt,
+    window._pollImgModel  || 'flux',
+    window._pollImgRatio  || 'square',
+    window._pollImgEnhance !== false,
+    null,
+    resId
+  );
+  updateMsg(resId, imgHtml);
+
+  if (window.AppState) {
+    AppState._tabChatHistory.push({ role: 'nivi', text: `[Image generated for: ${prompt}]` });
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
   }
 
   renderSidebarData();
   return true;
 }
+
+
 
 
 // Reads all pending files, saves them, returns combined AI answer
