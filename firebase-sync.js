@@ -210,17 +210,15 @@ async function syncWorkspaceFiles(projId) {
 
 async function saveNiviChat(chatHistory) {
   try {
-    // Save to IndexedDB
+    // Save to IndexedDB (always — even empty array, to clear deleted msgs)
     await NiviDB.saveChat('default', chatHistory);
-    // Backup to localStorage
-    if (chatHistory.length > 0) {
-      localStorage.setItem('niviTabChat', JSON.stringify(chatHistory));
-    }
+    // Always sync localStorage so deletions persist
+    localStorage.setItem('niviTabChat', JSON.stringify(chatHistory));
     _updateSyncUI('connected');
   } catch(e) {
     console.warn('saveNiviChat error:', e);
     // Fallback to localStorage only
-    if (chatHistory.length > 0) localStorage.setItem('niviTabChat', JSON.stringify(chatHistory));
+    localStorage.setItem('niviTabChat', JSON.stringify(chatHistory));
     _updateSyncUI('local');
   }
 }
@@ -311,7 +309,8 @@ function _newProjectSessionId(projId) {
 
 async function saveProjectChat(projId, chatHistory) {
   if (!projId || projId === 'default') return;
-  if (!chatHistory || chatHistory.length === 0) return;
+  if (!chatHistory) return;
+  // Allow saving empty array — needed so deleted messages don't reappear
   try {
     await NiviDB.saveChat(projId, chatHistory);
     localStorage.setItem('nivi_proj_chat_' + projId, JSON.stringify(chatHistory));
