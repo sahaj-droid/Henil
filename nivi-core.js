@@ -480,6 +480,28 @@ function _fmt(text) {
       const raw = typeof token === 'string' ? token : (token.raw || token.text || '');
       return escapeHTML(raw);
     };
+    // ── LIVE CODE RUNNER: inject ▶ Run button into JS code blocks ──
+    renderer.code = function(token) {
+      const code = typeof token === 'string' ? token : (token.text || token.raw || '');
+      const lang = (typeof token === 'object' ? (token.lang || '') : '').toLowerCase().trim();
+      const escaped = escapeHTML(code);
+      const isJS = lang === 'javascript' || lang === 'js';
+      const isPY = lang === 'python' || lang === 'py';
+      const runId = 'run-' + Math.random().toString(36).substr(2, 8);
+      let runBtn = '';
+      if (isJS) {
+        runBtn = `<button class="code-run-btn" onclick="runJSCode('${runId}')" title="Run JavaScript">▶ Run JS</button>`;
+      } else if (isPY) {
+        runBtn = `<button class="code-run-btn" onclick="runPYCode('${runId}')" title="Run Python (Pyodide)" style="color:#4ade80;">▶ Run PY</button>`;
+      }
+      const langBadge = lang ? `<span class="code-lang">${lang}</span>` : '';
+      const copyBtn   = `<button class="code-copy-btn" onclick="copyCode('${runId}')" title="Copy code">⧉</button>`;
+      return `<div class="code-block-wrap" id="${runId}-wrap">
+        <div class="code-block-header">${langBadge}${copyBtn}${runBtn}</div>
+        <pre><code id="${runId}-src" class="language-${lang || 'plaintext'}">${escaped}</code></pre>
+        <div id="${runId}-out" class="code-output" style="display:none;"></div>
+      </div>`;
+    };
     marked.setOptions({ breaks: true, renderer });
     const h = marked.parse(cleanText);
     const w = cleanText.trim().split(/\s+/).length;
@@ -487,6 +509,76 @@ function _fmt(text) {
   }
   return escapeHTML(cleanText).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 }
+
+// ── LIVE JS CODE RUNNER ──
+window.runJSCode = function(runId) {
+  const srcEl  = document.getElementById(runId + '-src');
+  const outEl  = document.getElementById(runId + '-out');
+  if (!srcEl || !outEl) return;
+  const code   = srcEl.innerText || srcEl.textContent || '';
+  outEl.style.display = 'block';
+  outEl.innerHTML     = '<span style="opacity:.5;font-size:11px;">Running…</span>';
+
+  // Capture console.log output
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  const logs = [];
+  try {
+    iframe.contentWindow.console = {
+      log:   (...a) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x, null, 2) : String(x)).join(' ')),
+      error: (...a) => logs.push('❌ ' + a.join(' ')),
+      warn:  (...a) => logs.push('⚠️ ' + a.join(' ')),
+      info:  (...a) => logs.push('ℹ️ ' + a.join(' ')),
+    };
+    iframe.contentWindow.eval(code);
+    const output = logs.length ? logs.join('\n') : '✅ Ran (no output)';
+    outEl.innerHTML = `<pre style="margin:0;white-space:pre-wrap;">${escapeHTML(output)}</pre>`;
+  } catch(e) {
+    outEl.innerHTML = `<pre style="margin:0;color:var(--red);">❌ ${escapeHTML(e.toString())}</pre>`;
+  } finally {
+    document.body.removeChild(iframe);
+  }
+};
+
+// ── PYTHON RUNNER (Pyodide lazy-loaded) ──
+window.runPYCode = async function(runId) {
+  const srcEl = document.getElementById(runId + '-src');
+  const outEl = document.getElementById(runId + '-out');
+  if (!srcEl || !outEl) return;
+  const code  = srcEl.innerText || srcEl.textContent || '';
+  outEl.style.display = 'block';
+  outEl.innerHTML = '<span style="opacity:.5;font-size:11px;">Loading Python runtime…</span>';
+  try {
+    if (!window._pyodide) {
+      if (!document.getElementById('pyodide-script')) {
+        await new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.id  = 'pyodide-script';
+          s.src = 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      outEl.innerHTML = '<span style="opacity:.5;font-size:11px;">Initializing Pyodide…</span>';
+      window._pyodide = await loadPyodide();
+    }
+    let out = '';
+    window._pyodide.setStdout({ batched: (s) => { out += s + '\n'; } });
+    window._pyodide.setStderr({ batched: (s) => { out += '❌ ' + s + '\n'; } });
+    await window._pyodide.runPythonAsync(code);
+    outEl.innerHTML = `<pre style="margin:0;white-space:pre-wrap;">${escapeHTML(out.trim() || '✅ Ran (no output)')}</pre>`;
+  } catch(e) {
+    outEl.innerHTML = `<pre style="margin:0;color:var(--red);">❌ ${escapeHTML(String(e))}</pre>`;
+  }
+};
+
+window.copyCode = function(runId) {
+  const srcEl = document.getElementById(runId + '-src');
+  if (srcEl) navigator.clipboard.writeText(srcEl.innerText || srcEl.textContent || '');
+};
+
+
 
 // ── APPEND MESSAGE ──
 function appendMsg(role, text, id) {
@@ -1069,6 +1161,57 @@ async function _saveAndSync(resId, wasAborted) {
   }
 }
 
+// ── 4x IMAGE VARIATIONS ──
+async function _handle4xImages(prompt, inp) {
+  if (!prompt) return;
+  appendMsg('user', `/imagine ${prompt}`);
+  if (window.AppState) {
+    AppState._tabChatHistory.push({ role: 'user', text: `/imagine ${prompt}` });
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+  }
+  inp.value = ''; inp.style.height = 'auto';
+  const resId  = 'nivi-' + Date.now();
+  const model  = window._pollImgModel  || 'flux';
+  const ratio  = window._pollImgRatio  || 'square';
+  const enhance = window._pollImgEnhance !== false;
+  const seeds  = Array.from({ length: 4 }, () => Math.floor(Math.random() * 9999999));
+
+  appendMsg('nivi', `<div class="img-generating"><span class="tm-spinner" style="display:inline-block;margin-right:8px;"></span>Generating 4 variations of: <em>${escapeHTML(prompt)}</em>…</div>`, resId);
+  scrollToBottom();
+  await new Promise(r => setTimeout(r, 50));
+
+  const gridHtml = `<div style="margin-bottom:10px;font-size:11px;color:var(--text-sub);font-family:var(--mono);">
+    4 variations · <strong>${model}</strong> · ${ratio}
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    ${seeds.map((seed, i) => {
+      const url = _buildPollinationsUrl(prompt, model, ratio, enhance, seed);
+      const vid = resId + '-v' + i;
+      return `<div style="position:relative;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.04);aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+        <div id="${vid}-ld" style="position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text-sub);font-size:11px;z-index:2;">
+          <div class="tm-spinner"></div><span>${i+1}</span>
+        </div>
+        <img src="${url}" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s;"
+          onload="this.style.opacity='1';document.getElementById('${vid}-ld')?.remove();"
+          onerror="document.getElementById('${vid}-ld').innerHTML='<span style=color:var(--red)>⚠️ Failed</span>';"
+        >
+        <div style="position:absolute;bottom:6px;right:6px;display:flex;gap:5px;">
+          <a href="${url}" download="nivi-var-${i+1}.png" class="tbtn prim" style="padding:3px 8px;font-size:10px;">⬇</a>
+          <a href="${url}" target="_blank" class="tbtn" style="padding:3px 8px;font-size:10px;">🔗</a>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div style="margin-top:10px;font-size:10px;font-family:var(--mono);color:var(--text-muted);opacity:.6;">pollinations.ai · Use /image for single with controls</div>`;
+
+  updateMsg(resId, gridHtml);
+  if (window.AppState) {
+    AppState._tabChatHistory.push({ role: 'nivi', text: `[4 variations generated for: ${prompt}]` });
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+  }
+  renderSidebarData();
+}
+
 // ── MAIN ENTRY POINT ──
 async function handleSend() {
   if (window.AppState && AppState._isGenerating) return;
@@ -1086,6 +1229,19 @@ async function handleSend() {
   if (_isImgCmd) {
     await _handleImageCommand(text, inp);
     return;
+  }
+
+  // /imagine — 4 variations at once
+  if (_txtLow.startsWith('/imagine ')) {
+    await _handle4xImages(text.substring(9).trim(), inp);
+    return;
+  }
+
+  // /summarize — summarize uploaded files or last reply
+  if (_txtLow === '/summarize' || _txtLow.startsWith('/summarize ')) {
+    const _sumExtra = text.substring(10).trim();
+    inp.value = `Summarize all the uploaded files and key points from our conversation so far. ${_sumExtra}`.trim();
+    // fall through to normal send
   }
 
   // Commit user message to UI + history
@@ -1213,3 +1369,70 @@ window.scrollToBottom = function() {
     setTimeout(() => { chatWrap.scrollTo({ top: chatWrap.scrollHeight, behavior: 'smooth' }); }, 100);
   }
 };
+
+// ══════════════════════════════════════════════════
+//  🎤 VOICE INPUT — Web Speech API (no API key)
+// ══════════════════════════════════════════════════
+let _voiceRecog = null;
+let _voiceActive = false;
+
+window.toggleVoiceInput = function() {
+  if (_voiceActive) {
+    _stopVoice();
+  } else {
+    _startVoice();
+  }
+};
+
+function _startVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Voice input not supported in this browser. Use Chrome or Edge.');
+    return;
+  }
+  _voiceRecog = new SR();
+  _voiceRecog.continuous      = true;
+  _voiceRecog.interimResults  = true;
+  _voiceRecog.lang            = 'en-IN'; // supports Hinglish/Gujarati accent well
+  _voiceRecog.maxAlternatives = 1;
+
+  const inp     = document.getElementById('mainInput');
+  const micBtn  = document.getElementById('micBtn');
+  const baseVal = inp.value;
+
+  _voiceRecog.onstart = () => {
+    _voiceActive = true;
+    micBtn.classList.add('mic-active');
+    micBtn.title = 'Recording… (click to stop)';
+  };
+
+  _voiceRecog.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    inp.value = baseVal + (baseVal ? ' ' : '') + (final || interim);
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 170) + 'px';
+  };
+
+  _voiceRecog.onerror = (e) => {
+    console.warn('Voice error:', e.error);
+    _stopVoice();
+  };
+
+  _voiceRecog.onend = () => {
+    _stopVoice();
+  };
+
+  _voiceRecog.start();
+}
+
+function _stopVoice() {
+  _voiceActive = false;
+  const micBtn = document.getElementById('micBtn');
+  if (micBtn) { micBtn.classList.remove('mic-active'); micBtn.title = 'Voice Input'; }
+  if (_voiceRecog) { try { _voiceRecog.stop(); } catch(e) {} _voiceRecog = null; }
+}
