@@ -58,11 +58,52 @@ window.readFileAsBase64 = function(file) {
 window.getFileMimeType = function(filename) {
   const ext = filename.split('.').pop().toLowerCase();
   const map = {
-    pdf:  'application/pdf', js:   'text/javascript', html: 'text/html',
-    css:  'text/css',        txt:  'text/plain',       json: 'application/json',
-    csv:  'text/csv',        md:   'text/plain',       py:   'text/plain',
-    png:  'image/png',       jpg:  'image/jpeg',       jpeg: 'image/jpeg',
-    webp: 'image/webp',      gif:  'image/gif',
+    // Documents
+    pdf:  'application/pdf',
+    // Web
+    html: 'text/html',   htm:  'text/html',
+    css:  'text/css',    scss: 'text/css',    sass: 'text/css',   less: 'text/css',
+    // JavaScript / TypeScript
+    js:   'text/javascript', mjs: 'text/javascript', cjs: 'text/javascript',
+    jsx:  'text/javascript', ts:  'text/plain',       tsx: 'text/plain',
+    // Frameworks
+    vue:    'text/plain', svelte: 'text/plain',
+    // Data / Config
+    json:   'application/json', json5: 'application/json', jsonc: 'application/json',
+    yaml:   'text/plain',  yml:  'text/plain',
+    toml:   'text/plain',  ini:  'text/plain',
+    env:    'text/plain',  conf: 'text/plain',  config: 'text/plain',
+    csv:    'text/csv',    tsv:  'text/csv',
+    xml:    'text/xml',    svg:  'image/svg+xml', plist: 'text/plain',
+    graphql: 'text/plain', gql:  'text/plain',
+    sql:    'text/plain',
+    diff:   'text/plain',  patch: 'text/plain',
+    // Docs / Text
+    txt:  'text/plain',  md:   'text/plain',   mdx:  'text/plain',
+    rst:  'text/plain',  log:  'text/plain',
+    // Python
+    py:  'text/plain', pyw: 'text/plain',
+    // Systems / Low-level
+    c:   'text/plain', cpp:   'text/plain', cc:   'text/plain',
+    cxx: 'text/plain', h:     'text/plain', hpp:  'text/plain',
+    cs:  'text/plain', go:    'text/plain', rs:   'text/plain',
+    // JVM
+    java:  'text/plain', kt:  'text/plain', kts:  'text/plain',
+    scala: 'text/plain', groovy: 'text/plain', clj: 'text/plain',
+    // Mobile / Other
+    swift: 'text/plain', dart: 'text/plain',
+    // Scripting
+    rb:   'text/plain', php:  'text/plain', lua: 'text/plain',
+    r:    'text/plain', m:    'text/plain',
+    ex:   'text/plain', exs:  'text/plain',
+    hs:   'text/plain',
+    // Shell
+    sh:   'text/plain', bash: 'text/plain', zsh: 'text/plain',
+    fish: 'text/plain', bat:  'text/plain', cmd: 'text/plain', ps1: 'text/plain',
+    // Images
+    png:  'image/png',  jpg:  'image/jpeg', jpeg: 'image/jpeg',
+    webp: 'image/webp', gif:  'image/gif',  bmp:  'image/bmp',
+    ico:  'image/x-icon', tiff: 'image/tiff', avif: 'image/avif',
   };
   return map[ext] || 'text/plain';
 };
