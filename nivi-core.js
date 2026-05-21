@@ -964,82 +964,124 @@ window._handleImg2ImgUpload = async function(inputEl, resId, prompt, model, rati
   model = (model || '').trim() || window._pollImgModel || 'flux';
   ratio = (ratio || '').trim() || window._pollImgRatio || 'square';
 
-  // Read as base64
-  const b64 = await new Promise((res, rej) => {
+  // Read as base64 dataURL
+  const dataUrl = await new Promise((res, rej) => {
     const r = new FileReader();
-    r.onload = e => res(e.target.result); // full dataURL
+    r.onload = e => res(e.target.result);
     r.onerror = rej;
     r.readAsDataURL(file);
   });
+  // Pure base64 (strip prefix) for Gemini
+  const b64only = dataUrl.split(',')[1];
+  const mime    = file.type || 'image/jpeg';
 
-  // Show img2img panel in same bubble
-  const block = document.getElementById('imgblock-' + resId);
+  // Find bubble
+  const block  = document.getElementById('imgblock-' + resId);
   if (!block) return;
   const bubble = block.closest('.bubble');
   if (!bubble) return;
 
-  const i2iId  = resId + '-i2i';
-  const strength = 0.65;
-  const seed     = Math.floor(Math.random() * 9999999);
-  // Pollinations img2img via ?image= param (base64 dataURL encoded)
-  const r = POLL_RATIOS.find(x => x.id === ratio) || POLL_RATIOS[0];
-  const imgParam = encodeURIComponent(b64);
-  const genUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=${model}&width=${r.w}&height=${r.h}&seed=${seed}&nologo=true&enhance=true&image=${imgParam}&strength=${strength}`;
+  const i2iId = resId + '-i2i';
 
+  // Step 1: Show reference + analyzing state
   bubble.innerHTML = `
   <div class="img-result" id="imgblock-${i2iId}">
-    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">
       <div style="flex-shrink:0;">
-        <div style="font-size:10px;font-family:var(--mono);color:var(--text-muted);margin-bottom:4px;">REFERENCE</div>
-        <img src="${b64}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.1);">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Reference</div>
+        <img src="${dataUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.12);">
       </div>
       <div style="flex:1;">
-        <div style="font-size:11px;color:var(--text-sub);font-family:var(--mono);margin-bottom:6px;">🖼️ Image-to-Image · <strong>${model}</strong> · strength ${strength}</div>
-        <div id="i2i-controls-${i2iId}" style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="tbtn prim" onclick="_applyI2iStrength('${i2iId}','${escapeHTML(prompt)}','${model}','${ratio}','${b64.substring(0,30)}...',0.4)">Subtle 0.4</button>
-          <button class="tbtn prim" onclick="_applyI2iStrength('${i2iId}','${escapeHTML(prompt)}','${model}','${ratio}','${b64.substring(0,30)}...',0.65)">Medium 0.65</button>
-          <button class="tbtn prim" onclick="_applyI2iStrength('${i2iId}','${escapeHTML(prompt)}','${model}','${ratio}','${b64.substring(0,30)}...',0.9)">Strong 0.9</button>
+        <div style="font-size:11px;color:var(--text-sub);font-family:var(--mono);margin-bottom:8px;">🖼️ Img2Img · <strong>${model}</strong></div>
+        <div id="i2i-status-${i2iId}" style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--accent-lt);">
+          <div class="tm-spinner"></div> Analyzing reference image with Gemini Vision…
         </div>
       </div>
     </div>
-    <div style="position:relative;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);min-height:120px;display:flex;align-items:center;justify-content:center;">
-      <div id="img-loading-${i2iId}" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-sub);font-size:12px;z-index:2;">
-        <div class="tm-spinner"></div><span>Processing img2img…</span>
-      </div>
-      <img src="${genUrl}"
-        style="max-width:100%;border-radius:12px;display:block;opacity:0;transition:opacity .4s;"
-        onload="this.style.opacity='1';document.getElementById('img-loading-${i2iId}')?.remove();"
-        onerror="document.getElementById('img-loading-${i2iId}').innerHTML='<span style=color:var(--red)>⚠️ Img2Img failed. Try a different model or strength.</span>';"
-        alt="Img2Img result"
-      >
-    </div>
-    <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;">
-      <a href="${genUrl}" target="_blank" download="nivi-i2i.png" class="tbtn prim img-dl">⬇ Download</a>
-      <a href="${genUrl}" target="_blank" class="tbtn">🔗 Open</a>
-      <button class="tbtn" onclick="_regenImg('${resId}','${escapeHTML(prompt)}','${model}','${ratio}',true)">← Back to normal</button>
+    <div id="i2i-result-${i2iId}" style="border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);min-height:100px;display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:12px;color:var(--text-muted);font-family:var(--mono);">Generating…</span>
     </div>
   </div>`;
   bubble.setAttribute('data-raw', `[Img2Img: ${prompt}]`);
+  scrollToBottom();
+
+  const statusEl = document.getElementById(`i2i-status-${i2iId}`);
+  const resultEl = document.getElementById(`i2i-result-${i2iId}`);
+
+  // Step 2: Use Gemini Vision to extract style description from reference image
+  let styleDesc = '';
+  try {
+    if (typeof directGeminiCallWithFile === 'function') {
+      const visionResult = await directGeminiCallWithFile(
+        `Analyze this image and describe its visual style in detail for use as an image generation prompt. Include: art style, color palette, lighting, mood, texture, composition, and any notable visual characteristics. Be concise but specific. Do NOT describe the subject/content — focus ONLY on visual style.`,
+        b64only,
+        mime
+      );
+      styleDesc = visionResult?.answer || '';
+    }
+  } catch(e) {
+    console.warn('Gemini Vision failed:', e);
+  }
+
+  // Step 3: Build enhanced prompt
+  let enhancedPrompt;
+  if (styleDesc) {
+    enhancedPrompt = `${prompt}, in the style of: ${styleDesc}`;
+    if (statusEl) statusEl.innerHTML = `✅ Style extracted · Generating image…`;
+  } else {
+    // Fallback: no Gemini key — add generic style transfer hint
+    enhancedPrompt = `${prompt}, highly detailed, matching the style and color palette of the reference image, professional quality`;
+    if (statusEl) statusEl.innerHTML = `⚠️ No Gemini key — using prompt-based style transfer`;
+  }
+
+  // Step 4: Generate with Pollinations using enhanced prompt
+  const r    = POLL_RATIOS.find(x => x.id === ratio) || POLL_RATIOS[0];
+  const seed = Math.floor(Math.random() * 9999999);
+  const genUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=${model}&width=${r.w}&height=${r.h}&seed=${seed}&nologo=true&enhance=true`;
+
+  if (resultEl) {
+    resultEl.innerHTML = `
+      <div style="position:relative;width:100%;">
+        <div id="i2i-ld-${i2iId}" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-sub);font-size:12px;z-index:2;">
+          <div class="tm-spinner"></div><span>Generating img2img…</span>
+        </div>
+        <img src="${genUrl}"
+          style="max-width:100%;border-radius:12px;display:block;opacity:0;transition:opacity .4s;"
+          onload="this.style.opacity='1';document.getElementById('i2i-ld-${i2iId}')?.remove();"
+          onerror="document.getElementById('i2i-ld-${i2iId}').innerHTML='<span style=color:var(--red)>⚠️ Generation failed. Try a different model.</span>';"
+          alt="Img2Img result"
+        >
+      </div>
+      <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <a href="${genUrl}" target="_blank" download="nivi-i2i.png" class="tbtn prim img-dl">⬇ Download</a>
+        <a href="${genUrl}" target="_blank" class="tbtn">🔗 Open</a>
+        <button class="tbtn" onclick="window._regenI2i('${i2iId}','${escapeHTML(enhancedPrompt)}','${model}','${ratio}')">🔄 Regen</button>
+        <button class="tbtn" onclick="_regenImg('${resId}','${escapeHTML(prompt)}','${model}','${ratio}',true)">← Original</button>
+      </div>
+      <div style="margin-top:6px;font-size:10px;font-family:var(--mono);color:var(--text-muted);opacity:.6;">
+        Style-transfer via Gemini Vision + Pollinations · ${model}
+      </div>`;
+  }
 };
 
-// ── Img2Img strength variants (regenerate with different blend) ──
-window._applyI2iStrength = function(i2iId, prompt, model, ratio, _b64hint, strength) {
-  const loadEl = document.getElementById('img-loading-' + i2iId);
-  const imgEl  = document.querySelector(`#imgblock-${i2iId} img[alt="Img2Img result"]`);
-  if (!loadEl || !imgEl) return;
-  // Note: actual re-generation needs the full b64 — this shows a notice
-  loadEl.style.display = 'flex';
-  loadEl.innerHTML = '<div class="tm-spinner"></div><span>Applying strength ' + strength + '…</span>';
-  imgEl.style.opacity = '0';
-  const newSeed = Math.floor(Math.random() * 9999999);
-  // Rebuild URL with same base but new seed/strength (b64 param is already encoded in src)
-  const src = imgEl.src.replace(/seed=\d+/, 'seed=' + newSeed).replace(/strength=[\d.]+/, 'strength=' + strength);
-  imgEl.src = src;
-  imgEl.onload  = () => { imgEl.style.opacity = '1'; loadEl.style.display = 'none'; };
-  imgEl.onerror = () => { loadEl.innerHTML = '<span style=color:var(--red)>⚠️ Failed</span>'; };
+// Regen img2img with new seed
+window._regenI2i = function(i2iId, enhancedPrompt, model, ratio) {
+  const resultEl = document.getElementById('i2i-result-' + i2iId);
+  if (!resultEl) return;
+  const r    = POLL_RATIOS.find(x => x.id === ratio) || POLL_RATIOS[0];
+  const seed = Math.floor(Math.random() * 9999999);
+  const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=${model}&width=${r.w}&height=${r.h}&seed=${seed}&nologo=true&enhance=true`;
+  const imgEl = resultEl.querySelector('img[alt="Img2Img result"]');
+  if (imgEl) {
+    imgEl.style.opacity = '0';
+    imgEl.src = url;
+    imgEl.onload = () => imgEl.style.opacity = '1';
+  }
 };
+
 
 // Handles /image command OR natural image request — returns true so caller can bail out
+
 async function _handleImageCommand(text, inp) {
   // Extract prompt — strip command prefix if present
   let prompt = text;
@@ -1799,5 +1841,3 @@ document.addEventListener('keydown', (e) => {
     openChatSearch();
   }
 });
-
-
