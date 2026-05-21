@@ -1353,7 +1353,17 @@ window.saveSettings = function() {
     if (!model && !key && !url) return; // empty row — skip silently
     if (!model) { errors.push(`Row ${idx + 1}: Model name is required.`); return; }
     if (!key)   { errors.push(`Row ${idx + 1}: API key is required.`);    return; }
-    chain.push({ provider: 'custom', model, key, url });
+    // Auto-detect provider from model name so Gemini models get the correct format
+    const modelLower = model.toLowerCase();
+    let provider = 'custom';
+    if (modelLower.startsWith('gemini-') || modelLower.startsWith('gemma-') || modelLower.startsWith('learnlm-')) {
+      provider = 'gemini';
+    } else if (url.includes('openrouter.ai')) {
+      provider = 'openrouter';
+    } else if (url.includes('nvidia.com') || url.includes('api.nvidia')) {
+      provider = 'nvidia';
+    }
+    chain.push({ provider, model, key, url });
   });
   if (errors.length) { alert(errors.join('\n')); return; }
   localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
@@ -1436,3 +1446,4 @@ function _stopVoice() {
   if (micBtn) { micBtn.classList.remove('mic-active'); micBtn.title = 'Voice Input'; }
   if (_voiceRecog) { try { _voiceRecog.stop(); } catch(e) {} _voiceRecog = null; }
 }
+
