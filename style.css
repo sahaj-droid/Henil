@@ -1032,3 +1032,100 @@ pre:focus-within .code-actions {
   align-items: center;
   gap: 5px;
 }
+
+/* ══════════════════════════════════════════════════
+   🔍 CHAT SEARCH BAR
+══════════════════════════════════════════════════ */
+.chat-search-bar {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: rgba(13,15,23,.97);
+  border-bottom: 1px solid rgba(34,211,238,.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 60;
+  flex-shrink: 0;
+  animation: slideDown .2s ease;
+}
+.chat-search-bar.open { display: flex; }
+@keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+#chatSearchInput {
+  flex: 1;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 7px;
+  padding: 5px 10px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  outline: none;
+  min-height: 30px;
+  transition: border-color .15s;
+}
+#chatSearchInput:focus { border-color: rgba(34,211,238,.45); }
+
+.cs-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  min-width: 60px;
+  text-align: center;
+}
+.cs-nav, .cs-close {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text-sub);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.cs-nav:hover  { background: rgba(34,211,238,.12); color: #67e8f9; border-color: rgba(34,211,238,.3); }
+.cs-close      { font-size: 16px; }
+.cs-close:hover{ background: rgba(248,113,113,.12); color: var(--red); border-color: rgba(248,113,113,.3); }
+
+/* Search highlights */
+mark.cs-hl {
+  background: rgba(251,191,36,.25);
+  color: #fde68a;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+mark.cs-hl-active {
+  background: rgba(251,191,36,.55);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(251,191,36,.35);
+}
+
+/* ══════════════════════════════════════════════════
+   📥 DRAG & DROP ZONE
+══════════════════════════════════════════════════ */
+.chat-wrap { position: relative; }
+.chat-wrap.drag-over::after {
+  content: '📁 Drop files to upload';
+  position: absolute;
+  inset: 0;
+  background: rgba(34,211,238,.07);
+  border: 2px dashed rgba(34,211,238,.45);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 16px;
+  color: #67e8f9;
+  font-weight: 600;
+  z-index: 40;
+  pointer-events: none;
+  animation: dragPulse .8s ease infinite;
+}
+@keyframes dragPulse {
+  0%,100% { background: rgba(34,211,238,.07); }
+  50%      { background: rgba(34,211,238,.12); }
+}

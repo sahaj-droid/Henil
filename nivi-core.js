@@ -934,6 +934,8 @@ function _buildImgUI(prompt, model, ratio, enhance, seed, resId) {
     <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
       <a href="${url}" target="_blank" download="nivi-image.png" class="tbtn prim img-dl">⬇ Download</a>
       <a href="${url}" target="_blank" class="tbtn">🔗 Open</a>
+      <button class="tbtn" onclick="document.getElementById('i2i-inp-${resId}').click()" title="Use this result as reference image">🖼️ Img2Img</button>
+      <input type="file" id="i2i-inp-${resId}" style="display:none" accept="image/*" onchange="_handleImg2ImgUpload(this,'${resId}','${escapeHTML(prompt)}',' '+ '${model}',' '+'${ratio}')">
       <span style="margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--text-muted);opacity:.6;">pollinations.ai • ${model}</span>
     </div>
   </div>`;
@@ -953,6 +955,88 @@ window._regenImg = function(resId, prompt, model, ratio, enhance) {
     bubble.innerHTML = newHtml;
     bubble.setAttribute('data-raw', `[Image: ${prompt}]`);
   }
+};
+
+// ── IMAGE-TO-IMAGE — Upload reference, regenerate with style transfer ──
+window._handleImg2ImgUpload = async function(inputEl, resId, prompt, model, ratio) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  model = (model || '').trim() || window._pollImgModel || 'flux';
+  ratio = (ratio || '').trim() || window._pollImgRatio || 'square';
+
+  // Read as base64
+  const b64 = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result); // full dataURL
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+
+  // Show img2img panel in same bubble
+  const block = document.getElementById('imgblock-' + resId);
+  if (!block) return;
+  const bubble = block.closest('.bubble');
+  if (!bubble) return;
+
+  const i2iId  = resId + '-i2i';
+  const strength = 0.65;
+  const seed     = Math.floor(Math.random() * 9999999);
+  // Pollinations img2img via ?image= param (base64 dataURL encoded)
+  const r = POLL_RATIOS.find(x => x.id === ratio) || POLL_RATIOS[0];
+  const imgParam = encodeURIComponent(b64);
+  const genUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=${model}&width=${r.w}&height=${r.h}&seed=${seed}&nologo=true&enhance=true&image=${imgParam}&strength=${strength}`;
+
+  bubble.innerHTML = `
+  <div class="img-result" id="imgblock-${i2iId}">
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+      <div style="flex-shrink:0;">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text-muted);margin-bottom:4px;">REFERENCE</div>
+        <img src="${b64}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.1);">
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11px;color:var(--text-sub);font-family:var(--mono);margin-bottom:6px;">🖼️ Image-to-Image · <strong>${model}</strong> · strength ${strength}</div>
+        <div id="i2i-controls-${i2iId}" style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="tbtn prim" onclick="_applyI2iStrength('${i2iId}','${escapeHTML(prompt)}','${model}','${ratio}','${b64.substring(0,30)}...',0.4)">Subtle 0.4</button>
+          <button class="tbtn prim" onclick="_applyI2iStrength('${i2iId}','${escapeHTML(prompt)}','${model}','${ratio}','${b64.substring(0,30)}...',0.65)">Medium 0.65</button>
+          <button class="tbtn prim" onclick="_applyI2iStrength('${i2iId}','${escapeHTML(prompt)}','${model}','${ratio}','${b64.substring(0,30)}...',0.9)">Strong 0.9</button>
+        </div>
+      </div>
+    </div>
+    <div style="position:relative;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);min-height:120px;display:flex;align-items:center;justify-content:center;">
+      <div id="img-loading-${i2iId}" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-sub);font-size:12px;z-index:2;">
+        <div class="tm-spinner"></div><span>Processing img2img…</span>
+      </div>
+      <img src="${genUrl}"
+        style="max-width:100%;border-radius:12px;display:block;opacity:0;transition:opacity .4s;"
+        onload="this.style.opacity='1';document.getElementById('img-loading-${i2iId}')?.remove();"
+        onerror="document.getElementById('img-loading-${i2iId}').innerHTML='<span style=color:var(--red)>⚠️ Img2Img failed. Try a different model or strength.</span>';"
+        alt="Img2Img result"
+      >
+    </div>
+    <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;">
+      <a href="${genUrl}" target="_blank" download="nivi-i2i.png" class="tbtn prim img-dl">⬇ Download</a>
+      <a href="${genUrl}" target="_blank" class="tbtn">🔗 Open</a>
+      <button class="tbtn" onclick="_regenImg('${resId}','${escapeHTML(prompt)}','${model}','${ratio}',true)">← Back to normal</button>
+    </div>
+  </div>`;
+  bubble.setAttribute('data-raw', `[Img2Img: ${prompt}]`);
+};
+
+// ── Img2Img strength variants (regenerate with different blend) ──
+window._applyI2iStrength = function(i2iId, prompt, model, ratio, _b64hint, strength) {
+  const loadEl = document.getElementById('img-loading-' + i2iId);
+  const imgEl  = document.querySelector(`#imgblock-${i2iId} img[alt="Img2Img result"]`);
+  if (!loadEl || !imgEl) return;
+  // Note: actual re-generation needs the full b64 — this shows a notice
+  loadEl.style.display = 'flex';
+  loadEl.innerHTML = '<div class="tm-spinner"></div><span>Applying strength ' + strength + '…</span>';
+  imgEl.style.opacity = '0';
+  const newSeed = Math.floor(Math.random() * 9999999);
+  // Rebuild URL with same base but new seed/strength (b64 param is already encoded in src)
+  const src = imgEl.src.replace(/seed=\d+/, 'seed=' + newSeed).replace(/strength=[\d.]+/, 'strength=' + strength);
+  imgEl.src = src;
+  imgEl.onload  = () => { imgEl.style.opacity = '1'; loadEl.style.display = 'none'; };
+  imgEl.onerror = () => { loadEl.innerHTML = '<span style=color:var(--red)>⚠️ Failed</span>'; };
 };
 
 // Handles /image command OR natural image request — returns true so caller can bail out
@@ -1244,6 +1328,31 @@ async function handleSend() {
     // fall through to normal send
   }
 
+  // /translate — translate text to any language
+  if (_txtLow.startsWith('/translate ')) {
+    _handleTranslate(text.substring(11).trim(), inp);
+    return;
+  }
+
+  // /export — export chat as Markdown
+  if (_txtLow === '/export' || _txtLow === '/export md' || _txtLow === '/export markdown') {
+    _exportChat('md');
+    inp.value = ''; inp.style.height = 'auto';
+    return;
+  }
+  if (_txtLow === '/export pdf') {
+    _exportChat('pdf');
+    inp.value = ''; inp.style.height = 'auto';
+    return;
+  }
+
+  // /search — search chat history
+  if (_txtLow.startsWith('/search ')) {
+    openChatSearch(text.substring(8).trim());
+    inp.value = ''; inp.style.height = 'auto';
+    return;
+  }
+
   // Commit user message to UI + history
   const userText = pendingFiles.length > 0
     ? `📎 ${pendingFiles.map(f => f.name).join(', ')}\n${text}`
@@ -1446,4 +1555,249 @@ function _stopVoice() {
   if (micBtn) { micBtn.classList.remove('mic-active'); micBtn.title = 'Voice Input'; }
   if (_voiceRecog) { try { _voiceRecog.stop(); } catch(e) {} _voiceRecog = null; }
 }
+
+// ══════════════════════════════════════════════════
+//  🌐 TRANSLATE COMMAND
+//  Usage: /translate to Gujarati: Hello world
+//         /translate Spanish: What is AI?
+// ══════════════════════════════════════════════════
+async function _handleTranslate(raw, inp) {
+  let lang = 'English', textToTrans = raw;
+  const m = raw.match(/^(?:to\s+)?([\w\s]+?):\s*(.+)$/is);
+  if (m) { lang = m[1].trim(); textToTrans = m[2].trim(); }
+
+  const displayText = `/translate ${raw}`;
+  appendMsg('user', displayText);
+  if (window.AppState) {
+    AppState._tabChatHistory.push({ role: 'user', text: displayText });
+    localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+  }
+  inp.value = ''; inp.style.height = 'auto';
+  toggleGen(true);
+  if (window.AppState) AppState._abortController = new AbortController();
+
+  const resId = 'nivi-' + Date.now();
+  appendMsg('nivi', `<div class="thinking"><span></span><span></span><span></span></div>`, resId);
+
+  try {
+    const prompt = `Translate the following text to ${lang}.\nReturn ONLY the translated text, no explanations.\n\nText: ${textToTrans}`;
+    if (typeof directGeminiCallStreamMultiTurn === 'function') {
+      await directGeminiCallStreamMultiTurn([], prompt, (chunk) => {
+        if (!AppState?._abortController?.signal.aborted) updateMsg(resId, chunk);
+      });
+    } else {
+      updateMsg(resId, `❌ Translation requires Gemini API key. Add it in ⚙️ Settings.`);
+    }
+  } catch(e) {
+    updateMsg(resId, `❌ Translation failed: ${e.message}`);
+  } finally {
+    toggleGen(false);
+    if (window.AppState) AppState._abortController = null;
+    const el = document.getElementById(resId);
+    const translated = el ? (el.getAttribute('data-raw') || el.innerText || '') : '';
+    if (translated.trim() && window.AppState) {
+      AppState._tabChatHistory.push({ role: 'nivi', text: translated });
+      localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  📤 EXPORT CHAT (Markdown / PDF)
+//  /export       → Markdown .md download
+//  /export pdf   → Print dialog (save as PDF)
+// ══════════════════════════════════════════════════
+window._exportChat = function(format = 'md') {
+  const history = window.AppState?._tabChatHistory || [];
+  if (!history.length) { alert('No chat history to export.'); return; }
+
+  const title = localStorage.getItem('nivi_current_title') || 'Nivi Chat';
+  const date  = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+
+  if (format === 'md') {
+    const md = `# ${title}\n_Exported from Nivi AI • ${date}_\n\n---\n\n` +
+      history.map(m => {
+        const role = m.role === 'user' ? '👤 **You**' : '🤖 **Nivi**';
+        return `${role}\n\n${(m.text || '').trim()}\n\n---`;
+      }).join('\n');
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `nivi-chat-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    appendMsg('nivi', `✅ Chat exported as **${a.download}**\n\n_${history.length} messages saved._`);
+
+  } else if (format === 'pdf') {
+    const printWin = window.open('', '_blank');
+    const rows = history.map(m => {
+      const isUser = m.role === 'user';
+      const txt    = (m.text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<div class="${isUser ? 'usr' : 'ai'}">
+        <b>${isUser ? '👤 You' : '🤖 Nivi'}</b>
+        <p>${txt}</p>
+      </div>`;
+    }).join('');
+    printWin.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+    <style>
+      body{font-family:system-ui;max-width:780px;margin:0 auto;padding:28px;background:#fff;color:#111;}
+      h1{font-size:22px;color:#7c3aed;border-bottom:2px solid #ede9fe;padding-bottom:8px;}
+      .meta{color:#888;font-size:12px;margin-bottom:24px;}
+      .usr,.ai{margin:12px 0;padding:12px 16px;border-radius:8px;}
+      .usr{background:#f5f3ff;border-left:3px solid #7c3aed;}
+      .ai{background:#f0fdf4;border-left:3px solid #22c55e;}
+      b{font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.7;}
+      p{margin:6px 0 0;white-space:pre-wrap;font-size:14px;line-height:1.6;}
+      @media print{body{padding:0;}}
+    </style></head>
+    <body><h1>${title}</h1><p class="meta">Nivi AI · ${date} · ${history.length} messages</p>${rows}</body></html>`);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 400);
+  }
+};
+
+// ══════════════════════════════════════════════════
+//  📥 DRAG & DROP FILE UPLOAD
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function _initDragDrop() {
+  const chatWin = document.querySelector('.chat-wrap') || document.getElementById('chatWrap');
+  if (!chatWin) return;
+
+  let _dc = 0;
+
+  chatWin.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    if (!e.dataTransfer.types.includes('Files')) return;
+    _dc++;
+    chatWin.classList.add('drag-over');
+  });
+  chatWin.addEventListener('dragleave', () => {
+    _dc--;
+    if (_dc <= 0) { _dc = 0; chatWin.classList.remove('drag-over'); }
+  });
+  chatWin.addEventListener('dragover', (e) => { e.preventDefault(); });
+  chatWin.addEventListener('drop', (e) => {
+    e.preventDefault();
+    _dc = 0;
+    chatWin.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+    if (window.AppState) AppState._pendingFiles = (AppState._pendingFiles || []).concat(files);
+    const names = files.map(f => f.name).join(', ');
+    const prev  = document.getElementById('filePreview');
+    const nameEl = document.getElementById('filePreviewName');
+    if (prev && nameEl) { nameEl.textContent = `📁 ${names}`; prev.classList.add('show'); }
+    document.getElementById('mainInput')?.focus();
+  });
+});
+
+// ══════════════════════════════════════════════════
+//  🔍 CHAT SEARCH  (Ctrl+F or /search query)
+// ══════════════════════════════════════════════════
+let _searchMatches = [], _searchIdx = 0;
+
+window.openChatSearch = function(prefill = '') {
+  let bar = document.getElementById('chatSearchBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id        = 'chatSearchBar';
+    bar.className = 'chat-search-bar';
+    bar.innerHTML = `
+      <input id="chatSearchInput" type="text" placeholder="🔍 Search messages..." autocomplete="off" spellcheck="false">
+      <span id="chatSearchCount" class="cs-count"></span>
+      <button class="cs-nav" onclick="window._searchNav(-1)" title="Previous (Shift+Enter)">↑</button>
+      <button class="cs-nav" onclick="window._searchNav(1)"  title="Next (Enter)">↓</button>
+      <button class="cs-close" onclick="closeChatSearch()" title="Close (Esc)">×</button>`;
+    document.querySelector('.main')?.prepend(bar);
+    const sinp = document.getElementById('chatSearchInput');
+    sinp.addEventListener('input', _doSearch);
+    sinp.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); window._searchNav(e.shiftKey ? -1 : 1); }
+      if (e.key === 'Escape') closeChatSearch();
+    });
+  }
+  bar.classList.add('open');
+  const sinp = document.getElementById('chatSearchInput');
+  sinp.value = prefill;
+  sinp.focus();
+  if (prefill) _doSearch();
+};
+
+window.closeChatSearch = function() {
+  document.getElementById('chatSearchBar')?.classList.remove('open');
+  document.querySelectorAll('mark.cs-hl').forEach(m => {
+    const t = document.createTextNode(m.textContent);
+    m.parentNode.replaceChild(t, m);
+  });
+  _searchMatches = []; _searchIdx = 0;
+};
+
+function _doSearch() {
+  // Clear old highlights
+  document.querySelectorAll('mark.cs-hl').forEach(m => {
+    const t = document.createTextNode(m.textContent);
+    m.parentNode.replaceChild(t, m);
+  });
+  _searchMatches = []; _searchIdx = 0;
+
+  const q = (document.getElementById('chatSearchInput')?.value || '').trim();
+  const cnt = document.getElementById('chatSearchCount');
+  if (!q) { if (cnt) cnt.textContent = ''; return; }
+
+  const esc   = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(esc, 'gi');
+
+  document.querySelectorAll('.bubble').forEach(bubble => {
+    const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT);
+    const nodes  = [];
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(node => {
+      if (!regex.test(node.textContent)) return;
+      regex.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let last = 0, match;
+      regex.lastIndex = 0;
+      while ((match = regex.exec(node.textContent)) !== null) {
+        frag.appendChild(document.createTextNode(node.textContent.slice(last, match.index)));
+        const mark = document.createElement('mark');
+        mark.className = 'cs-hl';
+        mark.textContent = match[0];
+        frag.appendChild(mark);
+        last = match.index + match[0].length;
+      }
+      frag.appendChild(document.createTextNode(node.textContent.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  });
+
+  _searchMatches = Array.from(document.querySelectorAll('mark.cs-hl'));
+  if (cnt) cnt.textContent = _searchMatches.length ? `1 / ${_searchMatches.length}` : 'No results';
+  if (_searchMatches.length) _scrollToMatch(0);
+}
+
+window._searchNav = function(dir) {
+  if (!_searchMatches.length) return;
+  _searchIdx = (_searchIdx + dir + _searchMatches.length) % _searchMatches.length;
+  const cnt = document.getElementById('chatSearchCount');
+  if (cnt) cnt.textContent = `${_searchIdx + 1} / ${_searchMatches.length}`;
+  _scrollToMatch(_searchIdx);
+};
+
+function _scrollToMatch(idx) {
+  _searchMatches.forEach((m, i) => m.classList.toggle('cs-hl-active', i === idx));
+  _searchMatches[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Ctrl+F → open search
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    if (['TEXTAREA','INPUT'].includes(document.activeElement?.tagName)) return;
+    e.preventDefault();
+    openChatSearch();
+  }
+});
+
 
