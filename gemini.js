@@ -173,15 +173,21 @@ async function _openaiCall(cfg, messages, onChunk) {
   throw new Error('No choices in response');
 }
 
-async function _geminiStreamCall(cfg, history, prompt, onChunk) {
+async function _geminiStreamCall(cfg, history, prompt, onChunk, opts = {}) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${cfg.key}`;
+  
+  const body = {
+    contents: [...history, { role: 'user', parts: [{ text: prompt }] }]
+  };
+  if (opts.useWebSearch) {
+    body.tools = [{ google_search: {} }];
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     signal: window.AppState?._abortController?.signal,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [...history, { role: 'user', parts: [{ text: prompt }] }]
-    })
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) throw new Error(`Gemini ${response.status}`);
@@ -227,7 +233,7 @@ async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
 // ═══════════════════════════════════════════════════════════
 //  MAIN: Multi-turn streaming with automatic fallback chain
 // ═══════════════════════════════════════════════════════════
-window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk) {
+window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk, opts = {}) {
   const chain = window.getModelChain();
   if (chain.length === 0) {
     _emitChunk(onChunk, 'No models configured. Open Settings to add a model.');
@@ -244,7 +250,7 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
 
     try {
       if (cfg.format === 'gemini') {
-        await _geminiStreamCall(cfg, priorHistory, currentPrompt, onChunk);
+        await _geminiStreamCall(cfg, priorHistory, currentPrompt, onChunk, opts);
       } else {
         const messages = priorHistory
           .map(m => ({
