@@ -222,26 +222,6 @@ function addArtifactButtons(el) {
       const actionDiv = document.createElement('div');
       actionDiv.className = 'code-actions';
 
-      // 1. COPY BUTTON (Primary)
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'tbtn copy-code-btn';
-      copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
-      copyBtn.onclick = () => {
-        // innerText ની જગ્યાએ textContent વાપરવું બેસ્ટ છે (ફોર્મેટિંગ બગડે નહિ)
-        navigator.clipboard.writeText(codeEl.textContent).then(() => {
-          const origHTML = copyBtn.innerHTML;
-          copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied';
-          copyBtn.style.color = 'var(--green)';
-          copyBtn.style.borderColor = 'rgba(52,211,153,.4)';
-          setTimeout(() => {
-            copyBtn.innerHTML = origHTML;
-            copyBtn.style.color = '';
-            copyBtn.style.borderColor = '';
-          }, 2000);
-        });
-      };
-      actionDiv.appendChild(copyBtn);
-
       // 2. ARTIFACT VIEW BUTTON (Secondary)
       const runBtn = document.createElement('button');
       runBtn.className = 'tbtn prim run-art-btn';
