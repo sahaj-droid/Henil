@@ -145,7 +145,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
    MESSAGES & BUBBLES
 ══════════════════════════════ */
 @keyframes msgIn { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: none; } }
-.msg-row { display: flex; margin-bottom: 14px; animation: msgIn .28s cubic-bezier(.22,1,.36,1) both; width: 100%; }
+.msg-row { display: flex; margin-bottom: 8px; animation: msgIn .28s cubic-bezier(.22,1,.36,1) both; width: 100%; }
 .msg-row.ur { justify-content: flex-end; animation-delay: .04s; }
 .msg-row.nr { justify-content: flex-start; gap: 14px; align-items: flex-start; }
 
@@ -574,8 +574,8 @@ input:focus-visible,
 }
 
 .bubble {
-  font-size: 15px;
-  line-height: 1.72;
+  font-size: 14.5px;
+  line-height: 1.6;
 }
 
 .ur .bubble {
