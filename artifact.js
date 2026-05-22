@@ -224,17 +224,28 @@ function addArtifactButtons(el) {
 
       // 2. ARTIFACT VIEW BUTTON (Secondary)
       const runBtn = document.createElement('button');
-      runBtn.className = 'tbtn prim run-art-btn';
-      runBtn.innerHTML = 'Open';
+      runBtn.className = 'code-run-btn'; // Use header button styling
+      runBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Open';
       runBtn.title = 'Open in Artifact Panel';
       runBtn.onclick = () => {
         const codeTxt = codeEl.textContent;
         const b64 = artEncodeB64Text(codeTxt);
         openArt({name: `Nivi_Code_${idx+1}.${ext}`, type: 'text/plain'}, b64);
       };
-      actionDiv.appendChild(runBtn);
 
-      pre.appendChild(actionDiv);
+      const wrap = pre.closest('.code-block-wrap');
+      if (wrap) {
+        const header = wrap.querySelector('.code-block-header');
+        if (header && !header.querySelector('.run-art-btn')) {
+            runBtn.classList.add('run-art-btn');
+            header.appendChild(runBtn);
+        }
+      } else {
+        const actionDiv = document.createElement('div');
+        actionDiv.className = 'code-actions';
+        actionDiv.appendChild(runBtn);
+        pre.appendChild(actionDiv);
+      }
     }
   });
 }
