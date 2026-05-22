@@ -36,7 +36,7 @@ async function saveFileToMemory(filename, base64Data, mimeType) {
     try { localStorage.setItem(_fileKey, JSON.stringify(files)); } catch(_) {}
   }
 
-  // FIX 14: await the async cloud backup
+  // Await the async cloud backup
   if (projId !== 'default' && typeof saveFileToCloudWorkspace === 'function') {
     await saveFileToCloudWorkspace(projId, filename, mimeType, base64Data);
   }
@@ -412,7 +412,7 @@ async function changeActiveProject() {
   }
 }
 
-// FIX 14: await the async cloud calls
+// Await the async cloud calls
 async function createNewProject() {
   const n = document.getElementById('newProjectName').value.trim();
   if (!n) return;
@@ -495,7 +495,7 @@ function _fmt(text) {
         runBtn = `<button class="code-run-btn" onclick="runPYCode('${runId}')" title="Run Python (Pyodide)" style="color:#4ade80;">▶ Run PY</button>`;
       }
       const langBadge = lang ? `<span class="code-lang">${lang}</span>` : '';
-      const copyBtn   = `<button class="code-copy-btn" onclick="copyCode('${runId}')" title="Copy code">⧉</button>`;
+      const copyBtn   = `<button class="code-copy-btn" onclick="copyCode('${runId}')" title="Copy code"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>`;
       return `<div class="code-block-wrap" id="${runId}-wrap">
         <div class="code-block-header">${langBadge}${copyBtn}${runBtn}</div>
         <pre><code id="${runId}-src" class="language-${lang || 'plaintext'}">${escaped}</code></pre>
@@ -720,7 +720,7 @@ async function deleteProject(id, name) {
   localStorage.removeItem('nivi_proj_chat_' + id);
   localStorage.removeItem('nivi_proj_session_' + id);
   if (window.NiviDB) { try { await NiviDB.deleteProjectFiles(id); } catch(e) {} }
-  // FIX 14: await the async cloud cleanup
+  // Await the async cloud cleanup
   if (typeof deleteCloudWorkspace === 'function') { try { await deleteCloudWorkspace(id); } catch(e) {} }
   if (document.getElementById('activeProjectSelect').value === id) setProj('default');
   else renderProjectsUI();
