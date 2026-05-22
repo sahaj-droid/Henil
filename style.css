@@ -168,10 +168,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .nr .bubble p { margin-bottom: 12px; }
 .nr .bubble p:last-child { margin-bottom: 0; }
 .nr .bubble pre { max-height: 360px; overflow-y: auto; scrollbar-width: thin; position: relative; background: #09090b !important; border: 1px solid var(--border); border-radius: 12px; }
-.nr .bubble pre::after { content: "Scroll to view more"; display: block; text-align: center; font-size: 10px; color: var(--text-muted); padding: 8px 0; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); opacity: 0.8; }
 
 /* Clean Code Blocks */
-pre { background: #09090b !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 12px !important; padding: 42px 14px 14px 14px !important; margin: 12px 0; box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);}
+pre { background: #09090b !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 12px !important; padding: 14px !important; margin: 12px 0; box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);}
 code { font-family: var(--mono); font-size: 13px; }
 .tbdg { font-family: var(--mono); font-size: 10px; background: rgba(255,255,255,0.04); color: var(--text-sub); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); margin-top: 8px; display: inline-block; }
 
@@ -1281,8 +1280,3 @@ video::-webkit-media-controls {
 }
 @keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 @keyframes toastOut { to   { opacity:0; transform:translateX(-50%) translateY(-6px); } }
-
-
-
-
-
