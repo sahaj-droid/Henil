@@ -1173,7 +1173,7 @@ async function _handleFilesMessage(text, pendingFiles, resId) {
 }
 
 // Builds history + file context, streams text response
-async function _handleTextMessage(text, resId) {
+async function _handleTextMessage(text, resId, opts = {}) {
   let apiText = text;
   if (text.toLowerCase().startsWith('/song ')) {
     apiText = `You are a professional lyricist. Write a beautiful song about: "${text.substring(6).trim()}". Include Verse, Chorus and Bridge. Make it emotional and modern.`;
@@ -1260,7 +1260,7 @@ IMPORTANT: Only bring up files/code if user explicitly asks. For casual/general 
   const finalPrompt = fileContext ? apiText + fileContext : apiText;
   const _result     = await directGeminiCallStreamMultiTurn(hist, finalPrompt, (chunk) => {
     if (!AppState?._abortController?.signal.aborted) updateMsg(resId, chunk);
-  });
+  }, opts);
   if (_result?.model && typeof updateActiveModelUI === 'function') updateActiveModelUI(_result.model);
 }
 
@@ -1442,6 +1442,15 @@ async function handleSend() {
     _runInlineCode(codeToRun); return;
   }
 
+  // /web — native Google Search grounding
+  let isWebSearch = false;
+  let textToSend = text;
+  if (_txtLow.startsWith('/web ') || _txtLow === '/web') {
+    isWebSearch = true;
+    textToSend = text.substring(4).trim();
+    if (!textToSend) textToSend = "Search the web and give me the latest news.";
+  }
+
   // Commit user message to UI + history
   const userText = pendingFiles.length > 0
     ? `📎 ${pendingFiles.map(f => f.name).join(', ')}\n${text}`
@@ -1462,9 +1471,9 @@ async function handleSend() {
   let _wasAborted = false;
   try {
     if (pendingFiles.length > 0 && typeof directGeminiCallWithFile === 'function') {
-      await _handleFilesMessage(text, pendingFiles, resId);
+      await _handleFilesMessage(textToSend, pendingFiles, resId);
     } else if (typeof directGeminiCallStreamMultiTurn === 'function') {
-      await _handleTextMessage(text, resId);
+      await _handleTextMessage(textToSend, resId, { useWebSearch: isWebSearch });
     }
   } catch(err) {
     if (!AppState?._abortController?.signal.aborted) {
@@ -2255,7 +2264,3 @@ FULL:
     scrollToBottom();
   }
 }
-
-
-
-
