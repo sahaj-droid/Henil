@@ -1579,39 +1579,86 @@ window.scrollToBottom = function() {
 };
 
 // ══════════════════════════════════════════════════
-//  🎤 VOICE INPUT — Web Speech API (no API key)
+//  🎤 VOICE INPUT — Hindi / Gujarati / English
+//  Click mic → record in selected language
+//  Click language badge → cycle language
 // ══════════════════════════════════════════════════
-let _voiceRecog = null;
-let _voiceActive = false;
+
+const VOICE_LANGS = [
+  { code: 'en-IN', label: 'EN', flag: '🇬🇧', name: 'English' },
+  { code: 'hi-IN', label: 'HI', flag: '🇮🇳', name: 'हिंदी' },
+  { code: 'gu-IN', label: 'GU', flag: '🏵️', name: 'ગુજરાતી' },
+];
+let _voiceLangIdx  = 0; // default English
+let _voiceRecog    = null;
+let _voiceActive   = false;
+
+// Inject lang badge next to mic button (runs once after DOM ready)
+function _initVoiceLangUI() {
+  const micBtn = document.getElementById('micBtn');
+  if (!micBtn || document.getElementById('voiceLangBadge')) return;
+  const badge = document.createElement('button');
+  badge.id        = 'voiceLangBadge';
+  badge.className = 'voice-lang-badge';
+  badge.title     = 'Switch voice language (EN → HI → GU)';
+  badge.onclick   = (e) => { e.stopPropagation(); _cycleVoiceLang(); };
+  _updateLangBadge(badge);
+  micBtn.parentNode.insertBefore(badge, micBtn.nextSibling);
+}
+document.addEventListener('DOMContentLoaded', _initVoiceLangUI);
+setTimeout(_initVoiceLangUI, 800); // fallback
+
+function _updateLangBadge(badge) {
+  badge = badge || document.getElementById('voiceLangBadge');
+  if (!badge) return;
+  const lang = VOICE_LANGS[_voiceLangIdx];
+  badge.textContent = lang.flag + ' ' + lang.label;
+  badge.title = `Voice: ${lang.name} — click to switch`;
+}
+
+window._cycleVoiceLang = function() {
+  if (_voiceActive) _stopVoice(); // stop if recording
+  _voiceLangIdx = (_voiceLangIdx + 1) % VOICE_LANGS.length;
+  _updateLangBadge();
+  const lang = VOICE_LANGS[_voiceLangIdx];
+  // Brief toast
+  const t = document.createElement('div');
+  t.className   = 'voice-lang-toast';
+  t.textContent = `🎤 ${lang.flag} ${lang.name}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
+};
 
 window.toggleVoiceInput = function() {
-  if (_voiceActive) {
-    _stopVoice();
-  } else {
-    _startVoice();
-  }
+  if (_voiceActive) { _stopVoice(); return; }
+  _initVoiceLangUI();
+  _startVoice();
 };
 
 function _startVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert('Voice input not supported in this browser. Use Chrome or Edge.');
+    alert('Voice input not supported. Use Chrome or Edge.');
     return;
   }
+
+  const langObj = VOICE_LANGS[_voiceLangIdx];
   _voiceRecog = new SR();
   _voiceRecog.continuous      = true;
   _voiceRecog.interimResults  = true;
-  _voiceRecog.lang            = 'en-IN'; // supports Hinglish/Gujarati accent well
+  _voiceRecog.lang            = langObj.code;
   _voiceRecog.maxAlternatives = 1;
 
-  const inp     = document.getElementById('mainInput');
-  const micBtn  = document.getElementById('micBtn');
+  const inp    = document.getElementById('mainInput');
+  const micBtn = document.getElementById('micBtn');
+  const badge  = document.getElementById('voiceLangBadge');
   const baseVal = inp.value;
 
   _voiceRecog.onstart = () => {
     _voiceActive = true;
     micBtn.classList.add('mic-active');
-    micBtn.title = 'Recording… (click to stop)';
+    micBtn.title = `Recording in ${langObj.name}… (click to stop)`;
+    if (badge) badge.classList.add('lang-badge-active');
   };
 
   _voiceRecog.onresult = (e) => {
@@ -1627,23 +1674,27 @@ function _startVoice() {
   };
 
   _voiceRecog.onerror = (e) => {
-    console.warn('Voice error:', e.error);
+    console.warn('[Voice] error:', e.error);
+    if (e.error === 'language-not-supported') {
+      alert(`Language "${langObj.name}" not supported. Switching to English.`);
+      _voiceLangIdx = 0; _updateLangBadge();
+    }
     _stopVoice();
   };
 
-  _voiceRecog.onend = () => {
-    _stopVoice();
-  };
-
+  _voiceRecog.onend = () => _stopVoice();
   _voiceRecog.start();
 }
 
 function _stopVoice() {
   _voiceActive = false;
   const micBtn = document.getElementById('micBtn');
+  const badge  = document.getElementById('voiceLangBadge');
   if (micBtn) { micBtn.classList.remove('mic-active'); micBtn.title = 'Voice Input'; }
+  if (badge)  badge.classList.remove('lang-badge-active');
   if (_voiceRecog) { try { _voiceRecog.stop(); } catch(e) {} _voiceRecog = null; }
 }
+
 
 // ══════════════════════════════════════════════════
 //  🌐 TRANSLATE COMMAND
@@ -2204,3 +2255,7 @@ FULL:
     scrollToBottom();
   }
 }
+
+
+
+

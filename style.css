@@ -1227,3 +1227,62 @@ video::-webkit-media-controls {
   font-size: 11px;
   color: #86efac;
 }
+
+/* ══════════════════════════════════════════════════
+   🎤 VOICE LANGUAGE BADGE & TOAST
+══════════════════════════════════════════════════ */
+.voice-lang-badge {
+  height: 28px;
+  padding: 0 7px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--text-sub);
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: all .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: .04em;
+}
+.voice-lang-badge:hover {
+  background: rgba(139,92,246,.15);
+  border-color: rgba(139,92,246,.3);
+  color: #c4b5fd;
+}
+.voice-lang-badge.lang-badge-active {
+  background: rgba(248,113,113,.15);
+  border-color: rgba(248,113,113,.4);
+  color: #fca5a5;
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+
+/* Toast — appears center-bottom for 1.8s */
+.voice-lang-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: rgba(15,15,25,.95);
+  border: 1px solid rgba(139,92,246,.35);
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: #e2e2e2;
+  z-index: 200;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  animation: toastIn .25s ease, toastOut .3s ease 1.5s forwards;
+}
+@keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+@keyframes toastOut { to   { opacity:0; transform:translateX(-50%) translateY(-6px); } }
+
+
+
+
+
