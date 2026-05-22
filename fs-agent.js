@@ -393,11 +393,23 @@ window.FSAgent = (() => {
 
   // ── Open a local file in Nivi's artifact panel ──
   async function openInArtifact(filename) {
-    const content = await readFile(filename);
-    if (content === null) { alert('Could not read file: ' + filename); return; }
     const ext  = filename.split('.').pop().toLowerCase();
-    const mime = window.getFileMimeType ? window.getFileMimeType(filename) : 'text/plain';
-    const b64  = btoa(unescape(encodeURIComponent(content)));
+    const isBinary = ['png','jpg','jpeg','gif','webp','pdf'].includes(ext);
+    
+    let b64 = '';
+    let mime = window.getFileMimeType ? window.getFileMimeType(filename) : 'text/plain';
+
+    if (isBinary) {
+      const res = await readFileAsBase64(filename);
+      if (!res) { alert('Could not read binary file: ' + filename); return; }
+      b64 = res.b64;
+      mime = res.mimeType || mime;
+    } else {
+      const content = await readFile(filename);
+      if (content === null) { alert('Could not read file: ' + filename); return; }
+      b64  = btoa(unescape(encodeURIComponent(content)));
+    }
+    
     if (typeof openArt === 'function') openArt({ name: filename, type: mime }, b64);
   }
 
