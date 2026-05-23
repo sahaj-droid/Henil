@@ -1246,7 +1246,15 @@ async function _handleTextMessage(text, resId, opts = {}) {
   const uploadedList  = textFiles.length > 0 ? textFiles.map(f => f.name).join(', ') : 'None';
   const localList     = _fsDirFiles.length > 0 ? _fsDirFiles.slice(0, 20).map(f => `${f.name} (${(f.size/1024).toFixed(1)}KB)`).join(', ') : 'None';
 
+  const curDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const curTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
   const niviDirective = `SYSTEM DIRECTIVE: You are Nivi — a smart, friendly, and versatile personal AI assistant built into the user's local workspace.
+
+CURRENT DATE & TIME:
+- Today's date is: ${curDate}
+- Current local time is: ${curTime}
+- ALWAYS assume the current year is ${new Date().getFullYear()} (May 2026), and treat terms like "today", "yesterday", "tomorrow", or recent matches relative to this date!
 
 Your personality:
 - Warm, clear, and direct — no unnecessary disclaimers
