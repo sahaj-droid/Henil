@@ -241,6 +241,8 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
   }
 
   let lastError = '';
+  let searchFailed = false;
+
   for (const rawItem of chain) {
     if (window.AppState?._abortController?.signal.aborted) break;
     const cfg = _resolveProvider(rawItem);
@@ -263,9 +265,28 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
       return { ok: true, model: cfg.model };
     } catch(e) {
       if (e.name === 'AbortError') return { ok: false, aborted: true };
+      
+      if (opts.useWebSearch && e.message.includes('429')) {
+        searchFailed = true;
+      }
+      
       lastError = e.message;
       console.warn(`[Nivi] ${cfg.provider}/${cfg.model} failed: ${e.message}. Trying next…`);
     }
+  }
+
+  if (opts.useWebSearch && searchFailed && !window.AppState?._abortController?.signal.aborted) {
+    const warningHTML = `<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);padding:12px 14px;border-radius:10px;margin-bottom:12px;font-size:12.5px;line-height:1.5;color:var(--text-sub);">
+      ⚠️ **Google Search Grounding failed (Gemini 429)**<br>
+      Dost, enabling real-time Google Search grounding (using <code>/web</code>) requires a **Paid (Billing-enabled) API Key** on Google AI Studio. Free-tier API keys do not support Google Search grounding. <br><br>
+      🔄 **Automatically retrying your prompt without web search...**
+    </div>
+    <div class="thinking" style="margin-top:10px;"><span></span><span></span><span></span></div>`;
+    
+    _emitChunk(onChunk, warningHTML);
+    
+    const fallbackOpts = { ...opts, useWebSearch: false };
+    return await window.directGeminiCallStreamMultiTurn(priorHistory, currentPrompt, onChunk, fallbackOpts);
   }
 
   if (window.AppState?._abortController?.signal.aborted) return { ok: false, aborted: true };
@@ -379,5 +400,53 @@ window.generateImage = async function(prompt) {
 
   } catch(e) {
     return { ok: false, error: 'Network error: ' + e.message };
+  }
+};
+
+
+// ── DUCKDUCKGO WEB SEARCH INTEGRATION ──
+window.duckDuckGoSearch = async function(query) {
+  try {
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    const targetUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+    const resp = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+    if (!resp.ok) throw new Error('Search failed with status: ' + resp.status);
+    const htmlText = await resp.text();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, 'text/html');
+    const results = [];
+
+    doc.querySelectorAll('.result').forEach(el => {
+      const titleEl = el.querySelector('.result__a');
+      const snippetEl = el.querySelector('.result__snippet');
+      if (titleEl && snippetEl) {
+        let title = (titleEl.innerText || titleEl.textContent || '').trim();
+        let snippet = (snippetEl.innerText || snippetEl.textContent || '').trim();
+        let href = titleEl.getAttribute('href') || '';
+        
+        title = title.replace(/\s+/g, ' ');
+        snippet = snippet.replace(/\s+/g, ' ');
+
+        if (href.includes('uddg=')) {
+          try {
+            const parts = href.split('uddg=');
+            if (parts.length > 1) {
+              const decoded = decodeURIComponent(parts[1].split('&')[0]);
+              if (decoded.startsWith('http')) href = decoded;
+            }
+          } catch (_) {}
+        } else if (href.startsWith('//')) {
+          href = 'https:' + href;
+        }
+
+        results.push({ title, link: href, snippet });
+      }
+    });
+
+    return results.slice(0, 5);
+  } catch(e) {
+    console.error('[Nivi DDG] Search failed:', e);
+    return null;
   }
 };
