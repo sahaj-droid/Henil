@@ -87,6 +87,10 @@
   </div>
 
   <div class="sb-bot">
+      <button class="set-btn" onclick="openUIEditor()" style="margin-bottom:6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        Appearance
+      </button>
       <button class="set-btn" onclick="openSettings()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Settings & Models
@@ -342,11 +346,92 @@
   <div id="tm-task-list" class="tm-task-list"></div>
 </div>
 <div class="mob-overlay" id="mobOverlay" onclick="closeMobSidebar()"></div>
+
+<!-- ══ UI EDITOR PANEL ══ -->
+<div id="uiEditorPanel" class="ui-editor-panel">
+  <div class="ui-editor-header">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <span>Appearance</span>
+    </div>
+    <button onclick="closeUIEditor()" class="ui-editor-close">×</button>
+  </div>
+
+  <div class="ui-editor-body">
+
+    <!-- Font Size -->
+    <div class="ui-slider-group">
+      <div class="ui-slider-label">
+        <span>Chat Font Size</span>
+        <span id="uiLblFontSize" class="ui-slider-val">14.5px</span>
+      </div>
+      <input type="range" id="uiSliderFontSize" class="ui-slider" min="12" max="18" step="0.5" value="14.5"
+        oninput="applyUI()">
+    </div>
+
+    <!-- Line Height -->
+    <div class="ui-slider-group">
+      <div class="ui-slider-label">
+        <span>Line Spacing</span>
+        <span id="uiLblLineHeight" class="ui-slider-val">1.6</span>
+      </div>
+      <input type="range" id="uiSliderLineHeight" class="ui-slider" min="1.3" max="2.0" step="0.05" value="1.6"
+        oninput="applyUI()">
+    </div>
+
+    <!-- Message Spacing -->
+    <div class="ui-slider-group">
+      <div class="ui-slider-label">
+        <span>Message Spacing</span>
+        <span id="uiLblMsgSpacing" class="ui-slider-val">8px</span>
+      </div>
+      <input type="range" id="uiSliderMsgSpacing" class="ui-slider" min="2" max="24" step="1" value="8"
+        oninput="applyUI()">
+    </div>
+
+    <!-- Code Font Size -->
+    <div class="ui-slider-group">
+      <div class="ui-slider-label">
+        <span>Code Font Size</span>
+        <span id="uiLblCodeFont" class="ui-slider-val">12.5px</span>
+      </div>
+      <input type="range" id="uiSliderCodeFont" class="ui-slider" min="10" max="16" step="0.5" value="12.5"
+        oninput="applyUI()">
+    </div>
+
+    <!-- Chat Width -->
+    <div class="ui-slider-group">
+      <div class="ui-slider-label">
+        <span>Chat Width</span>
+        <span id="uiLblChatWidth" class="ui-slider-val">840px</span>
+      </div>
+      <input type="range" id="uiSliderChatWidth" class="ui-slider" min="600" max="1100" step="20" value="840"
+        oninput="applyUI()">
+    </div>
+
+    <!-- Sidebar Width -->
+    <div class="ui-slider-group">
+      <div class="ui-slider-label">
+        <span>Sidebar Width</span>
+        <span id="uiLblSidebarWidth" class="ui-slider-val">268px</span>
+      </div>
+      <input type="range" id="uiSliderSidebarWidth" class="ui-slider" min="200" max="360" step="4" value="268"
+        oninput="applyUI()">
+    </div>
+
+    <div class="ui-editor-footer">
+      <button onclick="resetUI()" class="ui-reset-btn">↺ Reset Defaults</button>
+    </div>
+  </div>
+</div>
+<div id="uiEditorOverlay" class="ui-editor-overlay" onclick="closeUIEditor()"></div>
+
 <script src="firebase-sync.js"></script>
 <script src="nivi-core.js"></script>
 <script src="gemini.js"></script>
 <script src="artifact.js"></script>
 <script src="fs-agent.js"></script>
 <script src="agent.js"></script>
+<script src="ui-editor.js"></script>
 </body>
 </html>
