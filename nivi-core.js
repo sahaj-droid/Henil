@@ -74,10 +74,10 @@ function decodeB64Text(b64) {
 function sanitizeHTML(html) {
   const tpl = document.createElement('template');
   tpl.innerHTML = html;
-  const allowedTags  = new Set(['P','BR','STRONG','B','EM','I','U','S','CODE','PRE','BLOCKQUOTE','UL','OL','LI','A','IMG','DIV','SPAN','TABLE','THEAD','TBODY','TR','TH','TD','HR','H1','H2','H3','H4']);
-  const allowedAttrs = new Set(['href','src','alt','title','class','target','rel']);
+  const allowedTags  = new Set(['P','BR','STRONG','B','EM','I','U','S','CODE','PRE','BLOCKQUOTE','UL','OL','LI','A','IMG','DIV','SPAN','TABLE','THEAD','TBODY','TR','TH','TD','HR','H1','H2','H3','H4','BUTTON','SVG','RECT','PATH','POLYLINE','LINE']);
+  const allowedAttrs = new Set(['href','src','alt','title','class','target','rel','style','width','height','viewbox','fill','stroke','stroke-width','d','x','y','rx','points','x1','y1','x2','y2','data-copy-id','data-run-js-id','data-run-py-id']);
   tpl.content.querySelectorAll('*').forEach(node => {
-    if (!allowedTags.has(node.tagName)) {
+    if (!allowedTags.has(node.tagName.toUpperCase())) {
       node.replaceWith(document.createTextNode(node.textContent || ''));
       return;
     }
@@ -490,18 +490,15 @@ function _fmt(text) {
       const runId = 'run-' + Math.random().toString(36).substr(2, 8);
       let runBtn = '';
       if (isJS) {
-        runBtn = `<button class="code-run-btn" onclick="runJSCode('${runId}')" title="Run JavaScript">▶ Run JS</button>`;
+        runBtn = `<button class="code-run-btn" data-run-js-id="${runId}" title="Run JavaScript">▶ Run JS</button>`;
       } else if (isPY) {
-        runBtn = `<button class="code-run-btn" onclick="runPYCode('${runId}')" title="Run Python (Pyodide)" style="color:#4ade80;">▶ Run PY</button>`;
+        runBtn = `<button class="code-run-btn" data-run-py-id="${runId}" title="Run Python (Pyodide)" style="color:#4ade80;">▶ Run PY</button>`;
       }
       const langBadge = lang ? `<span class="code-lang">${lang}</span>` : '';
-      const copyBtn   = `<button class="code-copy-btn" onclick="copyCode('${runId}')" title="Copy code"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>`;
-      return `<div class="code-block-wrap" id="${runId}-wrap">
-        <div class="code-block-header">${langBadge}${copyBtn}${runBtn}</div>
-        <pre><code id="${runId}-src" class="language-${lang || 'plaintext'}">${escaped}</code></pre>
-        <div id="${runId}-out" class="code-output" style="display:none;"></div>
-      </div>`;
+      const copyBtn   = `<button class="code-copy-btn" data-copy-id="${runId}" title="Copy code"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>`;
+      return `<div class="code-block-wrap" id="${runId}-wrap"><div class="code-block-header">${langBadge}${copyBtn}${runBtn}</div><pre><code id="${runId}-src" class="language-${lang || 'plaintext'}">${escaped}</code></pre><div id="${runId}-out" class="code-output" style="display:none;"></div></div>`;
     };
+
     marked.setOptions({ breaks: true, renderer });
     const h = marked.parse(cleanText);
     const w = cleanText.trim().split(/\s+/).length;
@@ -588,8 +585,50 @@ window.runPYCode = async function(runId) {
 
 window.copyCode = function(runId) {
   const srcEl = document.getElementById(runId + '-src');
-  if (srcEl) navigator.clipboard.writeText(srcEl.innerText || srcEl.textContent || '');
+  if (srcEl) {
+    const codeText = srcEl.innerText || srcEl.textContent || '';
+    navigator.clipboard.writeText(codeText);
+    
+    const buttons = document.querySelectorAll(`[data-copy-id="${runId}"], button[onclick*="${runId}"]`);
+    buttons.forEach(btn => {
+      const origText = btn.innerHTML;
+      if (origText.includes('svg')) {
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" style="color:#4ade80;"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!`;
+      } else {
+        btn.innerHTML = '✓ Copied!';
+      }
+      setTimeout(() => { btn.innerHTML = origText; }, 1500);
+    });
+  }
 };
+
+// ── CODE BLOCK CLICK DELEGATION ──
+document.addEventListener('click', function(e) {
+  const copyBtn = e.target.closest('.code-copy-btn');
+  if (copyBtn) {
+    const runId = copyBtn.getAttribute('data-copy-id');
+    if (runId) {
+      e.preventDefault();
+      window.copyCode(runId);
+    }
+  }
+  const runJSBtn = e.target.closest('[data-run-js-id]');
+  if (runJSBtn) {
+    const runId = runJSBtn.getAttribute('data-run-js-id');
+    if (runId) {
+      e.preventDefault();
+      window.runJSCode(runId);
+    }
+  }
+  const runPYBtn = e.target.closest('[data-run-py-id]');
+  if (runPYBtn) {
+    const runId = runPYBtn.getAttribute('data-run-py-id');
+    if (runId) {
+      e.preventDefault();
+      window.runPYCode(runId);
+    }
+  }
+});
 
 
 
@@ -2117,20 +2156,13 @@ window._runInlineCode = function(raw) {
   const runFn = norm === 'python' ? `runPYCode('${rid}')` : `runJSCode('${rid}')`;
   const label = norm === 'python' ? '▶ Run PY' : '▶ Run JS';
 
-  const html = `<div class="code-block-wrap" id="${rid}-wrap">
-    <div class="code-block-header">
-      <span class="code-lang">${norm}</span>
-      <button class="code-copy-btn" onclick="copyCode('${rid}')">⧉</button>
-      <button class="code-run-btn" onclick="${runFn}">${label}</button>
-    </div>
-    <pre><code id="${rid}-src" class="language-${norm}">${escapeHTML(code)}</code></pre>
-    <div id="${rid}-out" class="code-output" style="display:none;"></div>
-  </div>`;
+  const html = `<div class="code-block-wrap" id="${rid}-wrap"><div class="code-block-header"><span class="code-lang">${norm}</span><button class="code-copy-btn" onclick="copyCode('${rid}')" data-copy-id="${rid}">⧉ Copy</button><button class="code-run-btn" onclick="${runFn}" data-run-${norm === 'python' ? 'py' : 'js'}-id="${rid}">${label}</button></div><pre><code id="${rid}-src" class="language-${norm}">${escapeHTML(code)}</code></pre><div id="${rid}-out" class="code-output" style="display:none;"></div></div>`;
   appendMsg('user', `/run ${norm}`);
   appendMsg('nivi', html);
   scrollToBottom();
   setTimeout(() => norm === 'python' ? runPYCode(rid) : runJSCode(rid), 150);
 };
+
 
 // ══════════════════════════════════════════════════
 //  📁 FILE AGENT COMMANDS
