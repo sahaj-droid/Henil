@@ -406,13 +406,43 @@ window.generateImage = async function(prompt) {
 
 // ── DUCKDUCKGO WEB SEARCH INTEGRATION ──
 window.duckDuckGoSearch = async function(query) {
-  try {
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-    const targetUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
-    const resp = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-    if (!resp.ok) throw new Error('Search failed with status: ' + resp.status);
-    const htmlText = await resp.text();
+  const targetUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+  const proxies = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url='
+  ];
+  
+  let htmlText = null;
+  let lastError = null;
 
+  for (const proxy of proxies) {
+    try {
+      const url = proxy + encodeURIComponent(targetUrl);
+      const resp = await fetch(url, {
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      });
+      if (resp.ok) {
+        const text = await resp.text();
+        if (text && text.includes('result__snippet')) {
+          htmlText = text;
+          console.log(`[Nivi DDG] Search succeeded using proxy: ${proxy}`);
+          break;
+        }
+      }
+    } catch(e) {
+      lastError = e;
+      console.warn(`[Nivi DDG] Proxy ${proxy} failed:`, e);
+    }
+  }
+
+  if (!htmlText) {
+    console.error('[Nivi DDG] All search proxies failed. Last error:', lastError);
+    return null;
+  }
+
+  try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlText, 'text/html');
     const results = [];
@@ -446,7 +476,7 @@ window.duckDuckGoSearch = async function(query) {
 
     return results.slice(0, 5);
   } catch(e) {
-    console.error('[Nivi DDG] Search failed:', e);
+    console.error('[Nivi DDG] Parsing failed:', e);
     return null;
   }
 };
