@@ -234,7 +234,15 @@ async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
 //  MAIN: Multi-turn streaming with automatic fallback chain
 // ═══════════════════════════════════════════════════════════
 window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPrompt, onChunk, opts = {}) {
-  const chain = window.getModelChain();
+  let chain = window.getModelChain();
+  
+  if (opts.useWebSearch) {
+    try {
+      const searchChain = JSON.parse(localStorage.getItem('nivi_search_model_chain') || '[]');
+      if (searchChain.length > 0) chain = searchChain;
+    } catch(e) {}
+  }
+
   if (chain.length === 0) {
     _emitChunk(onChunk, 'No models configured. Open Settings to add a model.');
     return { ok: false };
