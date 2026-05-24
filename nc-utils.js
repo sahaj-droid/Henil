@@ -33,7 +33,7 @@ function sanitizeHTML(html) {
   const tpl = document.createElement('template');
   tpl.innerHTML = html;
   const allowedTags  = new Set(['P','BR','STRONG','B','EM','I','U','S','CODE','PRE','BLOCKQUOTE','UL','OL','LI','A','IMG','DIV','SPAN','TABLE','THEAD','TBODY','TR','TH','TD','HR','H1','H2','H3','H4','BUTTON','SVG','RECT','PATH','POLYLINE','LINE']);
-  const allowedAttrs = new Set(['href','src','alt','title','class','id','target','rel','style','width','height','viewbox','fill','stroke','stroke-width','d','x','y','rx','points','x1','y1','x2','y2','data-copy-id','data-run-js-id','data-run-py-id']);
+  const allowedAttrs = new Set(['href','src','alt','title','class','target','rel','style','width','height','viewbox','fill','stroke','stroke-width','d','x','y','rx','points','x1','y1','x2','y2','data-copy-id','data-run-js-id','data-run-py-id']);
   tpl.content.querySelectorAll('*').forEach(node => {
     if (!allowedTags.has(node.tagName.toUpperCase())) {
       node.replaceWith(document.createTextNode(node.textContent || ''));
@@ -77,7 +77,7 @@ function _renderFilePreviews(files) {
   document.getElementById('filePreviewName').innerHTML = files.map((f, i) =>
     `<span class="file-chip">
       ${escapeHTML(f.name)}
-      <span onclick="_removeFile(${i})" class="file-chip-rm">x</span>
+      <span onclick="_removeFile(${i})" class="file-chip-rm">×</span>
     </span>`
   ).join('');
 }

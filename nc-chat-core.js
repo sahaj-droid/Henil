@@ -1,3 +1,53 @@
+// ══════════════════════════════════════════════════════════
+//  NC-CHAT-CORE — Clear Chat, Markdown, Code Runners
+// ══════════════════════════════════════════════════════════
+
+// ── CLEAR CHAT ──
+function clearChat() {
+  // Stop any in-progress generation
+  if (window.AppState?._abortController) {
+    window.AppState._abortController.abort();
+    window.AppState._abortController = null;
+    if (typeof toggleGen === 'function') toggleGen(false);
+  }
+  const history    = window.AppState?._tabChatHistory || [];
+  const activeProj = window._activeProjectId || document.getElementById('activeProjectSelect')?.value || 'default';
+  if (history.length > 0) {
+    if (activeProj !== 'default') {
+      if (typeof archiveProjectChat  === 'function') archiveProjectChat(activeProj, history);
+      if (typeof clearProjectSession === 'function') clearProjectSession(activeProj);
+    } else {
+      if (typeof archiveNiviChat === 'function') archiveNiviChat(history);
+      const _archKey = `nivi_chat_archives_default`;
+      let a = JSON.parse(localStorage.getItem(_archKey) || '[]');
+      a.unshift({ id: Date.now(), msgCount: history.length, chat: history, title: localStorage.getItem('nivi_current_title') || 'New Chat' });
+      if (a.length > 20) a = a.slice(0, 20);
+      localStorage.setItem(_archKey, JSON.stringify(a));
+    }
+  }
+  if (window.AppState) AppState._tabChatHistory = [];
+  localStorage.setItem('niviTabChat', '[]');
+  localStorage.removeItem('nivi_current_title');
+  localStorage.setItem('nivi_current_session_id', 'session_' + Date.now());
+  if (typeof closeArt   === 'function') closeArt();
+  if (typeof closeSheet === 'function') closeSheet();
+  document.getElementById('chatWindow').innerHTML = HERO_HTML;
+  renderSidebarData();
+  if (typeof syncNiviChat === 'function') { syncNiviChat([]); }
+  else if (typeof saveNiviChat === 'function') { saveNiviChat([]); }
+  if (typeof saveUserData === 'function') saveUserData('history');
+}
+
+// ── MARKDOWN / FORMAT ──
+function _fmt(text) {
+  if (!text) return '';
+  if (text.includes('<img') && text.includes('pollinations')) return text;
+  if (text.includes('class="thinking"')) return text;
+  let cleanText = text.replace(/~?\d+\s*tokens/g, '').replace(/<div class="tbdg".*?<\/div>/g, '');
+  if (typeof marked !== 'undefined') {
+    const renderer = new marked.Renderer();
+    renderer.html = function(token) {
+      const raw = typeof token === 'string' ? token : (token.raw || token.text || '');
       return escapeHTML(raw);
     };
     // ── LIVE CODE RUNNER: inject ▶ Run button into JS code blocks ──
@@ -10,9 +60,9 @@
       const runId = 'run-' + Math.random().toString(36).substr(2, 8);
       let runBtn = '';
       if (isJS) {
-        runBtn = `<button class="code-run-btn" data-run-js-id="${runId}" title="Run JavaScript">Run JS</button>`;
+        runBtn = `<button class="code-run-btn" data-run-js-id="${runId}" title="Run JavaScript">▶ Run JS</button>`;
       } else if (isPY) {
-        runBtn = `<button class="code-run-btn" data-run-py-id="${runId}" title="Run Python (Pyodide)" style="color:#4ade80;">Run PY</button>`;
+        runBtn = `<button class="code-run-btn" data-run-py-id="${runId}" title="Run Python (Pyodide)" style="color:#4ade80;">▶ Run PY</button>`;
       }
       const langBadge = lang ? `<span class="code-lang">${lang}</span>` : '';
       const copyBtn   = `<button class="code-copy-btn" data-copy-id="${runId}" title="Copy code"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>`;
@@ -34,7 +84,7 @@ window.runJSCode = function(runId) {
   if (!srcEl || !outEl) return;
   const code   = srcEl.innerText || srcEl.textContent || '';
   outEl.style.display = 'block';
-  outEl.innerHTML     = '<span style="opacity:.5;font-size:11px;">Running...</span>';
+  outEl.innerHTML     = '<span style="opacity:.5;font-size:11px;">Running…</span>';
 
   const iframe = document.createElement('iframe');
   iframe.style.display = 'none';
@@ -83,7 +133,7 @@ window.runPYCode = async function(runId) {
           document.head.appendChild(s);
         });
       }
-      outEl.innerHTML = '<span style="opacity:.5;font-size:11px;">Initializing Pyodide...</span>';
+      outEl.innerHTML = '<span style="opacity:.5;font-size:11px;">Initializing Pyodide…</span>';
       window._pyodide = await loadPyodide();
     }
     let out = '';
