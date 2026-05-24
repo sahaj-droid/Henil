@@ -287,14 +287,32 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
     const warningHTML = `<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);padding:12px 14px;border-radius:10px;margin-bottom:12px;font-size:12.5px;line-height:1.5;color:var(--text-sub);">
       ⚠️ **Google Search Grounding failed (Gemini 429)**<br>
       Dost, enabling real-time Google Search grounding (using <code>/web</code>) requires a **Paid (Billing-enabled) API Key** on Google AI Studio. Free-tier API keys do not support Google Search grounding. <br><br>
-      🔄 **Automatically retrying your prompt without web search...**
+      🔄 **Automatically falling back to DuckDuckGo search...**
     </div>
     <div class="thinking" style="margin-top:10px;"><span></span><span></span><span></span></div>`;
     
     _emitChunk(onChunk, warningHTML);
     
+    let modifiedPrompt = currentPrompt;
+    if (typeof window.duckDuckGoSearch === 'function') {
+      try {
+        const results = await window.duckDuckGoSearch(currentPrompt);
+        if (results && results.length > 0) {
+          const ddgContext = `\n\n---\n[LIVE WEB SEARCH RESULTS — DUCKDUCKGO]\nQuery: "${currentPrompt}"\n\n` +
+            results.map((r, i) => `[Source ${i+1}]\nTitle: ${r.title}\nLink: ${r.link}\nSnippet: ${r.snippet}`).join('\n\n') +
+            `\n\nInstructions: Use these real-time search results to provide a comprehensive, accurate, and up-to-date response in the user's language. Cite sources.`;
+          modifiedPrompt += ddgContext;
+          _emitChunk(onChunk, `<div style="font-size:12px;color:#4ade80;margin-top:6px;font-family:var(--sans);margin-bottom:8px;">✅ Found ${results.length} live search sources from DuckDuckGo! Synthesizing...</div>`);
+        } else {
+          _emitChunk(onChunk, `<div style="font-size:12px;opacity:0.5;margin-top:6px;font-family:var(--sans);margin-bottom:8px;">⚠️ No live sources found via DuckDuckGo. Answering using default knowledge...</div>`);
+        }
+      } catch(e) {
+        _emitChunk(onChunk, `<div style="font-size:12px;color:var(--red);margin-top:6px;font-family:var(--sans);margin-bottom:8px;">⚠️ DuckDuckGo fallback failed. Answering using default knowledge...</div>`);
+      }
+    }
+    
     const fallbackOpts = { ...opts, useWebSearch: false };
-    return await window.directGeminiCallStreamMultiTurn(priorHistory, currentPrompt, onChunk, fallbackOpts);
+    return await window.directGeminiCallStreamMultiTurn(priorHistory, modifiedPrompt, onChunk, fallbackOpts);
   }
 
   if (window.AppState?._abortController?.signal.aborted) return { ok: false, aborted: true };
@@ -408,5 +426,82 @@ window.generateImage = async function(prompt) {
 
   } catch(e) {
     return { ok: false, error: 'Network error: ' + e.message };
+  }
+};
+
+// ── DUCKDUCKGO WEB SEARCH INTEGRATION ──
+window.duckDuckGoSearch = async function(query) {
+  const targetUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+  const proxies = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url='
+  ];
+  
+  let htmlText = null;
+  let lastError = null;
+
+  for (const proxy of proxies) {
+    try {
+      const url = proxy + encodeURIComponent(targetUrl);
+      const resp = await fetch(url, {
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      });
+      if (resp.ok) {
+        const text = await resp.text();
+        if (text && text.includes('result__snippet')) {
+          htmlText = text;
+          console.log(`[Nivi DDG] Search succeeded using proxy: ${proxy}`);
+          break;
+        }
+      }
+    } catch(e) {
+      lastError = e;
+      console.warn(`[Nivi DDG] Proxy ${proxy} failed:`, e);
+    }
+  }
+
+  if (!htmlText) {
+    console.error('[Nivi DDG] All search proxies failed. Last error:', lastError);
+    return null;
+  }
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, 'text/html');
+    const results = [];
+
+    doc.querySelectorAll('.result').forEach(el => {
+      const titleEl = el.querySelector('.result__a');
+      const snippetEl = el.querySelector('.result__snippet');
+      if (titleEl && snippetEl) {
+        let title = (titleEl.innerText || titleEl.textContent || '').trim();
+        let snippet = (snippetEl.innerText || snippetEl.textContent || '').trim();
+        let href = titleEl.getAttribute('href') || '';
+        
+        title = title.replace(/\s+/g, ' ');
+        snippet = snippet.replace(/\s+/g, ' ');
+
+        if (href.includes('uddg=')) {
+          try {
+            const parts = href.split('uddg=');
+            if (parts.length > 1) {
+              const decoded = decodeURIComponent(parts[1].split('&')[0]);
+              if (decoded.startsWith('http')) href = decoded;
+            }
+          } catch (_) {}
+        } else if (href.startsWith('//')) {
+          href = 'https:' + href;
+        }
+
+        results.push({ title, link: href, snippet });
+      }
+    });
+
+    return results.slice(0, 5);
+  } catch(e) {
+    console.error('[Nivi DDG] Parsing failed:', e);
+    return null;
   }
 };
