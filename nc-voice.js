@@ -164,3 +164,40 @@ async function _handleTranslate(raw, inp) {
     }
   }
 }
+
+// ══════════════════════════════════════════════════
+//  🔊 VOICE OUTPUT (Text to Speech)
+// ══════════════════════════════════════════════════
+let _currentUtterance = null;
+window.playVoiceMsg = function(msgId) {
+  const el = document.getElementById(msgId);
+  if (!el) return;
+  const btn = document.getElementById('play-' + msgId);
+  
+  if (_currentUtterance && window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    _currentUtterance = null;
+    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    return;
+  }
+  
+  let text = el.getAttribute('data-raw') || el.innerText || '';
+  // basic cleanup for TTS
+  text = text.replace(/[*_#~]/g, '').replace(/```[\s\S]*?```/g, 'Code block').replace(/`[^`]+`/g, 'Code snippet');
+  if (!text.trim()) return;
+  
+  const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
+  _currentUtterance = new SpeechSynthesisUtterance(text);
+  _currentUtterance.lang = langObj.code;
+  
+  if (btn) {
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+  }
+  
+  _currentUtterance.onend = () => {
+    _currentUtterance = null;
+    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+  };
+  
+  window.speechSynthesis.speak(_currentUtterance);
+};
