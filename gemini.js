@@ -296,11 +296,15 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
     let modifiedPrompt = currentPrompt;
     if (typeof window.duckDuckGoSearch === 'function') {
       try {
-        const results = await window.duckDuckGoSearch(currentPrompt);
+        const currentYear = new Date().getFullYear();
+        let queryForDDG = currentPrompt.length > 60 ? currentPrompt.substring(0, 60) : currentPrompt;
+        if (!queryForDDG.includes(currentYear.toString())) queryForDDG += ` ${currentYear} latest news`;
+        
+        const results = await window.duckDuckGoSearch(queryForDDG);
         if (results && results.length > 0) {
-          const ddgContext = `\n\n---\n[LIVE WEB SEARCH RESULTS — DUCKDUCKGO]\nQuery: "${currentPrompt}"\n\n` +
+          const ddgContext = `\n\n---\n[LIVE WEB SEARCH RESULTS — DUCKDUCKGO]\nSearch Query Used: "${queryForDDG}"\n\n` +
             results.map((r, i) => `[Source ${i+1}]\nTitle: ${r.title}\nLink: ${r.link}\nSnippet: ${r.snippet}`).join('\n\n') +
-            `\n\nInstructions: Use these real-time search results to provide a comprehensive, accurate, and up-to-date response in the user's language. Cite sources.`;
+            `\n\nInstructions: It is currently ${currentYear}. Use these real-time search results to answer the user. IF the search results only contain old data (like 2024) and the user is asking about the present/future, explicitly tell the user that the search engine returned old data and ask them to provide a clearer English keyword (e.g. "India next cricket match 2026"). Do NOT blindly present 2024 data as current.`;
           modifiedPrompt += ddgContext;
           _emitChunk(onChunk, `<div style="font-size:12px;color:#4ade80;margin-top:6px;font-family:var(--sans);margin-bottom:8px;">✅ Found ${results.length} live search sources from DuckDuckGo! Synthesizing...</div>`);
         } else {
