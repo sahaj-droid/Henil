@@ -171,7 +171,10 @@ async function _handleTranslate(raw, inp) {
 let _currentUtterance = null;
 window.playVoiceMsg = function(msgId) {
   const el = document.getElementById(msgId);
-  if (!el) return;
+  if (!el) {
+    console.error("Voice output error: Message element not found");
+    return;
+  }
   const btn = document.getElementById('play-' + msgId);
   
   if (_currentUtterance && window.speechSynthesis.speaking) {
@@ -190,6 +193,18 @@ window.playVoiceMsg = function(msgId) {
   _currentUtterance = new SpeechSynthesisUtterance(text);
   _currentUtterance.lang = langObj.code;
   
+  // Robust voice selection
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    // Try to find exact match, then language match, then fallback to first available
+    const voice = voices.find(v => v.lang === langObj.code) || 
+                  voices.find(v => v.lang.startsWith(langObj.code.split('-')[0])) || 
+                  voices[0];
+    if (voice) {
+      _currentUtterance.voice = voice;
+    }
+  }
+  
   if (btn) {
     btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
   }
@@ -197,6 +212,16 @@ window.playVoiceMsg = function(msgId) {
   _currentUtterance.onend = () => {
     _currentUtterance = null;
     if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+  };
+
+  _currentUtterance.onerror = (e) => {
+    console.warn("TTS Error: ", e);
+    _currentUtterance = null;
+    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    // Fallback if voice failed (e.g. Gujarati not installed on Windows)
+    if (e.error === 'language-unavailable' || e.error === 'synthesis-failed') {
+      alert(`Voice playback failed. Your device might not support the "${langObj.name}" voice. Please switch to English.`);
+    }
   };
   
   window.speechSynthesis.speak(_currentUtterance);
