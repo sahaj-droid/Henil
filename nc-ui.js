@@ -20,6 +20,19 @@ window.toggleGen = function(g) {
   if (window.AppState) window.AppState._isGenerating = g;
 };
 
+window.toggleSearchGrounding = function() {
+  if (!window.AppState) window.AppState = {};
+  window.AppState.useSearch = !window.AppState.useSearch;
+  const btn = document.getElementById('searchToggleBtn');
+  if (btn) {
+    if (window.AppState.useSearch) {
+      btn.classList.add('search-active');
+    } else {
+      btn.classList.remove('search-active');
+    }
+  }
+};
+
 window.stopGeneration = function() {
   window.toggleGen(false);
   if (window.AppState?._abortController) {
