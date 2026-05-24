@@ -172,7 +172,10 @@ let _currentUtterance = null;
 window.playVoiceMsg = function(msgId) {
   try {
     const el = document.getElementById(msgId);
-    if (!el) return;
+    if (!el) {
+      alert("Error: Element with ID " + msgId + " not found!");
+      return;
+    }
     const btn = document.getElementById('play-' + msgId);
     
     // If already playing this, toggle it off
@@ -180,23 +183,26 @@ window.playVoiceMsg = function(msgId) {
       window.speechSynthesis.cancel();
       _currentUtterance = null;
       if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-      // If we just wanted to stop, return here. Otherwise, let it play the new text.
       return;
     }
     
-    // ALWAYS cancel before a new speak to clear stuck Windows TTS queues
     window.speechSynthesis.cancel();
     
     let text = el.getAttribute('data-raw') || el.innerText || '';
     text = text.replace(/[*_#~]/g, '').replace(/```[\s\S]*?```/g, ' Code block ').replace(/`[^`]+`/g, ' snippet ').trim();
-    if (!text) return;
+    if (!text) {
+      alert("Error: No text found to play!");
+      return;
+    }
     
     const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
     _currentUtterance = new SpeechSynthesisUtterance(text);
     _currentUtterance.lang = langObj.code;
     
     const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0) {
+    if (voices.length === 0) {
+      console.warn("No voices loaded yet. Browser might still be initializing TTS.");
+    } else {
       const voice = voices.find(v => v.lang === langObj.code) || 
                     voices.find(v => v.lang.startsWith(langObj.code.split('-')[0])) || 
                     voices[0];
@@ -220,10 +226,6 @@ window.playVoiceMsg = function(msgId) {
     };
     
     window.speechSynthesis.speak(_currentUtterance);
-
-    // Safari/Chrome fallback: if getVoices was empty, it might be loading async.
-    // The utterance should still play with default voice, but if it doesn't, this is why.
-
   } catch (err) {
     alert("Voice System Error: " + err.message);
   }
