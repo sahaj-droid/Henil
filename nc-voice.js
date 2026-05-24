@@ -1,7 +1,3 @@
-// ══════════════════════════════════════════════════════════
-//  NC-VOICE — Voice Input (EN/HI/GU) + Translate Command
-// ══════════════════════════════════════════════════════════
-
 // ══════════════════════════════════════════════════
 //  🎤 VOICE INPUT — Hindi / Gujarati / English
 //  Click mic → record in selected language
@@ -164,80 +160,82 @@ async function _handleTranslate(raw, inp) {
     }
   }
 }
-
 // ══════════════════════════════════════════════════
-//  🔊 VOICE OUTPUT (Text to Speech)
+//  🔊 VOICE OUTPUT (Text to Speech) — PATCHED
 // ══════════════════════════════════════════════════
 let _currentUtterance = null;
+
+function _getVoicesReady(cb) {
+  const v = window.speechSynthesis.getVoices();
+  if (v.length > 0) return cb(v);
+  window.speechSynthesis.onvoiceschanged = () => cb(window.speechSynthesis.getVoices());
+}
+
+function _decodeTTSText(raw) {
+  const d = document.createElement('textarea');
+  d.innerHTML = raw;
+  return d.value;
+}
+
 window.playVoiceMsg = function(msgId) {
   try {
     const el = document.getElementById(msgId);
-    if (!el) {
-      alert("Error: Element with ID " + msgId + " not found!");
-      return;
-    }
+    if (!el) { console.warn('[TTS] Element not found:', msgId); return; }
     const btn = document.getElementById('play-' + msgId);
-    
-    // If already playing this, toggle it off
+
     if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
       window.speechSynthesis.cancel();
       _currentUtterance = null;
       if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
       return;
     }
-    
+
     window.speechSynthesis.cancel();
-    
-    let text = el.getAttribute('data-raw') || el.innerText || '';
-    text = text.replace(/[*_#~]/g, '').replace(/```[\s\S]*?```/g, ' Code block ').replace(/`[^`]+`/g, ' snippet ').trim();
-    if (!text) {
-      alert("Error: No text found to play!");
-      return;
-    }
-    
+
+    let text = _decodeTTSText(
+      el.getAttribute('data-raw')
+      || el.querySelector('[data-raw]')?.getAttribute('data-raw')
+      || ''
+    ) || el.innerText || el.textContent || '';
+
+    text = text.replace(/[*_#~]/g, '')
+               .replace(/```[\s\S]*?```/g, ' code block ')
+               .replace(/`[^`]+`/g, ' snippet ')
+               .trim();
+
+    if (!text) { console.warn('[TTS] No text found in element:', msgId); return; }
+
     const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
     _currentUtterance = new SpeechSynthesisUtterance(text);
-    
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length === 0) {
-      console.warn("No voices loaded yet. Browser might still be initializing TTS.");
-      _currentUtterance.lang = 'en-US'; // Fallback to ensure something plays
-    } else {
-      let voice = voices.find(v => v.lang === langObj.code) || 
-                  voices.find(v => v.lang.startsWith(langObj.code.split('-')[0]));
-      
-      if (!voice) {
-        console.warn(`No voice found for ${langObj.name}. Falling back to English.`);
-        voice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-      }
-      
+
+    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+
+    _getVoicesReady((voices) => {
+      let voice = voices.find(v => v.lang === langObj.code)
+               || voices.find(v => v.lang.startsWith(langObj.code.split('-')[0]))
+               || voices.find(v => v.lang.startsWith('en'))
+               || voices[0];
+
       if (voice) {
         _currentUtterance.voice = voice;
         _currentUtterance.lang  = voice.lang;
       } else {
         _currentUtterance.lang = langObj.code;
       }
-    }
-    
-    if (btn) {
-      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
-    }
-    
-    _currentUtterance.onend = () => {
-      if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-    };
 
-    _currentUtterance.onerror = (e) => {
-      console.warn("TTS Error: ", e);
-      if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-      if (e.error !== 'canceled' && e.error !== 'interrupted') {
-        alert(`Voice playback error: ${e.error}. Try checking your Windows Language settings.`);
-      }
-    };
-    
-    window.speechSynthesis.speak(_currentUtterance);
+      _currentUtterance.onend = () => {
+        if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      };
+      _currentUtterance.onerror = (e) => {
+        console.warn('[TTS] Error:', e.error);
+        if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      };
+
+      window.speechSynthesis.speak(_currentUtterance);
+    });
+
   } catch (err) {
-    alert("Voice System Error: " + err.message);
+    console.error('[TTS] Exception:', err.message);
   }
 };
 
