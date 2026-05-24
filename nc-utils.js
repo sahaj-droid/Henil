@@ -142,7 +142,7 @@ window.onload = async () => {
     const file = imageItem.getAsFile();
     if (!file) return;
     const ext      = file.type.split('/')[1] || 'png';
-    const namedFile = new File([file], `pasted_image_${Date.now()}.${ext}`, { type: file.type });
+    const namedFile = new File([file], `pasted_image_${Date.now()}.${ext}`, { type: file.type || 'image/png' });
     const current  = window.AppState?._pendingFiles || [];
     if (current.length >= 3) return;
     const updated  = [...current, namedFile].slice(0, 3);
