@@ -573,10 +573,7 @@ input:focus-visible,
   color: #f8fafc;
 }
 
-.bubble {
-  font-size: 14.5px;
-  line-height: 1.6;
-}
+.bubble {font-size: 14.5px; line-height: 1.6; word-break: break-word; overflow-wrap: anywhere;}
 
 .ur .bubble {
   border-radius: 12px 12px 4px 12px;
