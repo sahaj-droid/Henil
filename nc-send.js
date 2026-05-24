@@ -144,8 +144,8 @@ async function handleSend() {
     _runInlineCode(codeToRun); return;
   }
 
-  // /web — native Google Search grounding
-  let isWebSearch = false;
+  // /web — native Google Search grounding or global toggle
+  let isWebSearch = window.AppState?.useSearch || false;
   let textToSend = text;
   if (_txtLow.startsWith('/web ') || _txtLow === '/web') {
     isWebSearch = true;
