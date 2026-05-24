@@ -1,0 +1,93 @@
+// ══════════════════════════════════════════════════════════
+//  NC-SETTINGS — Settings Modal, Model Chain, scrollToBottom
+// ══════════════════════════════════════════════════════════
+
+// ── SETTINGS MODAL ──
+window.openSettings = function() {
+  const c = document.getElementById('modelChainContainer');
+  if (!c) return;
+  c.innerHTML = '';
+  let chain = [];
+  try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+  if (!chain.length) addModelRow({ model: '', key: '', url: '' });
+  else chain.forEach(cfg => addModelRow(cfg));
+  document.getElementById('settingsModal').classList.add('open');
+};
+
+window.addModelRow = function(config = { model: '', key: '', url: '' }) {
+  const c = document.getElementById('modelChainContainer');
+  if (!c) return;
+  const row = document.createElement('div');
+  row.className = 'mrow';
+  row.innerHTML = `
+    <button class="mrow-rm" onclick="this.closest('.mrow').remove()" title="Delete">x</button>
+    <div class="mrow-grid">
+      <div>
+        <label class="flbl">Model Name</label>
+        <input type="text" class="finput conf-model" placeholder="e.g. gemini-2.5-flash" value="${config.model || ''}" style="margin-bottom:0;">
+      </div>
+      <div>
+        <label class="flbl">API Key</label>
+        <input type="password" class="finput conf-key" placeholder="Paste API key..." value="${config.key || ''}" style="margin-bottom:0;">
+      </div>
+    </div>
+    <div style="margin-top:8px;">
+      <label class="flbl">API URL <span style="opacity:.5;">(optional - leave blank for Gemini)</span></label>
+      <input type="text" class="finput conf-url" placeholder="https://..." value="${config.url || ''}" style="margin-bottom:0;">
+    </div>
+  `;
+  c.appendChild(row);
+};
+
+window.switchActiveModel = function(idx) {
+  let chain = [];
+  try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
+  const i = parseInt(idx);
+  if (isNaN(i) || i < 0 || i >= chain.length || i === 0) return;
+  const selected = chain.splice(i, 1)[0];
+  chain.unshift(selected);
+  localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
+  updateActiveModelUI();
+  renderSidebarData();
+  const sm = document.getElementById('settingsModal');
+  if (sm && sm.classList.contains('open')) openSettings();
+};
+
+// FIX 10: validate that each row has at least a model name AND an API key before saving
+window.saveSettings = function() {
+  const rows  = document.querySelectorAll('.mrow');
+  const chain = [];
+  const errors = [];
+  rows.forEach((row, idx) => {
+    const model = row.querySelector('.conf-model').value.trim();
+    const key   = row.querySelector('.conf-key').value.trim();
+    const url   = row.querySelector('.conf-url').value.trim();
+    if (!model && !key && !url) return; // empty row — skip silently
+    if (!model) { errors.push(`Row ${idx + 1}: Model name is required.`); return; }
+    if (!key)   { errors.push(`Row ${idx + 1}: API key is required.`);    return; }
+    // Auto-detect provider from model name so Gemini models get the correct format
+    const modelLower = model.toLowerCase();
+    let provider = 'custom';
+    if (modelLower.startsWith('gemini-') || modelLower.startsWith('gemma-') || modelLower.startsWith('learnlm-')) {
+      provider = 'gemini';
+    } else if (url.includes('openrouter.ai')) {
+      provider = 'openrouter';
+    } else if (url.includes('nvidia.com') || url.includes('api.nvidia')) {
+      provider = 'nvidia';
+    }
+    chain.push({ provider, model, key, url });
+  });
+  if (errors.length) { alert(errors.join('\n')); return; }
+  localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
+  closeModal('settingsModal');
+  if (typeof updateActiveModelUI === 'function') updateActiveModelUI();
+  if (typeof renderSidebarData   === 'function') renderSidebarData();
+};
+
+// ── AUTO-SCROLL ──
+window.scrollToBottom = function() {
+  const chatWrap = document.querySelector('.chat-wrap');
+  if (chatWrap) {
+    setTimeout(() => { chatWrap.scrollTo({ top: chatWrap.scrollHeight, behavior: 'smooth' }); }, 100);
+  }
+};

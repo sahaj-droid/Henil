@@ -427,7 +427,18 @@
 <div id="uiEditorOverlay" class="ui-editor-overlay" onclick="closeUIEditor()"></div>
 
 <script src="firebase-sync.js"></script>
-<script src="nivi-core.js"></script>
+<!-- nivi-core split — ORDER MATTERS -->
+<script src="nc-storage.js"></script>
+<script src="nc-utils.js"></script>
+<script src="nc-ui.js"></script>
+<script src="nc-chat-core.js"></script>
+<script src="nc-messages.js"></script>
+<script src="nc-image.js"></script>
+<script src="nc-send.js"></script>
+<script src="nc-settings.js"></script>
+<script src="nc-voice.js"></script>
+<script src="nc-export-search.js"></script>
+<script src="nc-video-fs.js"></script>
 <script src="gemini.js"></script>
 <script src="artifact.js"></script>
 <script src="fs-agent.js"></script>
