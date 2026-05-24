@@ -197,16 +197,26 @@ window.playVoiceMsg = function(msgId) {
     
     const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
     _currentUtterance = new SpeechSynthesisUtterance(text);
-    _currentUtterance.lang = langObj.code;
     
     const voices = window.speechSynthesis.getVoices();
     if (voices.length === 0) {
       console.warn("No voices loaded yet. Browser might still be initializing TTS.");
+      _currentUtterance.lang = 'en-US'; // Fallback to ensure something plays
     } else {
-      const voice = voices.find(v => v.lang === langObj.code) || 
-                    voices.find(v => v.lang.startsWith(langObj.code.split('-')[0])) || 
-                    voices[0];
-      if (voice) _currentUtterance.voice = voice;
+      let voice = voices.find(v => v.lang === langObj.code) || 
+                  voices.find(v => v.lang.startsWith(langObj.code.split('-')[0]));
+      
+      if (!voice) {
+        console.warn(`No voice found for ${langObj.name}. Falling back to English.`);
+        voice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+      }
+      
+      if (voice) {
+        _currentUtterance.voice = voice;
+        _currentUtterance.lang  = voice.lang;
+      } else {
+        _currentUtterance.lang = langObj.code;
+      }
     }
     
     if (btn) {
@@ -230,3 +240,9 @@ window.playVoiceMsg = function(msgId) {
     alert("Voice System Error: " + err.message);
   }
 };
+
+// Kickstart TTS loading on page load
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  window.speechSynthesis.getVoices();
+}
