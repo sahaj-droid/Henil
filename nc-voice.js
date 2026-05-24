@@ -170,59 +170,61 @@ async function _handleTranslate(raw, inp) {
 // ══════════════════════════════════════════════════
 let _currentUtterance = null;
 window.playVoiceMsg = function(msgId) {
-  const el = document.getElementById(msgId);
-  if (!el) {
-    console.error("Voice output error: Message element not found");
-    return;
-  }
-  const btn = document.getElementById('play-' + msgId);
-  
-  if (_currentUtterance && window.speechSynthesis.speaking) {
+  try {
+    const el = document.getElementById(msgId);
+    if (!el) return;
+    const btn = document.getElementById('play-' + msgId);
+    
+    // If already playing this, toggle it off
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+      _currentUtterance = null;
+      if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      // If we just wanted to stop, return here. Otherwise, let it play the new text.
+      return;
+    }
+    
+    // ALWAYS cancel before a new speak to clear stuck Windows TTS queues
     window.speechSynthesis.cancel();
-    _currentUtterance = null;
-    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-    return;
-  }
-  
-  let text = el.getAttribute('data-raw') || el.innerText || '';
-  // basic cleanup for TTS
-  text = text.replace(/[*_#~]/g, '').replace(/```[\s\S]*?```/g, 'Code block').replace(/`[^`]+`/g, 'Code snippet');
-  if (!text.trim()) return;
-  
-  const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
-  _currentUtterance = new SpeechSynthesisUtterance(text);
-  _currentUtterance.lang = langObj.code;
-  
-  // Robust voice selection
-  const voices = window.speechSynthesis.getVoices();
-  if (voices.length > 0) {
-    // Try to find exact match, then language match, then fallback to first available
-    const voice = voices.find(v => v.lang === langObj.code) || 
-                  voices.find(v => v.lang.startsWith(langObj.code.split('-')[0])) || 
-                  voices[0];
-    if (voice) {
-      _currentUtterance.voice = voice;
+    
+    let text = el.getAttribute('data-raw') || el.innerText || '';
+    text = text.replace(/[*_#~]/g, '').replace(/```[\s\S]*?```/g, ' Code block ').replace(/`[^`]+`/g, ' snippet ').trim();
+    if (!text) return;
+    
+    const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
+    _currentUtterance = new SpeechSynthesisUtterance(text);
+    _currentUtterance.lang = langObj.code;
+    
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      const voice = voices.find(v => v.lang === langObj.code) || 
+                    voices.find(v => v.lang.startsWith(langObj.code.split('-')[0])) || 
+                    voices[0];
+      if (voice) _currentUtterance.voice = voice;
     }
-  }
-  
-  if (btn) {
-    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
-  }
-  
-  _currentUtterance.onend = () => {
-    _currentUtterance = null;
-    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-  };
+    
+    if (btn) {
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+    }
+    
+    _currentUtterance.onend = () => {
+      if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    };
 
-  _currentUtterance.onerror = (e) => {
-    console.warn("TTS Error: ", e);
-    _currentUtterance = null;
-    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-    // Fallback if voice failed (e.g. Gujarati not installed on Windows)
-    if (e.error === 'language-unavailable' || e.error === 'synthesis-failed') {
-      alert(`Voice playback failed. Your device might not support the "${langObj.name}" voice. Please switch to English.`);
-    }
-  };
-  
-  window.speechSynthesis.speak(_currentUtterance);
+    _currentUtterance.onerror = (e) => {
+      console.warn("TTS Error: ", e);
+      if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      if (e.error !== 'canceled' && e.error !== 'interrupted') {
+        alert(`Voice playback error: ${e.error}. Try checking your Windows Language settings.`);
+      }
+    };
+    
+    window.speechSynthesis.speak(_currentUtterance);
+
+    // Safari/Chrome fallback: if getVoices was empty, it might be loading async.
+    // The utterance should still play with default voice, but if it doesn't, this is why.
+
+  } catch (err) {
+    alert("Voice System Error: " + err.message);
+  }
 };
