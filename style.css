@@ -154,6 +154,7 @@ top: 0 !important; right: 0 !important; opacity: 1 !important; }
 .pbtn.send:hover { background: var(--accent-lt); border-color: var(--accent-lt); box-shadow: 0 0 0 4px rgba(109,40,217,.18), 0 0 16px rgba(109,40,217,.22); transform: scale(1.06); }
 .pbtn.send:active { transform: scale(0.97); box-shadow: 0 0 0 2px rgba(109,40,217,.25); }
 .pbtn.stop { display: none; color: var(--red); border-color: rgba(248,113,113,.25); background: var(--red-dim); }
+.pbtn.search-active { color: #38bdf8; border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.1); box-shadow: 0 0 0 2px rgba(56,189,248,.15), 0 0 12px rgba(56,189,248,.2); }
 /* File chips */
 .file-prev { display: none; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
 .file-prev.show { display: flex; }
