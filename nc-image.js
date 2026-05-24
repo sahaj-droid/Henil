@@ -386,33 +386,7 @@ IMPORTANT: Only bring up files/code if user explicitly asks. For casual/general 
 
   let searchContext = '';
   let activeOpts = { ...opts };
-  if (opts.useWebSearch && typeof window.duckDuckGoSearch === 'function') {
-    if (!AppState?._abortController?.signal.aborted) {
-      updateMsg(resId, `<div class="thinking"><span></span><span></span><span></span></div><div style="font-size:12px;opacity:0.6;margin-top:6px;font-family:var(--sans);">🔍 Searching DuckDuckGo for "${escapeHTML(apiText)}"...</div>`);
-    }
-
-    try {
-      const results = await window.duckDuckGoSearch(apiText);
-      if (results && results.length > 0) {
-        searchContext = `\n\n---\n[LIVE WEB SEARCH RESULTS — DUCKDUCKGO]\nQuery: "${apiText}"\n\n` +
-          results.map((r, i) => `[Source ${i+1}]\nTitle: ${r.title}\nLink: ${r.link}\nSnippet: ${r.snippet}`).join('\n\n') +
-          `\n\nInstructions: Use these real-time search results to provide a comprehensive, accurate, and up-to-date response in the user's language. Cite sources and provide absolute links when referencing findings. Do NOT claim your knowledge is limited to 2024.`;
-
-        if (!AppState?._abortController?.signal.aborted) {
-          updateMsg(resId, `<div class="thinking"><span></span><span></span><span></span></div><div style="font-size:12px;color:#4ade80;margin-top:6px;font-family:var(--sans);display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Found ${results.length} live search sources! Synthesizing...</div>`);
-        }
-      } else {
-        searchContext = `\n\n---\n[LIVE WEB SEARCH RESULTS — DUCKDUCKGO]\nQuery: "${apiText}"\n\nNo search results found.`;
-        if (!AppState?._abortController?.signal.aborted) {
-          updateMsg(resId, `<div class="thinking"><span></span><span></span><span></span></div><div style="font-size:12px;opacity:0.5;margin-top:6px;font-family:var(--sans);">⚠️ No live sources found. Answering using default knowledge cutoff...</div>`);
-        }
-      }
-    } catch(e) {
-      console.error('DDG integration error:', e);
-      searchContext = `\n\n---\n[LIVE WEB SEARCH RESULTS — DUCKDUCKGO]\nQuery: "${apiText}"\n\nSearch failed due to a network error.`;
-    }
-    activeOpts.useWebSearch = false;
-  }
+  // DuckDuckGo legacy search removed — now using native Google Search Grounding in Gemini 2.x
 
   const finalPrompt = (fileContext || searchContext)
     ? apiText + fileContext + searchContext
