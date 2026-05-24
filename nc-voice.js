@@ -164,153 +164,11 @@ async function _handleTranslate(raw, inp) {
 //  🔊 VOICE OUTPUT (Text to Speech) — PATCHED
 // ══════════════════════════════════════════════════
 let _currentUtterance = null;
-let _currentVoiceMsgId = null;
-let _ttsQueue = [];
-let _ttsIndex = 0;
-let _ttsKeepAlive = null;
-
-const TTS_PLAY_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-const TTS_STOP_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-
-function _resetTTSButtons() {
-  document.querySelectorAll('.abt.play[id^="play-"]').forEach(btn => {
-    btn.innerHTML = TTS_PLAY_ICON;
-    btn.classList.remove('voice-playing');
-  });
-}
-
-function _setTTSButton(btn, isPlaying) {
-  if (!btn) return;
-  btn.innerHTML = isPlaying ? TTS_STOP_ICON : TTS_PLAY_ICON;
-  btn.classList.toggle('voice-playing', isPlaying);
-}
 
 function _decodeTTSText(raw) {
   const d = document.createElement('textarea');
   d.innerHTML = raw || '';
   return d.value;
-}
-
-function _getTTSVoices() {
-  try { return window.speechSynthesis.getVoices() || []; }
-  catch (_) { return []; }
-}
-
-function _pickTTSVoice(langObj) {
-  const voices = _getTTSVoices();
-  if (!voices.length) return null;
-  const base = (langObj.code || 'en').split('-')[0].toLowerCase();
-  return voices.find(v => v.lang === langObj.code)
-    || voices.find(v => (v.lang || '').toLowerCase().startsWith(base))
-    || voices.find(v => (v.lang || '').toLowerCase().startsWith('en'))
-    || voices[0];
-}
-
-function _getSpeakableText(el) {
-  let text = _decodeTTSText(
-    el.getAttribute('data-raw')
-    || el.querySelector('[data-raw]')?.getAttribute('data-raw')
-    || ''
-  ) || el.innerText || el.textContent || '';
-
-  text = text
-    .replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, ' ')
-    .replace(new RegExp('\\x60{3}[\\s\\S]*?\\x60{3}', 'g'), ' code block ')
-    .replace(new RegExp('\\x60[^\\x60]+\\x60', 'g'), ' snippet ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/~?\d+\s*tokens/gi, ' ')
-    .replace(new RegExp('[*_#~>\\[\\]()\\x60]', 'g'), ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return text;
-}
-
-function _splitTTSChunks(text) {
-  const clean = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!clean) return [];
-  if (clean.length <= 220) return [clean];
-
-  const chunks = [];
-  let rest = clean;
-  while (rest.length > 220) {
-    let cut = Math.max(
-      rest.lastIndexOf('. ', 220),
-      rest.lastIndexOf('? ', 220),
-      rest.lastIndexOf('! ', 220),
-      rest.lastIndexOf(', ', 220)
-    );
-    if (cut < 100) cut = rest.lastIndexOf(' ', 220);
-    if (cut < 80) cut = 220;
-    chunks.push(rest.slice(0, cut + 1).trim());
-    rest = rest.slice(cut + 1).trim();
-  }
-  if (rest) chunks.push(rest);
-  return chunks;
-}
-
-function _finishTTS(btn) {
-  clearInterval(_ttsKeepAlive);
-  _ttsKeepAlive = null;
-  _currentUtterance = null;
-  _currentVoiceMsgId = null;
-  _ttsQueue = [];
-  _ttsIndex = 0;
-  _setTTSButton(btn, false);
-}
-
-function _stopTTS() {
-  clearInterval(_ttsKeepAlive);
-  _ttsKeepAlive = null;
-  _currentUtterance = null;
-  _currentVoiceMsgId = null;
-  _ttsQueue = [];
-  _ttsIndex = 0;
-  try { window.speechSynthesis.cancel(); } catch (_) {}
-  _resetTTSButtons();
-}
-
-function _speakNextTTSChunk(btn, langObj, voice) {
-  if (_ttsIndex >= _ttsQueue.length) {
-    _finishTTS(btn);
-    return;
-  }
-
-  const utterance = new SpeechSynthesisUtterance(_ttsQueue[_ttsIndex]);
-  utterance.lang = voice?.lang || langObj.code || 'en-IN';
-  if (voice) utterance.voice = voice;
-  utterance.rate = 0.96;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-
-  utterance.onend = () => {
-    _ttsIndex += 1;
-    _speakNextTTSChunk(btn, langObj, voice);
-  };
-
-  utterance.onerror = (e) => {
-    console.warn('[TTS] Error:', e.error);
-    if (e.error === 'interrupted' || e.error === 'canceled') {
-      _finishTTS(btn);
-      return;
-    }
-    _ttsIndex += 1;
-    _speakNextTTSChunk(btn, langObj, voice);
-  };
-
-  _currentUtterance = utterance;
-  window.speechSynthesis.speak(utterance);
-  try { window.speechSynthesis.resume(); } catch (_) {}
-
-  clearInterval(_ttsKeepAlive);
-  _ttsKeepAlive = setInterval(() => {
-    try {
-      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-      if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending && _currentVoiceMsgId) {
-        _finishTTS(btn);
-      }
-    } catch (_) {}
-  }, 4000);
 }
 
 window.playVoiceMsg = function (msgId) {
@@ -323,32 +181,60 @@ window.playVoiceMsg = function (msgId) {
     const el = document.getElementById(msgId);
     if (!el) { console.warn('[TTS] Element not found:', msgId); return; }
     const btn = document.getElementById('play-' + msgId);
+    const playIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+    const stopIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
 
-    if (_currentVoiceMsgId === msgId && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
-      _stopTTS();
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+      _currentUtterance = null;
+      if (btn) btn.innerHTML = playIcon;
       return;
     }
 
-    _stopTTS();
+    let text = _decodeTTSText(el.getAttribute('data-raw') || '') || el.innerText || el.textContent || '';
+    text = text
+      .replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, ' ')
+      .replace(/```[\s\S]*?```/g, ' code block ')
+      .replace(/`[^`]+`/g, ' snippet ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/~?\d+\s*tokens/gi, ' ')
+      .replace(/[*_#~>\[\]()`]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    const text = _getSpeakableText(el);
     if (!text) { console.warn('[TTS] No text found in element:', msgId); return; }
 
     const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
-    const voice = _pickTTSVoice(langObj);
-    _ttsQueue = _splitTTSChunks(text);
-    _ttsIndex = 0;
-    _currentVoiceMsgId = msgId;
-    _setTTSButton(btn, true);
+    const utterance = new SpeechSynthesisUtterance(text.slice(0, 1500));
+    const voices = window.speechSynthesis.getVoices();
+    const baseLang = (langObj.code || 'en-IN').split('-')[0];
+    const voice = voices.find(v => v.lang === langObj.code)
+      || voices.find(v => (v.lang || '').startsWith(baseLang))
+      || voices.find(v => (v.lang || '').startsWith('en'))
+      || voices[0];
 
-    // Speak immediately from the click handler. Waiting for voiceschanged can lose the user gesture and go silent.
-    _speakNextTTSChunk(btn, langObj, voice);
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = langObj.code || 'en-IN';
+    }
 
-    // Warm voices for the next click; do not block current playback on this.
-    setTimeout(() => { try { window.speechSynthesis.getVoices(); } catch (_) {} }, 0);
+    utterance.rate = 0.96;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    utterance.onend = () => { if (btn) btn.innerHTML = playIcon; };
+    utterance.onerror = (e) => {
+      console.warn('[TTS] Error:', e.error);
+      if (btn) btn.innerHTML = playIcon;
+    };
+
+    _currentUtterance = utterance;
+    if (btn) btn.innerHTML = stopIcon;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
   } catch (err) {
     console.error('[TTS] Exception:', err.message);
-    _stopTTS();
   }
 };
 
@@ -356,10 +242,6 @@ window.playVoiceMsg = function (msgId) {
 if ('speechSynthesis' in window) {
   try {
     window.speechSynthesis.getVoices();
-    if (typeof window.speechSynthesis.addEventListener === 'function') {
-      window.speechSynthesis.addEventListener('voiceschanged', () => window.speechSynthesis.getVoices());
-    } else {
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
   } catch (_) {}
 }
