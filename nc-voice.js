@@ -1,3 +1,7 @@
+// ══════════════════════════════════════════════════════════
+//  NC-VOICE — Voice Input (EN/HI/GU) + Translate Command
+// ══════════════════════════════════════════════════════════
+
 // ══════════════════════════════════════════════════
 //  🎤 VOICE INPUT — Hindi / Gujarati / English
 //  Click mic → record in selected language
@@ -9,19 +13,19 @@ const VOICE_LANGS = [
   { code: 'hi-IN', label: 'HI', flag: '🇮🇳', name: 'हिंदी' },
   { code: 'gu-IN', label: 'GU', flag: '🏵️', name: 'ગુજરાતી' },
 ];
-let _voiceLangIdx = 0; // default English
-let _voiceRecog = null;
-let _voiceActive = false;
+let _voiceLangIdx  = 0; // default English
+let _voiceRecog    = null;
+let _voiceActive   = false;
 
 // Inject lang badge next to mic button (runs once after DOM ready)
 function _initVoiceLangUI() {
   const micBtn = document.getElementById('micBtn');
   if (!micBtn || document.getElementById('voiceLangBadge')) return;
   const badge = document.createElement('button');
-  badge.id = 'voiceLangBadge';
+  badge.id        = 'voiceLangBadge';
   badge.className = 'voice-lang-badge';
-  badge.title = 'Switch voice language (EN → HI → GU)';
-  badge.onclick = (e) => { e.stopPropagation(); _cycleVoiceLang(); };
+  badge.title     = 'Switch voice language (EN → HI → GU)';
+  badge.onclick   = (e) => { e.stopPropagation(); _cycleVoiceLang(); };
   _updateLangBadge(badge);
   micBtn.parentNode.insertBefore(badge, micBtn.nextSibling);
 }
@@ -36,20 +40,20 @@ function _updateLangBadge(badge) {
   badge.title = `Voice: ${lang.name} — click to switch`;
 }
 
-window._cycleVoiceLang = function () {
+window._cycleVoiceLang = function() {
   if (_voiceActive) _stopVoice(); // stop if recording
   _voiceLangIdx = (_voiceLangIdx + 1) % VOICE_LANGS.length;
   _updateLangBadge();
   const lang = VOICE_LANGS[_voiceLangIdx];
   // Brief toast
   const t = document.createElement('div');
-  t.className = 'voice-lang-toast';
+  t.className   = 'voice-lang-toast';
   t.textContent = `🎤 ${lang.flag} ${lang.name}`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 1800);
 };
 
-window.toggleVoiceInput = function () {
+window.toggleVoiceInput = function() {
   if (_voiceActive) { _stopVoice(); return; }
   _initVoiceLangUI();
   _startVoice();
@@ -64,14 +68,14 @@ function _startVoice() {
 
   const langObj = VOICE_LANGS[_voiceLangIdx];
   _voiceRecog = new SR();
-  _voiceRecog.continuous = true;
-  _voiceRecog.interimResults = true;
-  _voiceRecog.lang = langObj.code;
+  _voiceRecog.continuous      = true;
+  _voiceRecog.interimResults  = true;
+  _voiceRecog.lang            = langObj.code;
   _voiceRecog.maxAlternatives = 1;
 
-  const inp = document.getElementById('mainInput');
+  const inp    = document.getElementById('mainInput');
   const micBtn = document.getElementById('micBtn');
-  const badge = document.getElementById('voiceLangBadge');
+  const badge  = document.getElementById('voiceLangBadge');
   const baseVal = inp.value;
 
   _voiceRecog.onstart = () => {
@@ -109,10 +113,10 @@ function _startVoice() {
 function _stopVoice() {
   _voiceActive = false;
   const micBtn = document.getElementById('micBtn');
-  const badge = document.getElementById('voiceLangBadge');
+  const badge  = document.getElementById('voiceLangBadge');
   if (micBtn) { micBtn.classList.remove('mic-active'); micBtn.title = 'Voice Input'; }
-  if (badge) badge.classList.remove('lang-badge-active');
-  if (_voiceRecog) { try { _voiceRecog.stop(); } catch (e) { } _voiceRecog = null; }
+  if (badge)  badge.classList.remove('lang-badge-active');
+  if (_voiceRecog) { try { _voiceRecog.stop(); } catch(e) {} _voiceRecog = null; }
 }
 
 // ══════════════════════════════════════════════════
@@ -147,7 +151,7 @@ async function _handleTranslate(raw, inp) {
     } else {
       updateMsg(resId, `❌ Translation requires Gemini API key. Add it in ⚙️ Settings.`);
     }
-  } catch (e) {
+  } catch(e) {
     updateMsg(resId, `❌ Translation failed: ${e.message}`);
   } finally {
     toggleGen(false);
@@ -160,79 +164,81 @@ async function _handleTranslate(raw, inp) {
     }
   }
 }
+
 // ══════════════════════════════════════════════════
 //  🔊 VOICE OUTPUT (Text to Speech) — PATCHED
 // ══════════════════════════════════════════════════
 let _currentUtterance = null;
 
+function _getVoicesReady(cb) {
+  const v = window.speechSynthesis.getVoices();
+  if (v.length > 0) return cb(v);
+  window.speechSynthesis.onvoiceschanged = () => cb(window.speechSynthesis.getVoices());
+}
+
 function _decodeTTSText(raw) {
   const d = document.createElement('textarea');
-  d.innerHTML = raw || '';
+  d.innerHTML = raw;
   return d.value;
 }
 
-window.playVoiceMsg = function (msgId) {
+window.playVoiceMsg = function(msgId) {
   try {
-    if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
-      alert('Voice output is not supported in this browser. Use Chrome or Edge.');
-      return;
-    }
-
     const el = document.getElementById(msgId);
     if (!el) { console.warn('[TTS] Element not found:', msgId); return; }
     const btn = document.getElementById('play-' + msgId);
-    const playIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-    const stopIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
 
     if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
       window.speechSynthesis.cancel();
       _currentUtterance = null;
-      if (btn) btn.innerHTML = playIcon;
+      if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
       return;
     }
 
-    let text = _decodeTTSText(el.getAttribute('data-raw') || '') || el.innerText || el.textContent || '';
-    text = text
-      .replace(/<nivi-hidden>[\s\S]*?<\/nivi-hidden>/g, ' ')
-      .replace(/```[\s\S]*?```/g, ' code block ')
-      .replace(/`[^`]+`/g, ' snippet ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/~?\d+\s*tokens/gi, ' ')
-      .replace(/[*_#~>\[\]()`]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    window.speechSynthesis.cancel();
+
+    let text = _decodeTTSText(
+      el.getAttribute('data-raw')
+      || el.querySelector('[data-raw]')?.getAttribute('data-raw')
+      || ''
+    ) || el.innerText || el.textContent || '';
+
+    text = text.replace(/[*_#~]/g, '')
+               .replace(/```[\s\S]*?```/g, ' code block ')
+               .replace(/`[^`]+`/g, ' snippet ')
+               .trim();
 
     if (!text) { console.warn('[TTS] No text found in element:', msgId); return; }
 
     const langObj = VOICE_LANGS[_voiceLangIdx] || VOICE_LANGS[0];
-    const utterance = new SpeechSynthesisUtterance(text.slice(0, 1500));
-    const voices = window.speechSynthesis.getVoices();
-    const baseLang = (langObj.code || 'en-IN').split('-')[0];
-    const voice = voices.find(v => v.lang === langObj.code)
-      || voices.find(v => (v.lang || '').startsWith(baseLang))
-      || voices.find(v => (v.lang || '').startsWith('en'))
-      || voices[0];
+    _currentUtterance = new SpeechSynthesisUtterance(text);
 
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-    } else {
-      utterance.lang = langObj.code || 'en-IN';
-    }
+    if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
 
-    utterance.rate = 0.96;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    utterance.onend = () => { if (btn) btn.innerHTML = playIcon; };
-    utterance.onerror = (e) => {
-      console.warn('[TTS] Error:', e.error);
-      if (btn) btn.innerHTML = playIcon;
-    };
+    _getVoicesReady((voices) => {
+      let voice = voices.find(v => v.lang === langObj.code)
+               || voices.find(v => v.lang.startsWith(langObj.code.split('-')[0]))
+               || voices.find(v => v.lang.startsWith('en'))
+               || voices[0];
 
-    _currentUtterance = utterance;
-    if (btn) btn.innerHTML = stopIcon;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+      if (voice) {
+        _currentUtterance.voice = voice;
+        _currentUtterance.lang  = voice.lang;
+      } else {
+        _currentUtterance.lang = langObj.code;
+      }
+
+      _currentUtterance.onend = () => {
+        if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      };
+      _currentUtterance.onerror = (e) => {
+        console.warn('[TTS] Error:', e.error);
+        if (btn) btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+      };
+
+      window.speechSynthesis.speak(_currentUtterance);
+    });
+
   } catch (err) {
     console.error('[TTS] Exception:', err.message);
   }
@@ -240,8 +246,6 @@ window.playVoiceMsg = function (msgId) {
 
 // Kickstart TTS loading on page load
 if ('speechSynthesis' in window) {
-  try {
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-  } catch (_) {}
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  window.speechSynthesis.getVoices();
 }
