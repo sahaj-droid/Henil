@@ -246,8 +246,20 @@ ${textContent}
 
 User request: ${prompt || 'Analyze this file.'}`;
 
-  const result = await _geminiStreamCall(cfg, [], filePrompt, null, {});
-  return { ok: true, answer: result.text || 'No answer received.' };
+  // Use non-streaming generateContent for reliability
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    signal: window.AppState?._abortController?.signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: filePrompt }] }]
+    })
+  });
+  const data = await response.json().catch(() => ({}));
+  const answer = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+  if (response.ok && answer) return { ok: true, answer };
+  throw new Error(data.error?.message || `Gemini text file call failed (${response.status})`);
 }
 
 async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
@@ -269,7 +281,9 @@ async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
     .join('')
     .trim();
   if (response.ok && answer) return { ok: true, answer };
-  throw new Error(data.error?.message || `Gemini file call failed (${response.status})`);
+  // Surface the real API error message for better debugging
+  const errMsg = data.error?.message || `Gemini file call failed (${response.status})`;
+  throw new Error(errMsg);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -422,9 +436,12 @@ User request: ${prompt || 'Analyze this file.'}`,
   }
 
   const hint = isTextFile
-    ? 'Text/code file analysis failed.'
-    : 'Binary file analysis failed. Use a Gemini vision/file-capable model for PDFs/images.';
-  return { ok: false, answer: `${hint} ${lastError ? 'Last error: ' + lastError : 'Check API key, model name, and provider settings.'}` };
+    ? '⚠️ File analysis failed.'
+    : '⚠️ Binary file analysis failed. Make sure you have a Gemini model configured (for PDFs/images).';
+  const errDetail = lastError
+    ? `\n\n**Error:** ${lastError}`
+    : '\n\nCheck your API key, model name, and provider settings in ⚙️ Settings.';
+  return { ok: false, answer: hint + errDetail };
 };
 
 
