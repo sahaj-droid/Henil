@@ -18,9 +18,43 @@ const POLL_RATIOS = [
   { id: 'wide',      label: '◻ 4:3',  w: 1024, h: 768  },
 ];
 
-window._pollImgModel  = window._pollImgModel  || 'flux';
-window._pollImgRatio  = window._pollImgRatio  || 'square';
-window._pollImgEnhance = window._pollImgEnhance !== false;
+window._pollImgModel  = localStorage.getItem('nivi_img_model')  || 'flux';
+window._pollImgRatio  = localStorage.getItem('nivi_img_ratio')  || 'square';
+window._pollImgEnhance = (localStorage.getItem('nivi_img_enhance') !== 'false');
+
+// ── BLOB DOWNLOAD — fixes cross-origin download attribute being ignored ──
+window._dlImg = async function(url, filename) {
+  const btn = event?.currentTarget;
+  const orig = btn?.innerHTML;
+  if (btn) btn.innerHTML = '⏳';
+  try {
+    let objectUrl;
+    if (url.startsWith('data:')) {
+      // Already a data URL (e.g. Imagen 3) — convert directly, no fetch needed
+      const arr  = url.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      const n    = bstr.length;
+      const u8   = new Uint8Array(n);
+      for (let i = 0; i < n; i++) u8[i] = bstr.charCodeAt(i);
+      objectUrl = URL.createObjectURL(new Blob([u8], { type: mime }));
+    } else {
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      objectUrl  = URL.createObjectURL(blob);
+    }
+    const a    = document.createElement('a');
+    a.href     = objectUrl;
+    a.download = filename || 'nivi-image.png';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(objectUrl); a.remove(); }, 2000);
+    if (btn) { btn.innerHTML = '✅'; setTimeout(() => { btn.innerHTML = orig; }, 1500); }
+  } catch(e) {
+    if (btn) btn.innerHTML = orig;
+    window.open(url, '_blank');
+  }
+};
 
 function _buildPollinationsUrl(prompt, model, ratio, enhance, seed) {
   const r   = POLL_RATIOS.find(x => x.id === ratio) || POLL_RATIOS[0];
@@ -40,10 +74,10 @@ function _buildImgUI(prompt, model, ratio, enhance, seed, resId) {
 
   return `<div class="img-result" id="imgblock-${resId}">
     <div class="img-controls" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:10px;">
-      <select class="img-sel" onchange="window._pollImgModel=this.value;_regenImg('${resId}','${escapeHTML(prompt)}',this.value,document.getElementById('ratio-${resId}').value,window._pollImgEnhance)" style="font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e2e2;cursor:pointer;font-family:var(--mono);">${modelOpts}</select>
-      <select id="ratio-${resId}" class="img-sel" onchange="window._pollImgRatio=this.value;_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,this.value,window._pollImgEnhance)" style="font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e2e2;cursor:pointer;font-family:var(--mono);">${ratioOpts}</select>
+      <select class="img-sel" onchange="window._pollImgModel=this.value;localStorage.setItem('nivi_img_model',this.value);_regenImg('${resId}','${escapeHTML(prompt)}',this.value,document.getElementById('ratio-${resId}').value,window._pollImgEnhance)" style="font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e2e2;cursor:pointer;font-family:var(--mono);">${modelOpts}</select>
+      <select id="ratio-${resId}" class="img-sel" onchange="window._pollImgRatio=this.value;localStorage.setItem('nivi_img_ratio',this.value);_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,this.value,window._pollImgEnhance)" style="font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e2e2;cursor:pointer;font-family:var(--mono);">${ratioOpts}</select>
       <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-sub);cursor:pointer;user-select:none;">
-        <input type="checkbox" ${enhance ? 'checked' : ''} onchange="window._pollImgEnhance=this.checked;_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,document.getElementById('ratio-${resId}').value,this.checked)" style="accent-color:var(--accent);">
+        <input type="checkbox" ${enhance ? 'checked' : ''} onchange="window._pollImgEnhance=this.checked;localStorage.setItem('nivi_img_enhance',this.checked);_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,document.getElementById('ratio-${resId}').value,this.checked)" style="accent-color:var(--accent);">
         Enhance
       </label>
       <button onclick="_regenImg('${resId}','${escapeHTML(prompt)}',document.querySelector('#imgblock-${resId} .img-sel').value,document.getElementById('ratio-${resId}').value,window._pollImgEnhance)" class="tbtn" style="font-size:11px;padding:4px 10px;">🔄 Regen</button>
@@ -60,7 +94,7 @@ function _buildImgUI(prompt, model, ratio, enhance, seed, resId) {
       >
     </div>
     <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
-      <a href="${url}" target="_blank" download="nivi-image.png" class="tbtn prim img-dl">⬇ Download</a>
+      <button onclick="_dlImg('${url}','nivi-${Date.now()}.png')" class="tbtn prim img-dl">⬇ Download</button>
       <a href="${url}" target="_blank" class="tbtn">🔗 Open</a>
       <button class="tbtn" onclick="document.getElementById('i2i-inp-${resId}').click()" title="Use this result as reference image">🖼️ Img2Img</button>
       <input type="file" id="i2i-inp-${resId}" style="display:none" accept="image/*" onchange="_handleImg2ImgUpload(this,'${resId}','${escapeHTML(prompt)}',' '+ '${model}',' '+'${ratio}')">
@@ -181,7 +215,7 @@ window._handleImg2ImgUpload = async function(inputEl, resId, prompt, model, rati
         >
       </div>
       <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-        <a href="${genUrl}" target="_blank" download="nivi-i2i.png" class="tbtn prim img-dl">⬇ Download</a>
+        <button onclick="_dlImg('${genUrl}','nivi-i2i-${Date.now()}.png')" class="tbtn prim img-dl">⬇ Download</button>
         <a href="${genUrl}" target="_blank" class="tbtn">🔗 Open</a>
         <button class="tbtn" onclick="window._regenI2i('${i2iId}','${escapeHTML(enhancedPrompt)}','${model}','${ratio}')">🔄 Regen</button>
         <button class="tbtn" onclick="_regenImg('${resId}','${escapeHTML(prompt)}','${model}','${ratio}',true)">← Original</button>
@@ -227,10 +261,45 @@ async function _handleImageCommand(text, inp) {
   const resId = 'nivi-' + Date.now();
 
   // Show loading bubble immediately
-  appendMsg('nivi', `<div class="img-generating"><span class="tm-spinner" style="display:inline-block;margin-right:8px;"></span>Generating image: <em>${escapeHTML(prompt)}</em>…</div>`, resId);
+  appendMsg('nivi', `<div class="img-generating"><span class="tm-spinner" style="display:inline-block;margin-right:8px;"></span>Generating image with <strong>Imagen 3</strong>: <em>${escapeHTML(prompt)}</em>…</div>`, resId);
   scrollToBottom();
 
-  // Small delay so loading bubble renders, then swap in full UI
+  // ── Try Imagen 3 (Gemini API) first — much better quality ──
+  if (typeof window.generateImage === 'function') {
+    try {
+      const result = await window.generateImage(prompt);
+      if (result?.ok && result.b64) {
+        const dataUrl  = `data:${result.mimeType || 'image/png'};base64,${result.b64}`;
+        const imgHtml  = `<div class="img-result" id="imgblock-${resId}">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+            <span style="background:var(--accent-dim);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700;">✦ Imagen 3</span>
+            <span style="opacity:.6;">High quality · Google AI</span>
+          </div>
+          <div style="border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);">
+            <img src="${dataUrl}" style="max-width:100%;border-radius:12px;display:block;" alt="Imagen 3: ${escapeHTML(prompt)}">
+          </div>
+          <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+            <button onclick="_dlImg('${dataUrl}','imagen3-${Date.now()}.png')" class="tbtn prim">⬇ Download</button>
+            <button onclick="_regenWithImagen('${resId}','${escapeHTML(prompt)}')" class="tbtn">🔄 Regen</button>
+            <button onclick="_regenImg('${resId}','${escapeHTML(prompt)}','flux','square',true);document.getElementById('imgblock-${resId}').querySelector('.img-source-badge')?.remove();" class="tbtn">🎨 Try Pollinations</button>
+            <span style="margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--text-muted);opacity:.6;">Imagen 3 via Gemini API</span>
+          </div>
+        </div>`;
+        updateMsg(resId, imgHtml);
+        if (window.AppState) {
+          AppState._tabChatHistory.push({ role: 'nivi', text: `[Imagen 3 image generated for: ${prompt}]` });
+          localStorage.setItem('niviTabChat', JSON.stringify(AppState._tabChatHistory));
+        }
+        renderSidebarData();
+        return true;
+      }
+    } catch(e) {
+      console.warn('[Nivi] Imagen 3 failed, falling back to Pollinations:', e.message);
+    }
+  }
+
+  // ── Fallback: Pollinations.ai (no API key needed) ──
+  updateMsg(resId, `<div class="img-generating"><span class="tm-spinner" style="display:inline-block;margin-right:8px;"></span>Imagen 3 unavailable — generating with <strong>Pollinations (Flux)</strong>…</div>`);
   await new Promise(r => setTimeout(r, 50));
 
   const imgHtml = _buildImgUI(
@@ -251,6 +320,38 @@ async function _handleImageCommand(text, inp) {
   renderSidebarData();
   return true;
 }
+
+// Regenerate with Imagen 3
+window._regenWithImagen = async function(resId, prompt) {
+  const block = document.getElementById('imgblock-' + resId);
+  if (!block) return;
+  const bubble = block.closest('.bubble');
+  if (bubble) bubble.innerHTML = `<div class="img-generating"><span class="tm-spinner" style="display:inline-block;margin-right:8px;"></span>Regenerating with Imagen 3…</div>`;
+  try {
+    const result = await window.generateImage(prompt);
+    if (result?.ok && result.b64) {
+      const dataUrl = `data:${result.mimeType || 'image/png'};base64,${result.b64}`;
+      if (bubble) bubble.innerHTML = `<div class="img-result" id="imgblock-${resId}">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <span style="background:var(--accent-dim);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700;">✦ Imagen 3</span>
+          <span style="opacity:.6;">High quality · Google AI</span>
+        </div>
+        <div style="border-radius:12px;overflow:hidden;">
+          <img src="${dataUrl}" style="max-width:100%;border-radius:12px;display:block;" alt="${prompt}">
+        </div>
+        <div class="img-actions" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <button onclick="_dlImg('${dataUrl}','imagen3-${Date.now()}.png')" class="tbtn prim">⬇ Download</button>
+          <button onclick="_regenWithImagen('${resId}','${prompt}')" class="tbtn">🔄 Regen</button>
+          <span style="margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--text-muted);opacity:.6;">Imagen 3 via Gemini API</span>
+        </div>
+      </div>`;
+    } else {
+      if (bubble) bubble.innerHTML = `<div style="color:var(--red);padding:10px;">⚠️ Imagen 3 failed: ${result?.error || 'Unknown error'}</div>`;
+    }
+  } catch(e) {
+    if (bubble) bubble.innerHTML = `<div style="color:var(--red);padding:10px;">⚠️ ${e.message}</div>`;
+  }
+};
 
 // Reads all pending files, saves them, returns combined AI answer
 async function _handleFilesMessage(text, pendingFiles, resId) {
