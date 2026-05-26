@@ -51,7 +51,11 @@ function sanitizeHTML(html) {
     }
     if (node.tagName === 'IMG') {
       const src = node.getAttribute('src') || '';
-      if (!/^https:\/\/image\.pollinations\.ai\//i.test(src) && !src.startsWith('blob:')) node.remove();
+      // Allow: pollinations CDN, blob:, data: (base64 previews from file analysis)
+      const allowed = /^https:\/\/image\.pollinations\.ai\//i.test(src)
+        || src.startsWith('blob:')
+        || src.startsWith('data:');
+      if (!allowed) node.remove();
     }
   });
   return tpl.innerHTML;
@@ -97,11 +101,33 @@ function clearFile() {
   document.getElementById('filePreview').classList.remove('show');
 }
 
+// ── AUTO-MIGRATE: Fix model chain items saved with wrong provider ──
+// Old versions saved '3.1-flash-lite' etc as provider:'custom' — fix silently.
+function _migrateModelChain(key) {
+  try {
+    const chain = JSON.parse(localStorage.getItem(key) || '[]');
+    let changed = false;
+    const fixed = chain.map(item => {
+      if (item.provider !== 'custom' || item.url) return item; // already correct or has custom URL
+      const ml = (item.model || '').toLowerCase();
+      const looksGemini = ml.startsWith('gemini-') || ml.startsWith('gemma-')
+        || ml.startsWith('learnlm-') || /^\d+\.\d+/.test(ml);
+      if (looksGemini) { changed = true; return { ...item, provider: 'gemini' }; }
+      return item;
+    });
+    if (changed) localStorage.setItem(key, JSON.stringify(fixed));
+  } catch(e) {}
+}
+
 // ── INITIALISATION ──
 window.onload = async () => {
   if (!localStorage.getItem('nivi_current_session_id')) {
     localStorage.setItem('nivi_current_session_id', 'session_' + Date.now());
   }
+
+  // Auto-fix model chain items saved with wrong provider (e.g. '3.1-flash-lite' as 'custom')
+  _migrateModelChain('nivi_model_chain');
+  _migrateModelChain('nivi_search_model_chain');
 
   window._activeProjectId = document.getElementById('activeProjectSelect')?.value || 'default';
   const _initProj = window._activeProjectId;
