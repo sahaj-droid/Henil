@@ -293,6 +293,7 @@ to { opacity: 1; transform: none; }
 .art-tab { min-height: 44px; padding: 8px 12px; font-size: 12px; flex-shrink: 0; }
 .pbtn { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 10px; }
 .new-btn { min-height: 44px; }
+.sb-bot { padding-bottom: calc(12px + env(safe-area-inset-bottom, 16px)) !important; }
 .mbox { box-shadow: 0 24px 80px rgba(0,0,0,.5); }
 .mtitle { font-size: 18px; font-weight: 750; }
 .msub { font-family: var(--sans); font-size: 13px; color: var(--text-sub); }
@@ -654,10 +655,8 @@ input:focus-visible,
 
 .sb-top,
 .sb-bot {
-  background: rgba(8, 12, 21, .82);
+  background: var(--bg-panel);
   border-color: rgba(255,255,255,.09);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 
 .new-btn {

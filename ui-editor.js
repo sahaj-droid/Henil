@@ -95,6 +95,7 @@ window.resetUI = function() {
 
 // ── Open / Close panel ──
 window.openUIEditor = function() {
+  if (typeof closeMobSidebar === 'function') closeMobSidebar();
   document.getElementById('uiEditorPanel').classList.add('open');
   document.getElementById('uiEditorOverlay').classList.add('open');
 };

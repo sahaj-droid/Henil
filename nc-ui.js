@@ -62,6 +62,7 @@ window.closeMobSidebar = function() {
 };
 
 function openProjectModal() {
+  if (typeof closeMobSidebar === 'function') closeMobSidebar();
   document.getElementById('projectModal').classList.add('open');
   setTimeout(() => document.getElementById('newProjectName').focus(), 100);
 }

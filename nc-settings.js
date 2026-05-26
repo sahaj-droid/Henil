@@ -4,6 +4,7 @@
 
 // ── SETTINGS MODAL ──
 window.openSettings = function() {
+  if (typeof closeMobSidebar === 'function') closeMobSidebar();
   const c = document.getElementById('modelChainContainer');
   if (c) {
     c.innerHTML = '';
@@ -23,7 +24,8 @@ window.openSettings = function() {
   document.getElementById('settingsModal').classList.add('open');
 };
 
-window.addModelRow = function(config = { model: '', key: '', url: '' }) {
+window.addModelRow = function(config) {
+  const cfg = config || {};
   const c = document.getElementById('modelChainContainer');
   if (!c) return;
   const row = document.createElement('div');
@@ -33,22 +35,23 @@ window.addModelRow = function(config = { model: '', key: '', url: '' }) {
     <div class="mrow-grid">
       <div>
         <label class="flbl">Model Name</label>
-        <input type="text" class="finput conf-model" placeholder="e.g. gemini-2.5-flash" value="${config.model || ''}" style="margin-bottom:0;">
+        <input type="text" class="finput conf-model" placeholder="e.g. gemini-2.5-flash" value="${cfg.model || ''}" style="margin-bottom:0;">
       </div>
       <div>
         <label class="flbl">API Key</label>
-        <input type="password" class="finput conf-key" placeholder="Paste API key..." value="${config.key || ''}" style="margin-bottom:0;">
+        <input type="password" class="finput conf-key" placeholder="Paste API key..." value="${cfg.key || ''}" style="margin-bottom:0;">
       </div>
     </div>
     <div style="margin-top:8px;">
       <label class="flbl">API URL <span style="opacity:.5;">(optional - leave blank for Gemini)</span></label>
-      <input type="text" class="finput conf-url" placeholder="https://..." value="${config.url || ''}" style="margin-bottom:0;">
+      <input type="text" class="finput conf-url" placeholder="https://..." value="${cfg.url || ''}" style="margin-bottom:0;">
     </div>
   `;
   c.appendChild(row);
 };
 
-window.addSearchModelRow = function(config = { model: '', key: '', url: '' }) {
+window.addSearchModelRow = function(config) {
+  const cfg = config || {};
   const c = document.getElementById('searchChainContainer');
   if (!c) return;
   const row = document.createElement('div');
@@ -58,16 +61,16 @@ window.addSearchModelRow = function(config = { model: '', key: '', url: '' }) {
     <div class="mrow-grid">
       <div>
         <label class="flbl">Model Name</label>
-        <input type="text" class="finput conf-model" placeholder="e.g. gemini-2.5-pro" value="${config.model || ''}" style="margin-bottom:0;">
+        <input type="text" class="finput conf-model" placeholder="e.g. gemini-2.5-pro" value="${cfg.model || ''}" style="margin-bottom:0;">
       </div>
       <div>
         <label class="flbl">API Key</label>
-        <input type="password" class="finput conf-key" placeholder="Paste API key..." value="${config.key || ''}" style="margin-bottom:0;">
+        <input type="password" class="finput conf-key" placeholder="Paste API key..." value="${cfg.key || ''}" style="margin-bottom:0;">
       </div>
     </div>
     <div style="margin-top:8px;">
       <label class="flbl">API URL <span style="opacity:.5;">(optional)</span></label>
-      <input type="text" class="finput conf-url" placeholder="https://..." value="${config.url || ''}" style="margin-bottom:0;">
+      <input type="text" class="finput conf-url" placeholder="https://..." value="${cfg.url || ''}" style="margin-bottom:0;">
     </div>
   `;
   c.appendChild(row);
