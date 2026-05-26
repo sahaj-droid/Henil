@@ -37,7 +37,7 @@ async function _handle4xImages(prompt, inp) {
           onerror="document.getElementById('${vid}-ld').innerHTML='<span style=color:var(--red)>⚠️ Failed</span>';"
         >
         <div style="position:absolute;bottom:6px;right:6px;display:flex;gap:5px;">
-          <a href="${url}" download="nivi-var-${i+1}.png" class="tbtn prim" style="padding:3px 8px;font-size:10px;">⬇</a>
+          <button onclick="_dlImg('${url}','nivi-var-${i+1}.png')" class="tbtn prim" style="padding:3px 8px;font-size:10px;">⬇</button>
           <a href="${url}" target="_blank" class="tbtn" style="padding:3px 8px;font-size:10px;">🔗</a>
         </div>
       </div>`;

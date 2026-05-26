@@ -137,3 +137,40 @@ window.scrollToBottom = function() {
     setTimeout(() => { chatWrap.scrollTo({ top: chatWrap.scrollHeight, behavior: 'smooth' }); }, 100);
   }
 };
+
+// ── SETTINGS EXPORT / IMPORT (cross-device sync) ──
+window.exportNiviSettings = function() {
+  const data = {
+    v: 1,
+    chain:  JSON.parse(localStorage.getItem('nivi_model_chain')        || '[]'),
+    search: JSON.parse(localStorage.getItem('nivi_search_model_chain') || '[]'),
+  };
+  const json = JSON.stringify(data, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    // Flash the button
+    const btn = document.querySelector('[onclick="exportNiviSettings()"]');
+    if (btn) { const o = btn.innerHTML; btn.innerHTML = '✅ Copied!'; setTimeout(() => { btn.innerHTML = o; }, 2000); }
+  }).catch(() => {
+    // Fallback: prompt with text so user can manually copy
+    prompt('Copy this settings JSON and paste on your other device:', json);
+  });
+};
+
+window.importNiviSettings = function() {
+  const json = prompt('Paste the settings JSON from your other device:');
+  if (!json) return;
+  try {
+    const data = JSON.parse(json.trim());
+    if (!data.chain || !Array.isArray(data.chain)) throw new Error('Invalid format');
+    localStorage.setItem('nivi_model_chain', JSON.stringify(data.chain));
+    if (data.search) localStorage.setItem('nivi_search_model_chain', JSON.stringify(data.search));
+    // Reload settings UI
+    openSettings();
+    if (typeof updateActiveModelUI === 'function') updateActiveModelUI();
+    if (typeof renderSidebarData   === 'function') renderSidebarData();
+    const btn = document.querySelector('[onclick="importNiviSettings()"]');
+    if (btn) { const o = btn.innerHTML; btn.innerHTML = '✅ Imported!'; setTimeout(() => { btn.innerHTML = o; }, 2000); }
+  } catch(e) {
+    alert('❌ Invalid settings JSON. Make sure you copied the full text from "📋 Copy Settings" on your other device.');
+  }
+};

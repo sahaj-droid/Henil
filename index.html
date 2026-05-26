@@ -317,6 +317,21 @@
     </button>
     <button class="mbtn prim" onclick="saveSettings()">Save Configuration</button>
     <button class="mbtn sec" onclick="closeModal('settingsModal')">Cancel</button>
+    <!-- ── CROSS-DEVICE SYNC ── -->
+    <div style="margin-top:16px;border-top:1px dashed var(--border);padding-top:14px;">
+      <div style="font-size:11px;font-family:var(--mono);color:var(--text-muted);margin-bottom:8px;">📱 Transfer to another device (mobile etc.)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="exportNiviSettings()" class="tbtn" style="font-size:11px;gap:5px;display:flex;align-items:center;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          📋 Copy Settings
+        </button>
+        <button onclick="importNiviSettings()" class="tbtn" style="font-size:11px;gap:5px;display:flex;align-items:center;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          📥 Paste & Import
+        </button>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:6px;opacity:.6;">Copy on laptop → Paste on mobile → Done!</div>
+    </div>
   </div>
 </div>
   
