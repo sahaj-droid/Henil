@@ -436,6 +436,28 @@ User request: ${prompt || 'Analyze this file.'}`,
     }
   }
 
+  // ── ULTIMATE FALLBACK: embed file content in prompt, use full streaming chain ──
+  // This is exactly what happens when user types "hello" after upload — do it automatically.
+  if (isTextFile) {
+    try {
+      const textContent = _decodeFileBase64Text(fileBase64).slice(0, 60000);
+      if (textContent.trim()) {
+        const embeddedPrompt = `Analyze this uploaded file.\nMIME type: ${mimeType || 'text/plain'}\n\nFile content:\n\`\`\`\n${textContent}\n\`\`\`\n\nUser request: ${prompt || 'Analyze this file.'}`;
+        let collectedText = '';
+        const result = await window.directGeminiCallStreamMultiTurn(
+          [], embeddedPrompt,
+          (chunk) => { collectedText = chunk; },
+          {}
+        );
+        if (result?.ok && collectedText.trim()) return { ok: true, answer: collectedText.trim() };
+        lastError = lastError || 'All models failed.';
+      }
+    } catch(e) {
+      lastError = e.message;
+      console.warn('[Nivi] Ultimate fallback file call failed:', e.message);
+    }
+  }
+
   const hint = isTextFile
     ? '⚠️ File analysis failed.'
     : '⚠️ Binary file analysis failed. Make sure you have a Gemini model configured (for PDFs/images).';
