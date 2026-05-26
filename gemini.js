@@ -24,7 +24,8 @@ function _detectFormat(item, def) {
   if (item.provider !== 'custom') return def.format;
   // Custom provider: infer from model name as a best-effort fallback
   const modelLower = (item.model || '').toLowerCase();
-  const isGeminiModel = GEMINI_MODEL_PREFIXES.some(prefix => modelLower.startsWith(prefix));
+  const isGeminiModel = GEMINI_MODEL_PREFIXES.some(prefix => modelLower.startsWith(prefix))
+    || /^\d+\.\d+/.test(modelLower); // shorthand e.g. '2.0-flash', '3.1-flash-lite'
   return isGeminiModel ? 'gemini' : 'openai';
 }
 
