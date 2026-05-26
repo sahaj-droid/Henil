@@ -213,21 +213,63 @@ async function _geminiStreamCall(cfg, history, prompt, onChunk, opts = {}) {
   return { ok: true, text: fullText };
 }
 
+const FILE_TEXT_MIMES = new Set([
+  'text/javascript', 'text/html', 'text/plain', 'text/css', 'text/csv', 'text/xml',
+  'application/json', 'application/xml', 'image/svg+xml'
+]);
+
+function _isTextFileMime(mimeType) {
+  const mt = (mimeType || '').split(';')[0].toLowerCase();
+  return mt.startsWith('text/') || FILE_TEXT_MIMES.has(mt);
+}
+
+function _decodeFileBase64Text(fileBase64) {
+  try {
+    return new TextDecoder('utf-8')
+      .decode(Uint8Array.from(atob(fileBase64), c => c.charCodeAt(0)));
+  } catch(e) {
+    try { return atob(fileBase64); } catch(_) { return ''; }
+  }
+}
+
+async function _geminiTextFileCall(cfg, prompt, fileBase64, mimeType) {
+  const textContent = _decodeFileBase64Text(fileBase64).slice(0, 60000);
+  if (!textContent.trim()) throw new Error('Uploaded text file is empty or unreadable');
+
+  const filePrompt = `Analyze this uploaded file.
+MIME type: ${mimeType || 'text/plain'}
+
+File content:
+\`\`\`
+${textContent}
+\`\`\`
+
+User request: ${prompt || 'Analyze this file.'}`;
+
+  const result = await _geminiStreamCall(cfg, [], filePrompt, null, {});
+  return { ok: true, answer: result.text || 'No answer received.' };
+}
+
 async function _geminiFileCall(cfg, prompt, fileBase64, mimeType) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
   const response = await fetch(url, {
     method: 'POST',
+    signal: window.AppState?._abortController?.signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [
-        { inline_data: { mime_type: mimeType, data: fileBase64 } },
-        { text: prompt }
+        { inline_data: { mime_type: mimeType || 'application/octet-stream', data: fileBase64 } },
+        { text: prompt || 'Analyze this file.' }
       ]}]
     })
   });
-  const data = await response.json();
-  if (response.ok && data.candidates) return { ok: true, answer: data.candidates[0].content.parts[0].text };
-  throw new Error(data.error?.message || 'Gemini file call failed');
+  const data = await response.json().catch(() => ({}));
+  const answer = data.candidates?.[0]?.content?.parts
+    ?.map(p => p.text || '')
+    .join('')
+    .trim();
+  if (response.ok && answer) return { ok: true, answer };
+  throw new Error(data.error?.message || `Gemini file call failed (${response.status})`);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -328,47 +370,64 @@ window.directGeminiCallStreamMultiTurn = async function(priorHistory, currentPro
 //  FILE ANALYSIS — Gemini primary, OpenAI-compatible fallback
 // ═══════════════════════════════════════════════════════════
 window.directGeminiCallWithFile = async function(prompt, fileBase64, mimeType) {
-  const chain = window.getModelChain();
+  let chain = [];
+  try { chain = window.getModelChain ? window.getModelChain() : []; } catch(e) {}
+  const isTextFile = _isTextFileMime(mimeType);
+  let lastError = '';
 
-  // Prefer any provider whose resolved format is 'gemini'
+  // Gemini can analyze text/code files more reliably when sent as text instead of inline_data.
   const geminiRaw = chain.find(c => _resolveProvider(c).format === 'gemini');
   if (geminiRaw) {
     const cfg = _resolveProvider(geminiRaw);
-    if (cfg.key) {
+    if (cfg.key && cfg.model) {
       try {
-        return await _geminiFileCall(cfg, prompt, fileBase64, mimeType);
+        return isTextFile
+          ? await _geminiTextFileCall(cfg, prompt, fileBase64, mimeType)
+          : await _geminiFileCall(cfg, prompt, fileBase64, mimeType);
       } catch(e) {
+        lastError = e.message;
         console.warn('[Nivi] Gemini file call failed:', e.message);
       }
     }
   }
 
-  // Text-file fallback — send content as plain text to any OpenAI-compatible provider
-  const TEXT_MIMES = ['text/javascript', 'text/html', 'text/plain', 'text/css', 'application/json', 'text/csv'];
-  if (TEXT_MIMES.includes(mimeType)) {
+  // OpenAI-compatible fallback for text/code files.
+  if (isTextFile) {
     const fallbackRaw = chain.find(c => _resolveProvider(c).format !== 'gemini');
     if (fallbackRaw) {
       const cfg = _resolveProvider(fallbackRaw);
       if (cfg.key && cfg.url) {
         try {
-          const textContent = new TextDecoder('utf-8')
-            .decode(Uint8Array.from(atob(fileBase64), c => c.charCodeAt(0)))
-            .slice(0, 10000);
+          const textContent = _decodeFileBase64Text(fileBase64).slice(0, 60000);
           const messages = [{
             role: 'user',
-            content: `File: ${mimeType}\n\`\`\`\n${textContent}\n\`\`\`\n\nQuery: ${prompt}`,
+            content: `Analyze this uploaded file.
+MIME type: ${mimeType || 'text/plain'}
+
+File content:
+\`\`\`
+${textContent}
+\`\`\`
+
+User request: ${prompt || 'Analyze this file.'}`,
           }];
           const r = await _openaiCall(cfg, messages, null);
           return { ok: true, answer: r.text };
         } catch(e) {
+          lastError = e.message;
           console.warn('[Nivi] Fallback file call failed:', e.message);
         }
       }
     }
   }
 
-  return { ok: false, answer: 'File analysis failed. Ensure Gemini is configured with a valid API key.' };
+  const hint = isTextFile
+    ? 'Text/code file analysis failed.'
+    : 'Binary file analysis failed. Use a Gemini vision/file-capable model for PDFs/images.';
+  return { ok: false, answer: `${hint} ${lastError ? 'Last error: ' + lastError : 'Check API key, model name, and provider settings.'}` };
 };
+
+
 
 // ══════════════════════════════════════════════════════════
 //  IMAGE GENERATION — Imagen 3 via Gemini API
