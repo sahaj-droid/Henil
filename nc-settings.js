@@ -104,7 +104,12 @@ window.saveSettings = function() {
       if (!key)   { errors.push(`${prefix} Row ${idx + 1}: API key is required.`);    return; }
       const modelLower = model.toLowerCase();
       let provider = 'custom';
-      if (modelLower.startsWith('gemini-') || modelLower.startsWith('gemma-') || modelLower.startsWith('learnlm-')) provider = 'gemini';
+      // Detect Gemini: handles both 'gemini-2.0-flash' and shorthand '2.0-flash', '2.5-pro', '1.5-flash-lite'
+      const isGeminiModel = modelLower.startsWith('gemini-')
+        || modelLower.startsWith('gemma-')
+        || modelLower.startsWith('learnlm-')
+        || /^\d+\.\d+/.test(modelLower); // e.g. '2.0-flash', '3.1-flash-lite'
+      if (isGeminiModel && !url) provider = 'gemini';  // Only auto-detect Gemini if no custom URL
       else if (url.includes('openrouter.ai')) provider = 'openrouter';
       else if (url.includes('nvidia.com') || url.includes('api.nvidia')) provider = 'nvidia';
       ch.push({ provider, model, key, url });
