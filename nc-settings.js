@@ -4,22 +4,22 @@
 
 // ── SETTINGS MODAL ──
 window.openSettings = function() {
-  if (typeof closeMobSidebar === 'function') closeMobSidebar();
+  if (typeof window.closeMobSidebar === 'function') window.closeMobSidebar();
   const c = document.getElementById('modelChainContainer');
   if (c) {
     c.innerHTML = '';
     let chain = [];
     try { chain = JSON.parse(localStorage.getItem('nivi_model_chain') || '[]'); } catch(e) {}
-    if (!chain.length) addModelRow({ model: '', key: '', url: '' });
-    else chain.forEach(cfg => addModelRow(cfg));
+    if (!chain.length) window.addModelRow({ model: '', key: '', url: '' });
+    else chain.forEach(cfg => window.addModelRow(cfg));
   }
   const sc = document.getElementById('searchChainContainer');
   if (sc) {
     sc.innerHTML = '';
     let sChain = [];
     try { sChain = JSON.parse(localStorage.getItem('nivi_search_model_chain') || '[]'); } catch(e) {}
-    if (!sChain.length) addSearchModelRow({ model: '', key: '', url: '' });
-    else sChain.forEach(cfg => addSearchModelRow(cfg));
+    if (!sChain.length) window.addSearchModelRow({ model: '', key: '', url: '' });
+    else sChain.forEach(cfg => window.addSearchModelRow(cfg));
   }
   document.getElementById('settingsModal').classList.add('open');
 };
@@ -85,9 +85,9 @@ window.switchActiveModel = function(idx) {
   chain.unshift(selected);
   localStorage.setItem('nivi_model_chain', JSON.stringify(chain));
   updateActiveModelUI();
-  renderSidebarData();
+  if (typeof window.renderSidebarData === 'function') window.renderSidebarData();
   const sm = document.getElementById('settingsModal');
-  if (sm && sm.classList.contains('open')) openSettings();
+  if (sm && sm.classList.contains('open')) window.openSettings();
 };
 
 // FIX 10: validate that each row has at least a model name AND an API key before saving
@@ -130,7 +130,7 @@ window.saveSettings = function() {
   
   closeModal('settingsModal');
   if (typeof updateActiveModelUI === 'function') updateActiveModelUI();
-  if (typeof renderSidebarData   === 'function') renderSidebarData();
+  if (typeof window.renderSidebarData === 'function') window.renderSidebarData();
 };
 
 // ── AUTO-SCROLL ──
@@ -168,9 +168,9 @@ window.importNiviSettings = function() {
     localStorage.setItem('nivi_model_chain', JSON.stringify(data.chain));
     if (data.search) localStorage.setItem('nivi_search_model_chain', JSON.stringify(data.search));
     // Reload settings UI
-    openSettings();
+    window.openSettings();
     if (typeof updateActiveModelUI === 'function') updateActiveModelUI();
-    if (typeof renderSidebarData   === 'function') renderSidebarData();
+    if (typeof window.renderSidebarData === 'function') window.renderSidebarData();
     const btn = document.querySelector('[onclick="importNiviSettings()"]');
     if (btn) { const o = btn.innerHTML; btn.innerHTML = '✅ Imported!'; setTimeout(() => { btn.innerHTML = o; }, 2000); }
   } catch(e) {

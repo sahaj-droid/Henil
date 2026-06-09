@@ -475,7 +475,7 @@ User request: ${prompt || 'Analyze this file.'}`,
 // ══════════════════════════════════════════════════════════
 window.generateImage = async function(prompt) {
   // Get Gemini key from model chain
-  const chain = window.getModelChain ? getModelChain() : [];
+  const chain = window.getModelChain ? window.getModelChain() : [];
   const geminiRaw = chain.find(c => c.provider === 'gemini' || (c.model || '').startsWith('gemini-'));
   const cfg = geminiRaw ? _resolveProvider(geminiRaw) : null;
   const apiKey = cfg?.key || localStorage.getItem('nivi_key_gemini') || '';
